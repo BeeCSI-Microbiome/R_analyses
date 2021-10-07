@@ -72,7 +72,7 @@ phyla_data <- data.frame(samples,phyla,phyla_values)
 
 # Double checking to make sure my numbers aren't wack (Did I move all the numbers
 # from the old data frame to the new data frame correctly)?
-# If you get a false anywhere, there's a problem.
+# I am comparing the sum of the reads for each sample in both data frames.
 phyla_data_check <- ddply(phyla_data, .(samples), summarise, reads = sum(phyla_values))
 sum(comparison_phylum$CRA01e.cladeReads) == phyla_data_check$reads[1]
 sum(comparison_phylum$CRA01u.cladeReads) == phyla_data_check$reads[2]
@@ -90,7 +90,23 @@ sum(comparison_phylum$CRA05u.cladeReads) == phyla_data_check$reads[10]
 # https://ggplot2.tidyverse.org/reference/theme.html for some resources.
 png('comparison_phylum.png', width = 1500,height = 1500)
 ggplot(phyla_data, aes(fill=phyla, y=phyla_values, x=samples)) + 
-  ggtitle("Abundance of Phyla") +
+  ggtitle("Phylum Classification") +
+  geom_bar(position="stack", stat="identity") +
+  xlab("Sample") +
+  ylab("Reads") +
+  theme(axis.text=element_text(size=20),
+        title=element_text(size=25, face="bold"),
+        axis.title=element_text(size=20,face="bold"),
+        legend.key.size=unit(1, "lines"),
+        legend.title=element_text(size=20, face="bold"),
+        legend.text=element_text(size=17))
+dev.off()
+
+# Removing arthropods
+phyla_data <- phyla_data[- grep("Arthropoda", phyla_data$phyla),]
+png('comparison_phylum_noarthropods.png', width = 1500,height = 1500)
+ggplot(phyla_data, aes(fill=phyla, y=phyla_values, x=samples)) + 
+  ggtitle("Phylum Classification") +
   geom_bar(position="stack", stat="identity") +
   xlab("Sample") +
   ylab("Reads") +
