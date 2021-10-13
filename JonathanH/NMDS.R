@@ -4,28 +4,23 @@ library(vegan)
 library(ggplot2)
 
 # read data
-ctx_data <- read.delim(file = '2020_ctx_kraken2/ctx_kraken_genus_data.tsv',
+ctx_data <- read.delim(file = 'ctx_kraken_species_precent_data.tsv',
                        header = TRUE,
                        sep = '\t')
 
 # clean data
-clean_ctx_data <- select(ctx_data, -taxRank, -taxID, -lineage) %>%
-  # filter(name %in% c("Gilliamella", 
-  #                 "Frischella", 
-  #                 "Snodgrassella", 
-  #                 "Lactobacillus", 
-  #                 "Bifidobacterium")) %>%
-  filter(name != "Apis") %>%
-  pivot_longer(!name, names_to = "sample", values_to = "count") %>%
-  pivot_wider(names_from = "name", values_from = "count")
+clean_ctx_data <- select(ctx_data, -taxRank, -taxID, -Max, -lineage) %>%
+  filter(name != "Apis mellifera") %>%
+  pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
+  pivot_wider(names_from = "name", values_from = "percent")
 
-# convert genus part of data frame to matrix for nmds
-genus_data <- clean_ctx_data[,2:ncol(clean_ctx_data)]
-genus_mat <- as.matrix(genus_data) 
+# convert taxa part of data frame to matrix for nmds
+taxa_data <- clean_ctx_data[,2:ncol(clean_ctx_data)]
+taxa_mat <- as.matrix(taxa_data) 
 
 # perform nmds
 set.seed(1)
-nmds = metaMDS(genus_mat, distance = "bray")
+nmds = metaMDS(taxa_mat, distance = "bray")
 
 # add treatment info
 treatments <- c("Control", "CLO", "THI",
@@ -57,7 +52,7 @@ nmds_data$treatment <- factor(nmds_data$treatment,
 # plot data
 nmds_plot <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) + 
   geom_point(aes(shape = treatment, colour = replicate), size = 5) +
-  labs(title = "NMDS Analysis",
+  labs(title = "NMDS Species Percent",
        x = "NMDS1", 
        y = "NMDS2", 
        shape = "Treatment", 
@@ -66,6 +61,6 @@ nmds_plot <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
 nmds_plot
 
 # save plot as svg
-# svg("NMDS_Plot.svg")
+# svg("NMDS_Species_Percent.svg")
 # nmds_plot
 # dev.off()
