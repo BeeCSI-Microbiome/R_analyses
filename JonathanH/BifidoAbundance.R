@@ -1,3 +1,6 @@
+# This script plots a bar graph for samples containing percentage data.
+# The input is genus percent data from Pavian (kraken reports).
+
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -10,8 +13,8 @@ ctx_data <- read.delim(file = 'ctx_kraken_genus_precent_data.tsv',
 # clean data
 bifido_data <- select(ctx_data, -taxRank, -taxID, -Max, -lineage) %>%
   filter(name == "Bifidobacterium") %>%
-  pivot_longer(!name, names_to = "sample", values_to = "count") %>%
-  pivot_wider(names_from = "name", values_from = "count")
+  pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
+  pivot_wider(names_from = "name", values_from = "percent")
 
 # add treatment info
 treatments <- c("Control", "CLO", "THI",
@@ -44,7 +47,7 @@ bifido_plot <- ggplot(bifido_data,
   scale_fill_discrete(limits = order) +
   labs(title = "Bifidobacterium Percent Abundance",
        x = "Replicate",
-       y = "Read Counts",
+       y = "Percent",
        fill = "Treatment")
 
 bifido_plot

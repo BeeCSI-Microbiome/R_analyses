@@ -1,3 +1,6 @@
+# This script produces an NMDS plot using species percentage data.
+# The input is species percent data from Pavian (kraken reports).
+
 library(dplyr)
 library(tidyr)
 library(vegan)
