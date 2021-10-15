@@ -1,50 +1,55 @@
-# This script plots a bar graph for samples containing percentage data.
+# This script plots a bar graph for a single genus in samples containing percentage data.
 # The input is genus clade percent data from Pavian (kraken reports).
+
 # To download the data in a script-ready form, go to the Comparison tab in
 # Pavian, filter out Eukaryota, ensure clade is selected and select percent.
+
+# TODO:'s show recommended fields that should be changed for each analysis
 
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 
+# TODO: change file path
+datapath <- '2020_ctx_kraken2/ctx_kraken_genus_percent.tsv'
+
 # read data
-ctx_data <- read.delim(file = 'ctx_kraken_genus_percent_data.tsv',
+data <- read.delim(file = datapath,
                        header = TRUE,
                        sep = '\t')
 
 # clean data
-bifido_data <- select(ctx_data, -taxRank, -taxID, -Max, -lineage) %>%
+# TODO: change name to be genus of choice
+data <- select(data, -taxRank, -taxID, -Max, -lineage) %>%
   filter(name == "Bifidobacterium") %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
   pivot_wider(names_from = "name", values_from = "percent")
 
-# add treatment info
-treatments <- c("Control", "CLO", "THI",
-                "Control", "CLO", "THI",
-                "Control", "CLO", "THI",
-                "Control", "CLO", "THI",
-                "Control", "CLO", "THI")
-bifido_data$treatment <- treatments
+# TODO: add treatment info
+treatments <- rep(c("Control", "CLO", "THI"), 5)
+data$treatment <- treatments
 
-# for ordering on plots
+# TODO: for ordering on plots
 order <- c("Control", "CLO", "THI")
 
 # adjust factor levels for ordering
-bifido_data$treatment <- factor(bifido_data$treatment,
+data$treatment <- factor(data$treatment,
                                    levels = order)
 
-# add replicate info
+# TODO: add replicate info
 replicates <- c("Rep 2","Rep 2","Rep 2",
                 "Rep 3","Rep 3","Rep 3",
                 "Rep 4","Rep 4","Rep 4",
                 "Rep 5","Rep 5","Rep 5",
                 "Rep 6","Rep 6","Rep 6")
-bifido_data$replicate <- replicates
+data$replicate <- replicates
 
-bifido_plot <- ggplot(bifido_data, 
-                      aes(x = replicate, 
-                          y = Bifidobacterium, 
-                          fill = treatment)) +
+# plot data
+# TODO: change x to be genus of choice and title label
+genus_plot <- ggplot(data,
+                     aes(x = replicate,
+                         y = Bifidobacterium,
+                         fill = treatment))+
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_discrete(limits = order) +
   labs(title = "Bifidobacterium Percent Abundance",
@@ -52,9 +57,10 @@ bifido_plot <- ggplot(bifido_data,
        y = "Percent",
        fill = "Treatment")
 
-bifido_plot
+genus_plot
 
-# save plot as svg
+# un-comment last 3 lines to save plot as svg
+# TODO: change file name
 # svg("Bifido_Percent_Abundance.svg")
-# bifido_plot
+# genus_plot
 # dev.off()
