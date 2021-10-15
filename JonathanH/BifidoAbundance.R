@@ -1,12 +1,14 @@
 # This script plots a bar graph for samples containing percentage data.
-# The input is genus percent data from Pavian (kraken reports).
+# The input is genus clade percent data from Pavian (kraken reports).
+# To download the data in a script-ready form, go to the Comparison tab in
+# Pavian, filter out Eukaryota, ensure clade is selected and select percent.
 
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 
 # read data
-ctx_data <- read.delim(file = 'ctx_kraken_genus_precent_data.tsv',
+ctx_data <- read.delim(file = 'ctx_kraken_genus_percent_data.tsv',
                        header = TRUE,
                        sep = '\t')
 

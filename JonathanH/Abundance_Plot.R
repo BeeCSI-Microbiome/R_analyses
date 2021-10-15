@@ -1,22 +1,24 @@
 # This script plots a stacked bar graph for samples containing percentage data.
-# The input is genus percent data from Pavian (kraken reports).
+# The input is genus clade percent data from Pavian (kraken reports)
+# that have Eukaryota filtered out.
+# To download the data in a script-ready form, go to the Comparison tab in
+# Pavian, filter out Eukaryota, ensure clade is selected and select percent.
 
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 
 # read data
-ctx_data <- read.delim(file = 'ctx_kraken_genus_precent_data.tsv',
+ctx_data <- read.delim(file = 'ctx_kraken_genus_percent_data.tsv',
                        header = TRUE,
                        sep = '\t')
 
 # clean data
 clean_ctx_data <- select(ctx_data, -taxRank, -taxID, -Max, -lineage) %>%
-  filter(name != "Apis") %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
   pivot_wider(names_from = "name", values_from = "percent")
 
-# scale data after Apis removal
+# scale data and convert to data frame
 scaled_ctx_data <- apply(clean_ctx_data[, -1],
                          MARGIN = 1,
                          FUN = function(x) x / sum(x)) %>%
@@ -58,13 +60,13 @@ core_data$treatment <- factor(core_data$treatment,
 # convert data frame into "long" format for stacked bar plot
 long_data <- pivot_longer(core_data,
                           cols = 1:5,
-                          names_to = "taxa",
+                          names_to = "clade",
                           values_to = "percentage")
 
 # plot data
 abundance_plot <- ggplot(long_data, aes(x = treatment,
                                         y = percentage,
-                                        fill = taxa)) +
+                                        fill = clade)) +
   geom_bar(stat = "identity", colour = "black") +
   facet_grid(~replicate) +
   labs(title = "Abundance Analysis Using Percent(%) Data",

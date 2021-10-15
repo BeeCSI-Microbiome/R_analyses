@@ -1,5 +1,9 @@
 # This script produces an NMDS plot using species percentage data.
 # The input is species percent data from Pavian (kraken reports).
+# To download the data in a script-ready form, go to the Comparison tab in
+# Pavian, filter out Eukaryota, ensure clade is selected and select percent.
+
+# Leave in more info? bees and eukaryotes to capture more info?
 
 library(dplyr)
 library(tidyr)
@@ -7,13 +11,12 @@ library(vegan)
 library(ggplot2)
 
 # read data
-ctx_data <- read.delim(file = 'ctx_kraken_species_precent_data.tsv',
+ctx_data <- read.delim(file = 'ctx_kraken_species_percent_data.tsv',
                        header = TRUE,
                        sep = '\t')
 
 # clean data
 clean_ctx_data <- select(ctx_data, -taxRank, -taxID, -Max, -lineage) %>%
-  filter(name != "Apis mellifera") %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
   pivot_wider(names_from = "name", values_from = "percent")
 
@@ -25,14 +28,14 @@ taxa_mat <- as.matrix(taxa_data)
 set.seed(1)
 nmds = metaMDS(taxa_mat, distance = "bray")
 
-# add treatment info
+# setup treatment info
 treatments <- c("Control", "CLO", "THI",
                 "Control", "CLO", "THI",
                 "Control", "CLO", "THI",
                 "Control", "CLO", "THI",
                 "Control", "CLO", "THI")
 
-# add replicate info
+# setup replicate info
 replicates <- c("Rep 2","Rep 2","Rep 2",
                 "Rep 3","Rep 3","Rep 3",
                 "Rep 4","Rep 4","Rep 4",
@@ -40,8 +43,8 @@ replicates <- c("Rep 2","Rep 2","Rep 2",
                 "Rep 6","Rep 6","Rep 6")
 
 # add back information to matrix
-nmds_data = as.data.frame(scores(nmds))
-nmds_data$sample = clean_ctx_data$sample
+nmds_data <- as.data.frame(scores(nmds))
+nmds_data$sample <- clean_ctx_data$sample
 nmds_data$replicate <- replicates
 nmds_data$treatment <- treatments
 
