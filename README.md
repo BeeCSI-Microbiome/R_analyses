@@ -2,6 +2,8 @@
 
 This repository is intended to be the location in which we collect and share the **R scripts** for use on BeeCSI data.
 
+Taxonomic profiling can be done with [this Snakemake pipeline](https://github.com/BeeCSI-Microbiome/taxonomic_profiling_pipeline), which produces output kraken data (taxonomic classification) and QC reports.
+
 ## A few guidelines
 
 * A **descriptive script name** will help distinguish scripts from one another.
