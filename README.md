@@ -1,4 +1,4 @@
-# R_analyses
+# Microbiome analysis workflow and R analyses
 
 This repository is intended to be the location in which we collect and share the **R scripts** for use on BeeCSI data.
 
@@ -14,3 +14,15 @@ This repository is intended to be the location in which we collect and share the
     * All of your scripts (e.g. _Lance's Scripts_)
     * A series of scripts you consider to work together as a workflow
     * A single script and associated files (e.g. A README.md to describe the script and its usage, example visualizations produced by the script, etc.)
+
+## Bioinformatics workflow
+
+## Exploratory data analysis with Pavian
+
+## Exploratory data analysis with Krona
+
+## Downstream R analyses
+
+1. Cumulative Sum Scaling normalization with `cumSum` function
+2. Alpha diversity on both unnormalized and normalized data
+3. Alpha 
