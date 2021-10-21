@@ -8,13 +8,9 @@
 # TODO:'s show recommended values that should be changed for each analysis
 
 # This script assumes that samples are grouped by replicates first, then treatments.
-# example below:
-# Rep 1 TreatmentA
-# Rep 1 TreatmentB
-# Rep 1 TreatmentC
-# Rep 2 TreatmentA
-# Rep 2 TreatmentB
-# Rep 2 TreatmentC
+# Example below:
+# Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, Rep 2 TreatmentA,
+# Rep 2 TreatmentB, Rep 2 TreatmentC, ...
 
 library(dplyr)
 library(tidyr)
@@ -24,19 +20,14 @@ library(ggplot2)
 datapath <- '2020_ctx_kraken2/ctx_kraken_genus_percent.tsv'
 
 # TODO: setup treatment info
-treatment_vec <- c("Control", "CLO", "THI")
-# TODO: number of replicates
-num_reps <- 5
+treat_names <- c("Control", "CLO", "THI")
 
 # TODO: setup replicate info
-replicates <- c("Rep 2","Rep 2","Rep 2",
-                "Rep 3","Rep 3","Rep 3",
-                "Rep 4","Rep 4","Rep 4",
-                "Rep 5","Rep 5","Rep 5",
-                "Rep 6","Rep 6","Rep 6")
+rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 
 # TODO: Give a title for the plot
 plot_title <- "CTX Abundance Using Percent(%) Data"
+
 
 # read data
 data <- read.delim(file = datapath,
@@ -64,13 +55,21 @@ scaled_data <- apply(core_data,
   as.data.frame()
 
 # add in treatment and replicate cols
-treatments <- rep(treatment_vec, num_reps)
+num_treats <- length(treat_names)
+num_reps <- length(rep_names)
+
+treatments <- rep(treat_names, num_reps)
+replicates <- c()
+for (r in 1:num_reps) {
+  replicates = c(replicates, rep(rep_names[r], num_treats))
+}
+
 scaled_data$treatment <- treatments
 scaled_data$replicate <- replicates
 
 # adjust factor levels for ordering
 scaled_data$treatment <- factor(scaled_data$treatment,
-                              levels = treatment_vec)
+                              levels = treat_names)
 
 # convert data frame into "long" format for stacked bar plot
 long_data <- pivot_longer(scaled_data,
