@@ -5,7 +5,12 @@
 # To download the data in a script-ready form, go to the Comparison tab in
 # Pavian, filter out Eukaryota, ensure clade is selected and select percent.
 
-# TODO:'s show recommended fields that should be changed for each analysis
+# TODO:'s show recommended values that should be changed for each analysis
+
+# This script assumes that samples are grouped by replicates first, then treatments.
+# Example below:
+# Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, Rep 2 TreatmentA,
+# Rep 2 TreatmentB, Rep 2 TreatmentC, ...
 
 library(dplyr)
 library(tidyr)
@@ -13,6 +18,16 @@ library(ggplot2)
 
 # TODO: change file path
 datapath <- '2020_ctx_kraken2/ctx_kraken_genus_percent.tsv'
+
+# TODO: setup treatment info
+treat_names <- c("Control", "CLO", "THI")
+
+# TODO: setup replicate info
+rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+
+# TODO: Give a title for the plot
+plot_title <- "CTX Abundance Using Percent(%) Data"
+
 
 # read data
 data <- read.delim(file = datapath,
@@ -24,55 +39,51 @@ clean_data <- select(data, -taxRank, -taxID, -Max, -lineage) %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
   pivot_wider(names_from = "name", values_from = "percent")
 
-# scale data and convert to data frame
-scaled_data <- apply(clean_data[, -1],
-                         MARGIN = 1,
-                         FUN = function(x) x / sum(x)) %>%
-  t() %>%
-  as.data.frame()
-
 # select for core taxa
-core_data <- select(scaled_data,
+core_data <- select(clean_data,
                     "Gilliamella",
                     "Snodgrassella",
                     "Bifidobacterium",
                     "Lactobacillus",
                     "Frischella")
 
-# TODO: setup treatment info
-treatments <- rep(c("Control", "CLO", "THI"), 5)
+# scale data and convert to data frame
+scaled_data <- apply(core_data,
+                     MARGIN = 1,
+                     FUN = function(x) x / sum(x)) %>%
+  t() %>%
+  as.data.frame()
 
-# TODO: setup replicate info
-replicates <- c("Rep 2","Rep 2","Rep 2",
-                "Rep 3","Rep 3","Rep 3",
-                "Rep 4","Rep 4","Rep 4",
-                "Rep 5","Rep 5","Rep 5",
-                "Rep 6","Rep 6","Rep 6")
+# add in treatment and replicate cols
+num_treats <- length(treat_names)
+num_reps <- length(rep_names)
 
-core_data$treatment <- treatments
-core_data$replicate <- replicates
+treatments <- rep(treat_names, num_reps)
+replicates <- c()
+for (r in 1:num_reps) {
+  replicates = c(replicates, rep(rep_names[r], num_treats))
+}
 
-# TODO: for ordering on plots
-order <- c("Control", "CLO", "THI")
+scaled_data$treatment <- treatments
+scaled_data$replicate <- replicates
 
 # adjust factor levels for ordering
-core_data$treatment <- factor(core_data$treatment,
-                              levels = order)
+scaled_data$treatment <- factor(scaled_data$treatment,
+                              levels = treat_names)
 
 # convert data frame into "long" format for stacked bar plot
-long_data <- pivot_longer(core_data,
-                          cols = 1:(ncol(core_data)-2),
+long_data <- pivot_longer(scaled_data,
+                          cols = 1:(ncol(scaled_data)-2),
                           names_to = "clade",
                           values_to = "percentage")
 
 # plot data
-# TODO: change title label
 abundance_plot <- ggplot(long_data, aes(x = treatment,
                                         y = percentage,
                                         fill = clade)) +
   geom_bar(stat = "identity", colour = "black") +
   facet_grid(~replicate) +
-  labs(title = "CTX Abundance Using Percent(%) Data",
+  labs(title = plot_title,
        x = "Treatment",
        y = "Relative Abundance(%)",
        fill = "Genus") +
@@ -83,7 +94,6 @@ abundance_plot <- ggplot(long_data, aes(x = treatment,
 abundance_plot
 
 # un-comment last 3 lines to save plot as svg
-# TODO: change file name
-# svg("CTX_Abundance_Plot.svg")
+# svg("Genus_Abundance_Plot.svg")
 # abundance_plot
 # dev.off()
