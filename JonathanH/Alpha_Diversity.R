@@ -20,6 +20,12 @@ library(vegan)
 # TODO: change file path
 datapath <- '2020_clo_kraken2/clo_kraken_species_rawread.tsv'
 
+# TODO: setup treatment info
+treat_names <- c("Control", "Acute", "Sublethal")
+
+# TODO: setup replicate info
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
+
 # read data
 data <- read.delim(file = datapath,
                    header = TRUE,
@@ -49,3 +55,31 @@ calc_diversity_df <- function(x){
 }
 
 alpha_div <- calc_diversity_df(clean_data[,2:ncol(clean_data)])
+
+# add in treatment and replicate cols
+num_treats <- length(treat_names)
+num_reps <- length(rep_names)
+
+treatments <- rep(treat_names, num_reps)
+replicates <- c()
+for (r in 1:num_reps) {
+  replicates = c(replicates, rep(rep_names[r], num_treats))
+}
+
+alpha_div$treatment <- treatments
+alpha_div$replicate <- replicates
+
+# adjust factor levels for ordering
+alpha_div$treatment <- factor(alpha_div$treatment,
+                                levels = treat_names)
+
+# acp$sample <- gsub('(\\w+\\d\\d(u|e)).*$', "\\1", acp$sample)
+
+alpha_plot <- ggplot(alpha_div, aes(x = treatment, y = Shannon)) +
+  geom_boxplot() +
+  labs(title = "Alpha Diversity Plot",
+       x = "Treatment",
+       y = "Index")
+
+alpha_plot
+
