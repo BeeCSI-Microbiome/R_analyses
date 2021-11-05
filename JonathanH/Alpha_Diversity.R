@@ -1,16 +1,19 @@
-# This script plots a stacked bar graph for samples containing percentage data.
-# The input is genus clade percent data from Pavian (kraken reports)
-# that have Eukaryota filtered out.
+# This script calculates and plots alpha diversity metrics for 
+# kraken output data downloaded through Pavian.
+# The input is raw read data downloaded from the Comparison tab
+# without collapsing taxa.
 
 # To download the data in a script-ready form, go to the Comparison tab in
-# Pavian, filter out Eukaryota, ensure clade is selected and select percent.
-
-# TODO:'s show recommended values that should be changed for each analysis
+# Pavian, un-collapse the taxa, and download.
 
 # This script assumes that samples are grouped by replicates first, then treatments.
 # Example below:
 # Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, Rep 2 TreatmentA,
 # Rep 2 TreatmentB, Rep 2 TreatmentC, ...
+
+# TODO:'s show recommended values that should be changed for each analysis
+
+# Script Author(s): Jonathan Ho, Jocelyn O'brien
 
 library(dplyr)
 library(tidyr)
@@ -18,7 +21,7 @@ library(ggplot2)
 library(vegan)
 
 # TODO: change file path
-datapath <- '2020_clo_kraken2/clo_kraken_species_rawread.tsv'
+datapath <- '2020_clo_kraken2/clo_kraken_all_rawread_uncollapsed.tsv'
 
 # TODO: setup treatment info
 treat_names <- c("Control", "Acute", "Sublethal")
@@ -31,10 +34,12 @@ data <- read.delim(file = datapath,
                    header = TRUE,
                    sep = '\t')
 
-# clean data
-clean_data <- select(data, -taxRank, -taxID, -Max, -lineage) %>%
+# filter for species and clean data
+clean_data <- filter(data, taxRank == "S") %>%
+  select(-taxRank, -taxID, -Max, -lineage) %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
-  pivot_wider(names_from = "name", values_from = "percent")
+  pivot_wider(names_from = "name", values_from = "percent") %>%
+  select(-"Apis mellifera")
 
 # calc alpha metrics
 calc_diversity_df <- function(x){
@@ -54,7 +59,7 @@ calc_diversity_df <- function(x){
   div_df
 }
 
-alpha_div <- calc_diversity_df(clean_data[,2:ncol(clean_data)])
+alpha_df <- calc_diversity_df(clean_data[,2:ncol(clean_data)])
 
 # add in treatment and replicate cols
 num_treats <- length(treat_names)
@@ -66,20 +71,40 @@ for (r in 1:num_reps) {
   replicates = c(replicates, rep(rep_names[r], num_treats))
 }
 
-alpha_div$treatment <- treatments
-alpha_div$replicate <- replicates
+alpha_df$treatment <- treatments
+alpha_df$replicate <- replicates
 
 # adjust factor levels for ordering
-alpha_div$treatment <- factor(alpha_div$treatment,
+alpha_df$treatment <- factor(alpha_df$treatment,
                                 levels = treat_names)
 
-# acp$sample <- gsub('(\\w+\\d\\d(u|e)).*$', "\\1", acp$sample)
-
-alpha_plot <- ggplot(alpha_div, aes(x = treatment, y = Shannon)) +
+# make alpha diversity plot
+alpha_plot <- ggplot(alpha_df, aes(x = treatment, y = Inv_Simpson)) +
   geom_boxplot() +
   labs(title = "Alpha Diversity Plot",
-       x = "Treatment",
-       y = "Index")
+       x = "Treatment")
 
 alpha_plot
 
+# un-comment last 3 lines to save plot as svg
+# svg("Alpha_Diversity_Plot.svg")
+# abundance_plot
+# dev.off()
+
+# alpha_df$sample <- gsub('(\\w+\\d\\d(u|e)).*$', "\\1", acp$sample)
+
+######################################################
+
+# Stats: Mann Whitney U Test
+
+# test between control and acute treatments
+control_vs_acute <- filter(alpha_df, treatment %in% c("Control", "Acute"))
+wilcox.test(Inv_Simpson~treatment, data=control_vs_acute)
+
+# test between control and sublethal treatments
+control_vs_sublethal <- filter(alpha_df, treatment %in% c("Control", "Sublethal"))
+wilcox.test(Inv_Simpson~treatment, data=control_vs_sublethal)
+
+# test between acute and sublethal treatments
+acute_vs_sublethal <- filter(alpha_df, treatment %in% c("Acute", "Sublethal"))
+wilcox.test(Inv_Simpson~treatment, data=acute_vs_sublethal)
