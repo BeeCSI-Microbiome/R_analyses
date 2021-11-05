@@ -5,6 +5,11 @@
 # To download the data in a script-ready form, go to the Comparison tab in
 # Pavian, un-collapse the taxa, and download.
 
+# This script assumes that samples are grouped by replicates first, then treatments.
+# Example below:
+# Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, 
+# Rep 2 TreatmentA, Rep 2 TreatmentB, Rep 2 TreatmentC, ...
+
 # TODO:'s show recommended fields that should be changed for each analysis
 
 # Script Author(s): Jonathan Ho
@@ -15,16 +20,16 @@ library(vegan)
 library(ggplot2)
 
 # TODO: change file path
-datapath <- '2020_ctx_kraken2/ctx_kraken_all_percent_uncollapsed.tsv'
+datapath <- '2020_thi_kraken2/thi_kraken_all_percent_uncollapsed.tsv'
 
 # TODO: setup treatment info
-treat_names <- c("Control", "CLO", "THI")
+treat_names <- c("Control", "Acute", "Sublethal")
 
 # TODO: setup replicate info
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
 
 # TODO: give a title for the plot
-plot_title <- "CTX Bifidobacterium Percent Abundance"
+plot_title <- "THI NMDS"
 
 # read data
 data <- read.delim(file = datapath,
@@ -36,11 +41,11 @@ clean_data <- filter(data, taxRank == "G") %>%
   select(-taxRank, -taxID, -Max, -lineage) %>%
   pivot_longer(!name, names_to = "sample", values_to = "percent") %>%
   pivot_wider(names_from = "name", values_from = "percent")%>%
-  select(-Apis)
+  select(-"Apis")
 
 # convert taxa part of data frame to matrix for nmds
 taxa_data <- clean_data[,2:ncol(clean_data)]
-taxa_mat <- as.matrix(taxa_data) 
+taxa_mat <- as.matrix(taxa_data)
 
 # perform nmds
 set.seed(1)
@@ -81,3 +86,15 @@ nmds_plot
 # svg("CTX_NMDS_Species_Percent.svg")
 # nmds_plot
 # dev.off()
+
+
+################################################
+
+# stats: ANOSIM
+
+ano = anosim(taxa_mat,
+             nmds_data$replicate,
+             distance = "bray",
+             permutations = 9999)
+
+ano
