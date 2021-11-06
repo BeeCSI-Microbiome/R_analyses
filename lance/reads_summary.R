@@ -2,10 +2,20 @@
 # Oct 2021
 # Produce a summary of read information
 
-
-# ----------------------------------- Setup  -----------------------------------
+# ----------------------------------- Setup ------------------------------------
 packs <- c('ggplot2', 'tidyverse', 'metagenomeSeq', 'plyr')
 lapply(packs, library, character.only=TRUE)
+# ------------------------------------------------------------------------------
+
+# ---------------------------------- Globals -----------------------------------
+# Core list (do not change)
+taxa_list <- c('root', 'unclassified','Apis mellifera')
+
+# append any additional taxa (e.g. Lactobacillus)
+taxa_list <- append(taxa_list, c('Lactobacillus', 'Gilliamela'))
+
+# Is this needed?
+taxa_list_nospace <- gsub(' ', '_', taxa_list)
 # ------------------------------------------------------------------------------
 
 
@@ -13,16 +23,16 @@ lapply(packs, library, character.only=TRUE)
 # Read in master table
 cr <- read_tsv("data/all_clade_and_taxon_reads.tsv")
 
-# Pivot samples to a column, keep only 3 taxa seen below
-ta <- cr %>% subset(str_detect(name, 'unclassified$|cellular organisms|Apis mellifera')) %>% 
+# Pivot samples to a column, keep only taxa in taxa_list
+ta <- subset(cr, name %in% taxa_list) %>% 
+  select_if(str_detect(names(.), 'name|cladeReads')) %>% 
   tidyr::pivot_longer(
-    cols = 5:14,
+    cols = ends_with('cladeReads'),
     names_to = "sample",
     values_to = "reads"
   )
 
-# Remove the "Max" columns
-ta <- ta[, (colnames(ta) %in% c("sample", "reads", "name"))]
+# sample name formatting
 ta$sample <- gsub('(.*)\\.cladeReads', '\\1', ta$sample)
 
 # Pivot to get taxa as columns
@@ -32,21 +42,29 @@ ta <- ta %>%
     values_from = c("reads")
   )
 
+# some column name formatting
+ta <- dplyr::rename(ta, classified=root)
+ta <- dplyr::rename_with(ta, ~ gsub(' ', '_', .x))
+ta <- dplyr::rename_with(ta, ~ str_c(.x, '_reads'), !matches('sample'))
+
+# create total read count column
+ta <- dplyr::mutate(ta, total_reads = unclassified_reads+classified_reads, .after=sample)
+
+# create "percent of total reads" columns
+ta <- ta %>% dplyr::mutate(across(
+  !matches('sample|total_reads'),
+  ~ .x/total_reads*100,
+  .names = "percent_total_{.col}",
+  ))
+
+# create "percent of classified reads" columns
+ta <- ta %>% dplyr::mutate(across(
+  !matches('sample|total_reads|*classified*|*percent*'),
+  ~ .x/classified_reads*100,
+  .names = "percent_classified_{.col}",
+))
+
 # column name formatting
-ta <- setNames(ta, c('sample','unclassified_reads','classified_reads','Apis_mellifera_reads'))  
-
-# mutate to create additional columns
-# Total and percents
-ta <- mutate(ta, total_reads = unclassified_reads+classified_reads) 
-ta <- mutate(ta, percent_classified = classified_reads/total_reads*100)
-ta <- mutate(ta, percent_unclassified = unclassified_reads/total_reads*100)
-ta <- mutate(ta, percent_total_Apis_mellifera = Apis_mellifera_reads/total_reads*100)
-ta <- mutate(ta, percent_classified_Apis_mellifera = Apis_mellifera_reads/classified_reads*100)
-# meta data 
-ta <- mutate(ta, exposure=ifelse(endsWith(sample, "e"), "exposed", "unexposed"))
-ta <- mutate(ta, replicate=str_extract(sample, '\\d\\d'))
-
-# Reorder columns
-ta <- ta[, c(1,10,11,5,2,7,3,6,4,8,9)]
+ta <- dplyr::rename_with(ta, ~ gsub('(percent.*)_reads', '\\1', .x))
 
 write.table(ta, file='results/read_summary.tsv', quote=F, sep='\t', row.names=F)
