@@ -95,7 +95,50 @@ source('visualize_scaling.r')
 
 
 # -------------------------- Calculate Clade Counts --------------------------
-# TODO: reaggregate clade counts with normalized values
+# Reaggregate clade counts with normalized values
+
+# Count lineage_depths. Clade counts will be counted from leaves up
 cr_norm <- cr_norm %>%
   mutate(lineage_depth=str_count(lineage, '>'))
+
+# Set remaining NA values to 0
+cr_norm[is.na(cr_norm)] <- 0
+
+# Pivot samples into 1 column
+cr_norm <- cr_norm %>% 
+  tidyr::pivot_longer(
+    cols = contains('taxonReads'),
+    names_to = "sample",
+    values_to = "scaled_reads"
+  )
+
+# Clean sample names
+cr_norm$sample <- gsub('(.*)\\.taxonReads.y', '\\1', cr_norm$sample)
+
+# Sort rows by lineage depth
+cr_norm <- arrange(cr_norm, desc(lineage_depth))
+
+# Sum reads from rows with the following conditions:
+#   - samples match
+#   - lineage depth is equal (to get taxon count of that taxa), or 1 greater, 
+#     to sum up subtaxa
+#   - lineage is contained within the subtaxa lineage   
+# TODO: This implementation is likely exponential in time. There is probably a better way
+for(i in 1:nrow(cr_norm)){
+  row <- cr_norm[i,]
+  row$scaled_reads <- sum(
+    filter(cr_norm,
+           sample==row$sample,
+           lineage_depth==row$lineage_depth+1 | lineage_depth==row$lineage_depth,
+           str_detect(lineage, row$lineage))$scaled_reads)
+  cr_norm[i,] <- row
+}
+
+# Pivot samples back into their own columns
+cr_norm <- cr_norm %>% 
+  tidyr::pivot_wider(
+    names_from = "sample",
+    values_from = c("scaled_reads")
+  )
+
 # ______________________________________________________________________________
