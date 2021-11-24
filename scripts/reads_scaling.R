@@ -36,16 +36,22 @@ format_count_table <- function(tb){
 }
 
 
-export('filter_table')
-filter_table <- function(tb, filter_list){
+#export('filter_table')
+#filter_table <- function(tb, filter_list){
   # Filters given taxa out of a table
   # filter unwanted taxa out
-  tb <- filter(tb, !name %in% filter_list)
+#  tb <- filter(tb, !name %in% filter_list)
   # additional filter needed for uncollapsed clades
   # TODO: is there a better way to do this?
-  if('Apis mellifera' %in% filter_list){
-    tb <- filter(tb, !str_detect(tb$lineage, 'Metazoa'))
-  }
+#  if('Apis mellifera' %in% filter_list){
+#    tb <- filter(tb, !str_detect(tb$lineage, 'Metazoa'))
+#  }
+#}
+
+export('filter_table')
+filter_table <- function(tb, filter_list){
+  # Get only bacterial taxa
+  tb <- filter(tb, str_detect(lineage, 'Bacteria'))
 }
 
 

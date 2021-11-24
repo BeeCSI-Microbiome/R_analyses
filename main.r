@@ -24,9 +24,9 @@ counts_path <- "data/all_clade_and_taxon_reads.tsv"
 percents_path <- "data/all_clades_percents.tsv" 
 
 # Core list (do not change)
-filter_list <- c('root', 'unclassified') %>%
+#filter_list <- c('root', 'unclassified') %>%
 # append any additional taxa (e.g. Apis mellifera)
-  append(c('Apis mellifera'))
+#  append(c('Apis mellifera'))
 
 css_percentile = 0.5
 # ______________________________________________________________________________
@@ -42,7 +42,7 @@ pt <- read_tsv(percents_path)
 # -------------------- Formatting, Filtering, and Scaling ----------------------
 # Format and perform filtering on the table
 ct <- scaling$format_count_table(ct) %>%
-  scaling$filter_table(filter_list)
+  scaling$filter_table()
 
 # Get just the taxon counts by dropping taxa with no counts in any sample
 ct_raw_taxon <- scaling$drop_all_NA_rows(ct)
