@@ -11,14 +11,14 @@ import('vegan')
 # cleans data into tidy format for genus or species level
 tidy_data <- function(d, r) {
   if(r=="G") {
-    to_remove <- c("Apis")
+    # to_remove <- c("Apis")
   } else if(r=="S") {
-    to_remove <- c("Apis mellifera")
+    # to_remove <- c("Apis mellifera")
   }
   clean_data <- filter(d, taxRank == r) %>%
     select(-taxRank, -taxID, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
-    filter(!name %in% to_remove) %>%
+    # filter(!name %in% to_remove) %>%
     pivot_wider(names_from = "name", values_from = "value")%>%
     return(clean_data)
 }
@@ -123,6 +123,7 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
     plot_genera_abundance()
   
   plot
+  ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
 }
 
 # Alpha Diversity ---------------------------------------------------------
@@ -150,7 +151,7 @@ plot_alpha <- function(d, alpha) {
   index <- sym(alpha)
   alpha_plot <- ggplot(d, aes(x = treatment, y = !!index)) +
     geom_boxplot() +
-    labs(title = "Alpha Diversity Plot",
+    labs(title = "Alpha Diversity",
          x = "Treatment")
   
   alpha_plot
@@ -158,7 +159,6 @@ plot_alpha <- function(d, alpha) {
 
 # Returns an alpha diversity plot using specific index
 # see specific functions for details and assumptions
-export("make_alpha_bars")
 make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
   plot <- tidy_data(data, "S") %>%
     calc_diversity_df() %>%
@@ -166,4 +166,17 @@ make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
     plot_alpha(alpha_index)
   
   plot
+}
+
+# Makes all alpha div bar plots and saves them in results
+export("make_all_alpha_plots")
+make_all_alpha_plots <- function(data, treat_names, rep_names) {
+  plot_1 <- make_alpha_bars(data, treat_names, rep_names, "Shannon")
+  plot_2 <- make_alpha_bars(data, treat_names, rep_names, "Simpson")
+  plot_3 <- make_alpha_bars(data, treat_names, rep_names, "Inv_Simpson")
+  plot_4 <- make_alpha_bars(data, treat_names, rep_names, "Evenness")
+  ggsave(plot = plot_1, filename = 'results/alpha_div_shannon.png', bg = 'white')
+  ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
+  ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
+  ggsave(plot = plot_4, filename = 'results/alpha_div_evenness.png', bg = 'white')
 }
