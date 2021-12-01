@@ -53,12 +53,10 @@ tables <- scaling$scaling_procedure(ct, css_percentile)
 # TODO: these details will need to be provided
 treat_names <- c("Control", "CLO", "THI")
 rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
-plot_title <- "CTX Abundance Using Percent(%) Data"
 
 relative_abundance <- tables[["raw_clade"]] %>%
   exploratory$make_genera_abundance(treat_names,
-                                    rep_names,
-                                    plot_title)
+                                    rep_names)
 relative_abundance
 
 # Alpha Diversity ---------------------------------------------------------
