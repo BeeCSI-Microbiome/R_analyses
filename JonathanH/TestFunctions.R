@@ -5,17 +5,15 @@
 packs <- c('dplyr', 'tidyr', 'ggplot2', 'vegan')
 lapply(packs, library, character.only=T)
 
-# Functions ---------------------------------------------------------------
+# Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format for genus or species level
 tidy_data <- function(d, r) {
-  if(r=="genus") {
-    lv <- "G"
+  if(r=="G") {
     to_remove <- c("Apis")
-  } else {
-    lv <- "S"
+  } else if(r=="S") {
     to_remove <- c("Apis mellifera")
   }
-  clean_data <- filter(d, taxRank == lv) %>%
+  clean_data <- filter(d, taxRank == r) %>%
     select(-taxRank, -taxID, -Max, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     filter(!name %in% to_remove) %>%
@@ -84,9 +82,12 @@ tidy_to_long <- function(d) {
   return(long_data)
 }
 
+
+
+# Relative Abundance ------------------------------------------------------
 # plots relative abundance data at genus level
 # uses the taxa, value, treatment, and replicate column from data
-plot_genera_abundance <- function(d, title) {
+plot_genera_abundance <- function(d) {
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
                                y = value,
@@ -99,39 +100,66 @@ plot_genera_abundance <- function(d, title) {
                                                         "Others")))) +
     geom_bar(stat = "identity", colour = "black") +
     facet_grid(~replicate) +
-    labs(title = title,
+    labs(title = "Relative Abundance",
          x = "Treatment",
-         y = "Relative Abundance(%)",
+         y = "Percentage (%)",
          fill = "Genus") +
     theme(axis.text.x = element_text(angle = 45,
                                      vjust = 1,
                                      hjust = 1))
 }
 
-make_genera_abundance <- function(datapath, treat_names, rep_names, plot_title) {
+# Returns a relative abundance plot at the genus level
+# see specific functions for details and assumptions
+make_genera_abundance <- function(datapath, treat_names, rep_names) {
   data <- read.delim(file = datapath,
                      header = TRUE,
                      sep = '\t')
-  plot <- tidy_data(data, "genus") %>%
+  plot <- tidy_data(data, "G") %>%
     calc_prop() %>%
     filter_core() %>%
     treat_reps(treat_names, rep_names) %>%
     tidy_to_long() %>%
-    plot_genera_abundance(plot_title)
+    plot_genera_abundance()
     
   plot
 }
 
+# Relative Abundance Tests ------------------------------------------------
+# necessary info
+# datapath <- '../2020_ctx_kraken2/ctx_kraken_all_rawread_uncollapsed.tsv'
+# treat_names <- c("Control", "CLO", "THI")
+# rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+
+# data <- read.delim(file = datapath,
+#                    header = TRUE,
+#                    sep = '\t')
+
+# tests for genera abundance
+# test_1 <- tidy_data(data, "G")
+# test_2 <- calc_prop(test_1)
+# test_3 <- filter_core(test_2)
+# test_4 <- treat_reps(test_3, treat_names, rep_names)
+# test_5 <- tidy_to_long(test_4)
+# test_6 <- plot_genera_abundance(test_5, plot_title)
+# test_6
+
+# make_genera_abundance(datapath,
+#                       treat_names,
+#                       rep_names)
+
+
+# Alpha Diversity ---------------------------------------------------------
 # calc alpha metrics
-# assumes data in tidy format
+# assumes data in tidy format and no extra columns
 calc_diversity_df <- function(x){
-  observed_richness <- specnumber(x)
-  invsimpson <- diversity(x, index="invsimpson")
-  simpson <- diversity(x, index="simpson")
-  shannon <- diversity(x, index="shannon")
+  observed_richness <- specnumber(x[,2:ncol(x)])
+  invsimpson <- diversity(x[,2:ncol(x)], index="invsimpson")
+  simpson <- diversity(x[,2:ncol(x)], index="simpson")
+  shannon <- diversity(x[,2:ncol(x)], index="shannon")
   evenness <- shannon/log(observed_richness)
   div_df <- data.frame(
-    ID = clean_data$sample,
+    ID = x$sample,
     Observed_Richness = observed_richness,
     Inv_Simpson = invsimpson,
     Simpson = simpson,
@@ -141,30 +169,50 @@ calc_diversity_df <- function(x){
   div_df
 }
 
-# Tests -------------------------------------------------------------------
-# TODO: change file path
-datapath <- '../2020_ctx_kraken2/ctx_kraken_all_percent_uncollapsed.tsv'
-# TODO: setup treatment info
-treat_names <- c("Control", "CLO", "THI")
-# TODO: setup replicate info
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
-# TODO: give a title for the plot
-plot_title <- "CTX Abundance Using Percent(%) Data"
+# plot alpha diversity
+plot_alpha <- function(d, alpha) {
+  index <- sym(alpha)
+  alpha_plot <- ggplot(d, aes(x = treatment, y = !!index)) +
+    geom_boxplot() +
+    labs(title = "Alpha Diversity Plot",
+         x = "Treatment")
+  
+  alpha_plot
+}
 
-# read data
+# Returns an alpha diversity plot using specific index
+# see specific functions for details and assumptions
+make_alpha_bars <- function(datapath, treat_names, rep_names, alpha_index) {
+  data <- read.delim(file = datapath,
+                     header = TRUE,
+                     sep = '\t')
+  plot <- tidy_data(data, "S") %>%
+    calc_diversity_df() %>%
+    treat_reps(treat_names, rep_names) %>%
+    plot_alpha(alpha_index)
+  
+  plot
+}
+
+# Alpha Diversity Tests ---------------------------------------------------
+# necessary info
+# datapath <- '../2020_ctx_kraken2/ctx_kraken_all_rawread_uncollapsed.tsv'
+# treat_names <- c("Control", "CLO", "THI")
+# rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+# plot_title <- "CTX Abundance Using Percent(%) Data"
+
 # data <- read.delim(file = datapath,
 #                    header = TRUE,
 #                    sep = '\t')
-# 
-# test_1 <- tidy_data(data, "genus")
-# test_2 <- calc_prop(test_1)
-# test_3 <- filter_core(test_2)
-# test_4 <- treat_reps(test_3, treat_names, rep_names)
-# test_5 <- tidy_to_long(test_4)
-# test_6 <- plot_genera_abundance(test_5, plot_title)
-# test_6
 
-make_genera_abundance(datapath,
-                      treat_names,
-                      rep_names,
-                      plot_title)
+# tests for alpha diversity
+# test_1 <- tidy_data(data, "S")
+# test_2 <- calc_diversity_df(test_1)
+# test_3 <- treat_reps(test_2, treat_names, rep_names)
+# test_4 <- plot_alpha(test_3, "Shannon")
+# test_4
+
+# make_alpha_bars(datapath,
+#                 treat_names,
+#                 rep_names,
+#                 "Inv_Simpson")
