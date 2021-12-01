@@ -89,7 +89,7 @@ tidy_to_long <- function(d) {
 # Relative Abundance ------------------------------------------------------
 # plots relative abundance data at genus level
 # uses the taxa, value, treatment, and replicate column from data
-plot_genera_abundance <- function(d, title) {
+plot_genera_abundance <- function(d) {
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
                                y = value,
@@ -102,9 +102,9 @@ plot_genera_abundance <- function(d, title) {
                                                         "Others")))) +
     geom_bar(stat = "identity", colour = "black") +
     facet_grid(~replicate) +
-    labs(title = title,
+    labs(title = "Relative Abundance",
          x = "Treatment",
-         y = "Relative Abundance(%)",
+         y = "Percentage (%)",
          fill = "Genus") +
     theme(axis.text.x = element_text(angle = 45,
                                      vjust = 1,
@@ -114,13 +114,13 @@ plot_genera_abundance <- function(d, title) {
 # Returns a relative abundance plot at the genus level
 # see specific functions for details and assumptions
 export('make_genera_abundance')
-make_genera_abundance <- function(data, treat_names, rep_names, plot_title) {
+make_genera_abundance <- function(data, treat_names, rep_names) {
   plot <- tidy_data(data, "G") %>%
     calc_prop() %>%
     filter_core() %>%
     treat_reps(treat_names, rep_names) %>%
     tidy_to_long() %>%
-    plot_genera_abundance(plot_title)
+    plot_genera_abundance()
   
   plot
 }
