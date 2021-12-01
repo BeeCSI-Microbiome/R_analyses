@@ -5,11 +5,11 @@
 
 
 # ---------------------------------- Imports -----------------------------------
-import('ggplot2', attach=T)
-import('tidyverse', attach=T)
-import('stringr', attach=T)
-import('metagenomeSeq', attach=T)
-import('dplyr', attach=T)
+import('ggplot2')
+#import('tidyverse')
+import('stringr')
+import('metagenomeSeq')
+import('dplyr')
 import('stats', 'setNames', 'aggregate')
 # ______________________________________________________________________________
 
@@ -36,22 +36,33 @@ format_count_table <- function(tb){
 }
 
 
-#export('filter_table')
-#filter_table <- function(tb, filter_list){
-  # Filters given taxa out of a table
-  # filter unwanted taxa out
-#  tb <- filter(tb, !name %in% filter_list)
-  # additional filter needed for uncollapsed clades
-  # TODO: is there a better way to do this?
-#  if('Apis mellifera' %in% filter_list){
-#    tb <- filter(tb, !str_detect(tb$lineage, 'Metazoa'))
-#  }
-#}
-
 export('filter_table')
 filter_table <- function(tb, filter_list){
   # Get only bacterial taxa
   tb <- filter(tb, str_detect(lineage, 'Bacteria'))
+}
+
+
+export('scaling_procedure')
+scaling_procedure <- function(tb, css_percentile){
+  # Given the formatted and filtered table, return a list of four ordered items:
+  # (Raw taxon table, raw clade table, scaled taxon table, scaled clade table)
+  
+  tb_raw_taxon <- drop_all_NA_rows(tb)
+  # Get clade counts. We calculate counts rather than use clade counts from Pavian
+  # in order to account for taxa that we filtered out
+  tb_raw_clade <- get_raw_clade_data(tb)
+  
+  # Perform the scaling
+  tb_scaled <- css_scale(tb, css_percentile)
+  
+  # Get scaled taxon table by dropping taxa rows with no counts in any sample
+  tb_scaled_taxon <- drop_all_NA_rows(tb_scaled)
+  
+  # Calculate scaled clade counts from scaled taxon counts 
+  tb_scaled_clade <- calc_clade_counts(tb_scaled)
+  
+  list(tb_raw_taxon, tb_raw_clade, tb_scaled_taxon, tb_scaled_clade)
 }
 
 
