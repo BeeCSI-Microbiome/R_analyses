@@ -2,8 +2,10 @@
 # Author(s): Jonathan Ho
 
 # Load Packages -----------------------------------------------------------
-packs <- c('dplyr', 'tidyr', 'ggplot2', 'vegan')
-lapply(packs, import, character.only=T)
+import('dplyr')
+import('tidyr')
+import('ggplot2')
+import('vegan')
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format for genus or species level
@@ -14,7 +16,7 @@ tidy_data <- function(d, r) {
     to_remove <- c("Apis mellifera")
   }
   clean_data <- filter(d, taxRank == r) %>%
-    select(-taxRank, -taxID, -Max, -lineage) %>%
+    select(-taxRank, -taxID, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     filter(!name %in% to_remove) %>%
     pivot_wider(names_from = "name", values_from = "value")%>%
@@ -112,10 +114,7 @@ plot_genera_abundance <- function(d, title) {
 # Returns a relative abundance plot at the genus level
 # see specific functions for details and assumptions
 export('make_genera_abundance')
-make_genera_abundance <- function(datapath, treat_names, rep_names, plot_title) {
-  data <- read.delim(file = datapath,
-                     header = TRUE,
-                     sep = '\t')
+make_genera_abundance <- function(data, treat_names, rep_names, plot_title) {
   plot <- tidy_data(data, "G") %>%
     calc_prop() %>%
     filter_core() %>%
@@ -160,10 +159,7 @@ plot_alpha <- function(d, alpha) {
 # Returns an alpha diversity plot using specific index
 # see specific functions for details and assumptions
 export("make_alpha_bars")
-make_alpha_bars <- function(datapath, treat_names, rep_names, alpha_index) {
-  data <- read.delim(file = datapath,
-                     header = TRUE,
-                     sep = '\t')
+make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
   plot <- tidy_data(data, "S") %>%
     calc_diversity_df() %>%
     treat_reps(treat_names, rep_names) %>%
