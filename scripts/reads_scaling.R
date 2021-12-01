@@ -62,7 +62,10 @@ scaling_procedure <- function(tb, css_percentile){
   # Calculate scaled clade counts from scaled taxon counts 
   tb_scaled_clade <- calc_clade_counts(tb_scaled)
   
-  list(tb_raw_taxon, tb_raw_clade, tb_scaled_taxon, tb_scaled_clade)
+  list(raw_taxon=tb_raw_taxon,
+       raw_clade=tb_raw_clade,
+       scaled_taxon=tb_scaled_taxon,
+       scaled_clade=tb_scaled_clade)
 }
 
 
