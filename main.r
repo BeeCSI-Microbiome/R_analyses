@@ -54,17 +54,12 @@ tables <- scaling$scaling_procedure(ct, css_percentile)
 treat_names <- c("Control", "CLO", "THI")
 rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 
-relative_abundance <- tables[["raw_clade"]] %>%
-  exploratory$make_genera_abundance(treat_names,
-                                    rep_names)
-relative_abundance
+exploratory$make_genera_abundance(tables[["raw_clade"]],
+                                  treat_names,
+                                  rep_names)
 
 # Alpha Diversity ---------------------------------------------------------
-# TODO: this will need to be defined
-alpha_index <- "Shannon"
+exploratory$make_all_alpha_plots(tables[["raw_clade"]],
+                                 treat_names,
+                                 rep_names)
 
-alpha_div <- tables[["raw_clade"]] %>%
-  exploratory$make_alpha_bars(treat_names,
-                              rep_names,
-                              alpha_index)
-alpha_div
