@@ -1,0 +1,1 @@
+This __results__ folder will contain some of the auto-generated results from the analyses.
