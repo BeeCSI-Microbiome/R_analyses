@@ -20,9 +20,9 @@ exploratory <- use('scripts/exploratory_functions.R')
 # ---------------------------------- Globals -----------------------------------
 # Input file paths:
 # Counts table (clade and taxon counts, uncollapsed)
-counts_path <- "../2020_ctx_kraken2/ctx_all_clade_taxa_reads_uncollapsed.tsv"
+counts_path <- "../2020_clo_kraken2/clo_all_clade_taxa_reads_uncollapsed.tsv"
 # Percentage table (clade, uncollapsed)
-percents_path <- "../2020_ctx_kraken2/ctx_kraken_all_percent_uncollapsed.tsv" 
+percents_path <- "../2020_clo_kraken2/clo_kraken_all_percent_uncollapsed.tsv" 
 
 # Core list (do not change)
 #filter_list <- c('root', 'unclassified') %>%
@@ -51,8 +51,8 @@ tables <- scaling$scaling_procedure(ct, css_percentile)
 
 # Relative Abundance ------------------------------------------------------
 # TODO: these details will need to be provided
-treat_names <- c("Control", "CLO", "THI")
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+treat_names <- c("Control", "Acute", "Sublethal")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
 
 exploratory$make_genera_abundance(tables[["raw_clade"]],
                                   treat_names,
@@ -62,4 +62,10 @@ exploratory$make_genera_abundance(tables[["raw_clade"]],
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
                                  treat_names,
                                  rep_names)
+
+
+# Beta Diversity ----------------------------------------------------------
+exploratory$make_nmds_plots(tables[["raw_clade"]],
+                            treat_names,
+                            rep_names)
 
