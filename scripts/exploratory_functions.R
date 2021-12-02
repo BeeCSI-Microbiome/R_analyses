@@ -8,23 +8,17 @@ import('ggplot2')
 import('vegan')
 
 # Wrangling Functions -----------------------------------------------------
-# cleans data into tidy format for genus or species level
+# cleans data into tidy format at r taxRank level
 tidy_data <- function(d, r) {
-  if(r=="G") {
-    # to_remove <- c("Apis")
-  } else if(r=="S") {
-    # to_remove <- c("Apis mellifera")
-  }
   clean_data <- filter(d, taxRank == r) %>%
     select(-taxRank, -taxID, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
-    # filter(!name %in% to_remove) %>%
     pivot_wider(names_from = "name", values_from = "value")%>%
     return(clean_data)
 }
 
 # calculates proportions and convert to data frame
-# ignores the first col (typically sample names)
+# subsets out the first col (typically sample names)
 calc_prop <- function(d){
   prop_data <- apply(d[,2:ncol(d)],
                      MARGIN = 1,
@@ -179,4 +173,59 @@ make_all_alpha_plots <- function(data, treat_names, rep_names) {
   ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
   ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
   ggsave(plot = plot_4, filename = 'results/alpha_div_evenness.png', bg = 'white')
+}
+
+
+# Beta Diversity ----------------------------------------------------------
+# calculates nmds using Bray Curtis distances using only taxa data
+calc_nmds <- function(data) {
+  set.seed(1)
+  nmds_data <- data %>%
+    as.matrix() %>%
+    metaMDS(distance = "bray") %>%
+    scores() %>%
+    as.data.frame()
+  
+  nmds_data
+}
+
+# plots the nmds
+plot_nmds <- function(data) {
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + 
+    geom_point(aes(shape = treatment, colour = replicate), size = 5) +
+    labs(title = "NMDS - Bray Curtis",
+         shape = "Treatment", 
+         colour = "Replicate")
+  
+  plot
+}
+
+# makes an nmds plot using tidy raw read data
+make_nmds <- function(data, treat_names, rep_names) {
+  
+  # calc_prop subsets data to remove samples column
+  nmds_data <- calc_prop(data) %>%
+    calc_nmds()
+  
+  # add back samples column
+  nmds_data$sample <- data$sample
+  
+  plot <- nmds_data %>%
+    treat_reps(treat_names, rep_names) %>%
+    plot_nmds()
+  
+  plot
+}
+
+
+# make and save nmds plots for genus and species levels using read data
+# uses raw reads to calculate proportions (for now)
+export("make_nmds_plots")
+make_nmds_plots <- function(data, treat_names, rep_names) {
+  genus_data <- tidy_data(data, "G")
+  speci_data <- tidy_data(data, "S")
+  genus_nmds <- make_nmds(genus_data, treat_names, rep_names)
+  speci_nmds <- make_nmds(speci_data, treat_names, rep_names)
+  ggsave(plot = genus_nmds, filename = 'results/genus_nmds.png', bg = 'white')
+  ggsave(plot = speci_nmds, filename = 'results/speci_nmds.png', bg = 'white')
 }
