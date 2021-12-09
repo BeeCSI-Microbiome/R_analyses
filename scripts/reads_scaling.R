@@ -6,7 +6,6 @@
 
 # ---------------------------------- Imports -----------------------------------
 import('ggplot2')
-#import('tidyverse')
 import('stringr')
 import('metagenomeSeq')
 import('dplyr')
@@ -37,7 +36,7 @@ format_count_table <- function(tb){
 
 
 export('filter_table')
-filter_table <- function(tb, filter_list){
+filter_table <- function(tb){
   # Get only bacterial taxa
   tb <- filter(tb, str_detect(lineage, 'Bacteria'))
 }
@@ -51,18 +50,19 @@ scaling_procedure <- function(tb, css_percentile){
   tb_raw_taxon <- drop_all_NA_rows(tb)
   # Get clade counts. We calculate counts rather than use clade counts from Pavian
   # in order to account for taxa that we filtered out
-  tb_raw_clade <- get_raw_clade_data(tb)
+  tb_raw_clade <- get_clade_data(tb)
   
   # Perform the scaling
-  tb_scaled <- css_scale(tb, css_percentile)
+  tb_scaled_list <- css_scale(tb, css_percentile)
   
   # Get scaled taxon table by dropping taxa rows with no counts in any sample
-  tb_scaled_taxon <- drop_all_NA_rows(tb_scaled)
+  tb_scaled_taxon <- drop_all_NA_rows(tb_scaled_list$tb_scaled)
   
   # Calculate scaled clade counts from scaled taxon counts 
-  tb_scaled_clade <- calc_clade_counts(tb_scaled)
+  tb_scaled_clade <- get_clade_data(tb_scaled_list$tb_scaled)
   
-  list(raw_taxon=tb_raw_taxon,
+  list(css_MRexp=tb_scaled_list$css_MRexp,
+       raw_taxon=tb_raw_taxon,
        raw_clade=tb_raw_clade,
        scaled_taxon=tb_scaled_taxon,
        scaled_clade=tb_scaled_clade)
@@ -79,8 +79,8 @@ drop_all_NA_rows <- function(tb){
 }
 
 
-export('get_raw_clade_data')
-get_raw_clade_data <- function(tb){
+export('get_clade_data')
+get_clade_data <- function(tb){
   # We calculate counts rather than use clade counts from Pavian in order to 
   # account for taxa that we filtered out
   tb <- calc_clade_counts(tb)
@@ -107,23 +107,26 @@ css_scale <- function(tb, css_percentile){
   # Set remaining NA values to 0
   counts_only[is.na(counts_only)] <- 0
   
+  css_MRexp <- newMRexperiment(counts_only)
+  
   # Perform CSS normalization
-  css_experiment <- cumNorm(newMRexperiment(counts_only), p = css_percentile)
+  css_MRexp <- cumNorm(css_MRexp, p = css_percentile)
   
   # Get scaled counts into table
-  scaled_counts <- data.frame(MRcounts(css_experiment, norm = TRUE))
+  scaled_counts <- data.frame(MRcounts(css_MRexp, norm = TRUE))
   scaled_counts <- tibble::rownames_to_column(scaled_counts, var = 'lineage')
   
   # Merge scaled_counts back with tb, overwriting count values
   tb <- merge(tb, scaled_counts, by = 'lineage', all = T)
   # Remove the unnormalized columns
   tb <- select(tb, !ends_with('taxonReads.x'))
+  names(tb) <- gsub(names(tb), pattern='(.*).y', replacement='\\1')
   
   # Another function, writes a visualization  'results/scaling_visualization.png'
   visualize_scaling(taxon_raw, scaled_counts, css_percentile)
   
   # return table
-  tb
+  list(tb_scaled=tb, css_MRexp=css_MRexp)
 }
 
 

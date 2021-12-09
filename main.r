@@ -20,15 +20,11 @@ exploratory <- use('scripts/exploratory_functions.R')
 # ---------------------------------- Globals -----------------------------------
 # Input file paths:
 # Counts table (clade and taxon counts, uncollapsed)
-counts_path <- "../2020_clo_kraken2/clo_all_clade_taxa_reads_uncollapsed.tsv"
+counts_path <- "data/all_clade_and_taxon_reads.tsv"
 # Percentage table (clade, uncollapsed)
-percents_path <- "../2020_clo_kraken2/clo_kraken_all_percent_uncollapsed.tsv" 
+percents_path <- "data/all_clades_percents.tsv" 
 
-# Core list (do not change)
-#filter_list <- c('root', 'unclassified') %>%
-# append any additional taxa (e.g. Apis mellifera)
-#  append(c('Apis mellifera'))
-
+# Percentile value used by CSS (default=0.5)
 css_percentile = 0.5
 # ______________________________________________________________________________
 
@@ -46,13 +42,18 @@ ct <- scaling$format_count_table(ct) %>%
   scaling$filter_table()
 
 tables <- scaling$scaling_procedure(ct, css_percentile)
+
+rt <- tables$raw_taxon
+rc <- tables$raw_clade
+st <- tables$scaled_taxon
+sc <- tables$scaled_clade
 # ______________________________________________________________________________
 
 
 # Relative Abundance ------------------------------------------------------
 # TODO: these details will need to be provided
-treat_names <- c("Control", "Acute", "Sublethal")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
+treat_names <- c("exposed", "unexposed")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 exploratory$make_genera_abundance(tables[["raw_clade"]],
                                   treat_names,
