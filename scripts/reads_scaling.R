@@ -1,8 +1,6 @@
 # Author(s): Lance Lansing
-# Oct 2021
+# Fall 2021
 # Normalization via Cumulative Sum Scaling of read count data
-# Input: table from Pavian with clades AND taxon counts, not collapsed
-
 
 # ---------------------------------- Imports -----------------------------------
 import('ggplot2')
@@ -12,36 +10,7 @@ import('dplyr')
 import('stats', 'setNames', 'aggregate')
 # ______________________________________________________________________________
 
-
-export("format_count_table")
-format_count_table <- function(tb){
-  # Performs some preliminary formatting on count table
-  
-  # Remove the "Max" columns
-  tb <- tb[, !(colnames(tb) %in% c("Max", "Max.1"))]
-  
-  # Taxa name formatting
-  tb$name <- gsub(".*<wbr>(.*)", "\\1", tb$name)
-  
-  # Lineage formatting
-  tb$lineage <- gsub("&nbsp;", " ", tb$lineage)
-  tb <-  tb %>%
-    mutate(lineage = case_when(
-      name == 'cellular organisms' ~ 'cellular organisms',
-      TRUE ~ str_c(lineage, name, sep = ">")))
-  
-  # Remove clade read columns 
-  tb %>% select(-contains("cladeReads"))
-}
-
-
-export('filter_table')
-filter_table <- function(tb){
-  # Get only bacterial taxa
-  tb <- filter(tb, str_detect(lineage, 'Bacteria'))
-}
-
-
+# --------------------------------- Functions ----------------------------------
 export('scaling_procedure')
 scaling_procedure <- function(tb, css_percentile){
   # Given the formatted and filtered table, return a list of four ordered items:
@@ -69,7 +38,6 @@ scaling_procedure <- function(tb, css_percentile){
 }
 
 
-export('drop_all_NA_rows')
 drop_all_NA_rows <- function(tb){
   # drops all rows from the table in which counts are NA for all samples
   counts_only <- as.data.frame(select(tb, contains('taxonReads')))
@@ -79,7 +47,6 @@ drop_all_NA_rows <- function(tb){
 }
 
 
-export('get_clade_data')
 get_clade_data <- function(tb){
   # We calculate counts rather than use clade counts from Pavian in order to 
   # account for taxa that we filtered out
@@ -89,9 +56,8 @@ get_clade_data <- function(tb){
 }
 
 
-export('css_scale')  
 css_scale <- function(tb, css_percentile){
-
+  
   # get table with only counts
   counts_only <- as.data.frame(select(tb, ends_with('taxonReads')))
   
@@ -209,7 +175,7 @@ visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile){
   ggsave(plot = scaling_vis, filename = 'results/scaling_visualization.png', bg = 'white')
 }
 
-export('calc_clade_counts')
+
 calc_clade_counts <- function(tb){
   # Reaggregate clade counts with normalized values
   

@@ -12,6 +12,7 @@ lapply(packages, library, character.only = TRUE)
 # ______________________________________________________________________________
 
 # ------------------------- Load Aux Files as Modules --------------------------
+ip <- use('scripts/initial_processing.R')
 scaling <- use('scripts/reads_scaling.R')
 exploratory <- use('scripts/exploratory_functions.R')
 # ______________________________________________________________________________
@@ -38,11 +39,12 @@ pt <- read_tsv(percents_path)
 
 # -------------------- Formatting, Filtering, and Scaling ----------------------
 # Format and perform filtering on the table
-ct <- scaling$format_count_table(ct) %>%
-  scaling$filter_table()
+ct <- ip$format_count_table(ct) %>%
+  ip$filter_table()
 
 tables <- scaling$scaling_procedure(ct, css_percentile)
 
+mrexp <- tables$css_MRexp
 rt <- tables$raw_taxon
 rc <- tables$raw_clade
 st <- tables$scaled_taxon
