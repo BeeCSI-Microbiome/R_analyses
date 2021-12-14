@@ -41,7 +41,7 @@ pt <- read_tsv(percents_path)
 # Format and perform filtering on the table
 ct <- ip$format_count_table(ct) %>%
   ip$filter_table() %>%
-  ip$group_lactobacillus()
+  ip$group_taxa_of_interest()
 
 tables <- scaling$scaling_procedure(ct, css_percentile)
 
