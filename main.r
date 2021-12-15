@@ -24,7 +24,9 @@ exploratory <- use('scripts/exploratory_functions.R')
 counts_path <- "../../2020_ctx_kraken2/ctx_all_clade_taxa_reads_uncollapsed.tsv"
 # Percentage table (clade, uncollapsed)
 percents_path <- "../../2020_ctx_kraken2/ctx_kraken_all_percent_uncollapsed.tsv" 
-
+# Treatment and replicate names
+treat_names <- c("Control", "CLO", "THI")
+rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 # Percentile value used by CSS (default=0.5)
 css_percentile = 0.5
 # ______________________________________________________________________________
@@ -54,10 +56,6 @@ sc <- tables$scaled_clade
 
 
 # Relative Abundance ------------------------------------------------------
-# TODO: these details will need to be provided
-treat_names <- c("Control", "CLO", "THI")
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
-
 exploratory$make_genera_abundance(tables[["raw_clade"]],
                                   treat_names,
                                   rep_names)
