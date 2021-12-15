@@ -225,7 +225,7 @@ calc_nmds <- function(data) {
 }
 
 # plots the nmds
-plot_nmds <- function(data, h_var) {
+plot_nmds <- function(data, h_var, plot_title) {
   hull_var <- sym(h_var)
   
   hull <- data %>%
@@ -236,7 +236,7 @@ plot_nmds <- function(data, h_var) {
     geom_point(shape = 21, size = 3) +
     geom_polygon(data = hull, alpha = 0.5) +
     aes(fill = !!hull_var) +
-    labs(title = "NMDS - Brays Curtis",
+    labs(title = plot_title,
          x = "NMDS1", 
          y = "NMDS2",
          fill = tools::toTitleCase(h_var))
@@ -245,7 +245,7 @@ plot_nmds <- function(data, h_var) {
 }
 
 # makes an nmds plot using tidy raw read data
-make_nmds <- function(data, treat_names, rep_names, h_var) {
+make_nmds <- function(data, treat_names, rep_names, h_var, plot_title) {
   
   # calc_prop subsets data to remove samples column
   nmds_data <- calc_prop(data) %>%
@@ -256,7 +256,7 @@ make_nmds <- function(data, treat_names, rep_names, h_var) {
   
   plot <- nmds_data %>%
     treat_reps(treat_names, rep_names) %>%
-    plot_nmds(h_var)
+    plot_nmds(h_var, plot_title)
   
   plot
 }
@@ -271,10 +271,26 @@ make_nmds_plots <- function(data, treat_names, rep_names) {
   speci_data <- filter(data, taxRank == "S") %>%
     tidy_data()
   
-  genus_treat_nmds <- make_nmds(genus_data, treat_names, rep_names, "treatment")
-  genus_reps_nmds <- make_nmds(genus_data, treat_names, rep_names, "replicate")
-  speci_treat_nmds <- make_nmds(speci_data, treat_names, rep_names, "treatment")
-  speci_reps_nmds <- make_nmds(speci_data, treat_names, rep_names, "replicate")
+  genus_treat_nmds <- make_nmds(genus_data,
+                                treat_names,
+                                rep_names,
+                                "treatment",
+                                "Genus NMDS - Brays Curtis")
+  genus_reps_nmds <- make_nmds(genus_data,
+                               treat_names,
+                               rep_names,
+                               "replicate",
+                               "Genus NMDS - Brays Curtis")
+  speci_treat_nmds <- make_nmds(speci_data,
+                                treat_names,
+                                rep_names,
+                                "treatment",
+                                "Species NMDS - Bray Curtis")
+  speci_reps_nmds <- make_nmds(speci_data,
+                               treat_names,
+                               rep_names,
+                               "replicate",
+                               "Species NMDS - Bray Curtis")
   
   ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
   ggsave(plot = genus_reps_nmds, filename = 'results/genus_reps_nmds.png', bg = 'white')
