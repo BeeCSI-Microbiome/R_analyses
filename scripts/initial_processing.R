@@ -20,6 +20,7 @@ bifido_list <- paste('Bifidobacterium', sep=' ', c('asteroides',
                                                    'coryneforme',
                                                    'indicum'))
 
+export("taxa_of_interest")
 taxa_of_interest <- c('Lactobacillus Firm-4',
                       'Lactobacillus Firm-5',
                       'Other Lactobacillus',

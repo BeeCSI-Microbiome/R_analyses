@@ -28,6 +28,12 @@ calc_prop <- function(d){
   return(prop_data)
 }
 
+# filters for taxa of interest
+# TODO: complete
+filter_interest <- function(d, interest_list) {
+  
+}
+
 # select for core taxa and add Others col
 filter_core <- function(d) {
   core_data <- select(d,
@@ -79,10 +85,10 @@ tidy_to_long <- function(d) {
 }
 
 
-
 # Relative Abundance ------------------------------------------------------
 # plots relative abundance data at genus level
 # uses the taxa, value, treatment, and replicate column from data
+# TODO: adjust for interest taxa functionality
 plot_genera_abundance <- function(d) {
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
@@ -118,6 +124,19 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
   
   plot
   ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
+}
+
+# Returns relative abundance for taxa of interest
+make_interest_abundance <- function(data, treat_names, rep_names, interest_list) {
+  plot <- filter_interest(data, interest_list) %>%
+    calc_prop() %>%
+    treat_reps(treat_names, rep_names) %>%
+    tidy_to_long() %>%
+    plot_genera_abundance()
+  
+  plot
+  ggsave(plot = plot, filename = 'results/interest_abundance.png', bg = 'white')
+  
 }
 
 # Alpha Diversity ---------------------------------------------------------
