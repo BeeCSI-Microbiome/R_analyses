@@ -11,7 +11,7 @@ import('vegan')
 # cleans data into tidy format at r taxRank level
 tidy_data <- function(d, r) {
   clean_data <- filter(d, taxRank == r) %>%
-    select(-taxRank, -taxID, -lineage) %>%
+    select(-taxRank, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")%>%
     return(clean_data)
