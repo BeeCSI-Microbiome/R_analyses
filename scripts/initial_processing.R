@@ -3,7 +3,6 @@
 # Normalization via Cumulative Sum Scaling of read count data
 
 
-
 # ---------------------------------- Imports -----------------------------------
 import('stringr')
 import('dplyr')
@@ -17,6 +16,9 @@ firm5_list <- paste('Lactobacillus', sep=' ', c('kimbladii',
                                            'melliventris',
                                            'helsingborgensis',
                                            'apis'))
+bifido_list <- paste('Bifidobacterium', sep=' ', c('asteroides',
+                                                   'coryneforme',
+                                                   'indicum'))
 
 taxa_of_interest <- c('Lactobacillus Firm-4',
                       'Lactobacillus Firm-5',
@@ -28,6 +30,7 @@ taxa_of_interest <- c('Lactobacillus Firm-4',
                       'Bartonella apis',
                       'Melissococcus plutonius',
                       'Paenibacillus larvae')
+
 # ______________________________________________________________________________
 
 # --------------------------------- Functions ----------------------------------
@@ -64,10 +67,47 @@ export('group_taxa_of_interest')
 group_taxa_of_interest <- function(tb){
   tb <- aggregate_unclassified(tb)
   tb <- group_lactobacillus(tb)
+  tb <- group_bifidobacterium(tb)
+}
+
+
+aggregate_unclassified <- function(tb){
+  # Drops 'unclassified <Genus>' taxa, aggregates their counts to the appropriate
+  # genus and modifies subtaxa lineage strings accordingly
+  
+  # Get list of names
+  unclass_names <- filter(tb, str_detect(name, 'unclassified'))$name
+  genera_names <- str_extract(unclass_names, '(?<=unclassified ).*')
+  
+  count_cols <- grepl('taxonReads', names(tb))
+  
+  for (nm in genera_names){
+    unclass_nm <- str_c('unclassified ', nm)
+    # Get counts of 'unclassified Genus' and 'Genus'
+    df <- rbind(tb[tb$name==nm, count_cols],
+                tb[tb$name==unclass_nm, count_cols])
+    
+    # Set counts for Genus to the sum of 'Genus' and 'unclassified Genus'
+    tb[tb$name==nm, count_cols] <- as.list(colSums(df, na.rm=T))
+    
+    # Update lineages of previous 'unclassified Genus' subtaxa
+    tb <-  tb %>%
+      mutate(lineage = case_when(
+        str_detect(lineage, unclass_nm) ~ gsub(str_c(unclass_nm, '>'),
+                                               '', lineage),
+        
+        TRUE ~ lineage))
+    
+    # Drop 'unclassified Genus' row
+    tb <- filter(tb, !name==unclass_nm)
+  }
+  tb
 }
 
 
 group_lactobacillus <- function(tb){
+  # Create the Firm-4, Firm-5 and Other Lactobacillus groupings and update the 
+  # lineage strings of member species
   firm4_name <- 'Lactobacillus Firm-4'
   firm5_name <- 'Lactobacillus Firm-5'
   other_name <- 'Other Lactobacillus'
@@ -119,35 +159,21 @@ reassign_wkb <- function(tb){
 }
 
 
-aggregate_unclassified <- function(tb){
-  # Drops 'unclassified <Genus>' taxa, aggregates their counts to the appropriate
-  # genus and modifies subtaxa lineage strings accordingly
+group_bifidobacterium <- function(tb){
+  # Create "Bifidiobacterium spp." grouping and update the lineage strings of
+  # member species
+  bifido_grp_name <- 'Bifidobacterium spp.'
+  bifido_str <- '>Bifidobacterium>'
+  genus_lineage <- tb[tb$name=='Bifidobacterium',]$lineage
   
-  # Get list of names
-  unclass_names <- filter(tb, str_detect(name, 'unclassified'))$name
-  genera_names <- str_extract(unclass_names, '(?<=unclassified ).*')
+  # Create rows for "Bifidobacterium spp."
+  tb <- tb %>% add_row(name=bifido_grp_name,
+                       taxRank='-',
+                       lineage=paste(genus_lineage, bifido_grp_name, sep='>'))
   
-  count_cols <- grepl('taxonReads', names(tb))
-  
-  for (nm in genera_names){
-    unclass_nm <- str_c('unclassified ', nm)
-    # Get counts of 'unclassified Genus' and 'Genus'
-    df <- rbind(tb[tb$name==nm, count_cols],
-                tb[tb$name==unclass_nm, count_cols])
-    
-    # Set counts for Genus to the sum of 'Genus' and 'unclassified Genus'
-    tb[tb$name==nm, count_cols] <- as.list(colSums(df, na.rm=T))
-    
-    # Update lineages of previous 'unclassified Genus' subtaxa
-    tb <-  tb %>%
-      mutate(lineage = case_when(
-        str_detect(lineage, unclass_nm) ~ gsub(str_c(unclass_nm, '>'),
-                                               '', lineage),
-
-        TRUE ~ lineage))
-    
-    # Drop 'unclassified Genus' row
-    tb <- filter(tb, !name==unclass_nm)
-  }
-  tb
+  # Update lineage strings of members
+  tb <-  tb %>% mutate(lineage = case_when(
+    name %in% bifido_list ~ 
+      gsub(bifido_str, str_c(bifido_str, bifido_grp_name, ">"), lineage),
+    TRUE ~ lineage))
 }
