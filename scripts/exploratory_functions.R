@@ -8,13 +8,13 @@ import('ggplot2')
 import('vegan')
 
 # Wrangling Functions -----------------------------------------------------
-# cleans data into tidy format at r taxRank level
-tidy_data <- function(d, r) {
-  clean_data <- filter(d, taxRank == r) %>%
-    select(-taxRank, -lineage) %>%
+# cleans data into tidy format
+tidy_data <- function(d) {
+  clean_data <- select(d, -taxRank, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
-    pivot_wider(names_from = "name", values_from = "value")%>%
-    return(clean_data)
+    pivot_wider(names_from = "name", values_from = "value")
+    
+  clean_data
 }
 
 # calculates proportions and convert to data frame
@@ -25,13 +25,8 @@ calc_prop <- function(d){
                      FUN = function(x) x / sum(x) * 100) %>%
     t() %>%
     as.data.frame()
-  return(prop_data)
-}
-
-# filters for taxa of interest
-# TODO: complete
-filter_interest <- function(d, interest_list) {
   
+  prop_data
 }
 
 # select for core taxa and add Others col
@@ -88,7 +83,6 @@ tidy_to_long <- function(d) {
 # Relative Abundance ------------------------------------------------------
 # plots relative abundance data at genus level
 # uses the taxa, value, treatment, and replicate column from data
-# TODO: adjust for interest taxa functionality
 plot_genera_abundance <- function(d) {
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
@@ -111,11 +105,30 @@ plot_genera_abundance <- function(d) {
                                      hjust = 1))
 }
 
+# plots relative abundance data for taxa of interest
+# uses the taxa, value, treatment, and replicate column from data
+plot_interest_abundance <- function(d) {
+  abundance_plot <- ggplot(d, 
+                           aes(x = treatment,
+                               y = value,
+                               fill = taxa)) +
+    geom_bar(stat = "identity", colour = "black") +
+    facet_grid(~replicate) +
+    labs(title = "Relative Abundance",
+         x = "Treatment",
+         y = "Percentage (%)",
+         fill = "Taxa") +
+    theme(axis.text.x = element_text(angle = 45,
+                                     vjust = 1,
+                                     hjust = 1))
+}
+
 # Returns a relative abundance plot at the genus level
 # see specific functions for details and assumptions
 export('make_genera_abundance')
 make_genera_abundance <- function(data, treat_names, rep_names) {
-  plot <- tidy_data(data, "G") %>%
+  plot <- filter(data, taxRank == "G") %>%
+    tidy_data() %>%
     calc_prop() %>%
     filter_core() %>%
     treat_reps(treat_names, rep_names) %>%
@@ -127,12 +140,14 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
 }
 
 # Returns relative abundance for taxa of interest
+export("make_interest_abundance")
 make_interest_abundance <- function(data, treat_names, rep_names, interest_list) {
-  plot <- filter_interest(data, interest_list) %>%
+  plot <- filter(data, name %in% interest_list) %>%
+    tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names) %>%
     tidy_to_long() %>%
-    plot_genera_abundance()
+    plot_interest_abundance()
   
   plot
   ggsave(plot = plot, filename = 'results/interest_abundance.png', bg = 'white')
@@ -173,7 +188,8 @@ plot_alpha <- function(d, alpha) {
 # Returns an alpha diversity plot using specific index
 # see specific functions for details and assumptions
 make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
-  plot <- tidy_data(data, "S") %>%
+  plot <- filter(data, taxRank == "S") %>%
+    tidy_data() %>%
     calc_diversity_df() %>%
     treat_reps(treat_names, rep_names) %>%
     plot_alpha(alpha_index)
@@ -250,8 +266,10 @@ make_nmds <- function(data, treat_names, rep_names, h_var) {
 # uses raw reads to calculate proportions (for now)
 export("make_nmds_plots")
 make_nmds_plots <- function(data, treat_names, rep_names) {
-  genus_data <- tidy_data(data, "G")
-  speci_data <- tidy_data(data, "S")
+  genus_data <- filter(data, taxRank == "G") %>%
+    tidy_data()
+  speci_data <- filter(data, taxRank == "S") %>%
+    tidy_data()
   
   genus_treat_nmds <- make_nmds(genus_data, treat_names, rep_names, "treatment")
   genus_reps_nmds <- make_nmds(genus_data, treat_names, rep_names, "replicate")

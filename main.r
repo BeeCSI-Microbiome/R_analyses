@@ -62,6 +62,11 @@ exploratory$make_genera_abundance(tables[["raw_clade"]],
                                   treat_names,
                                   rep_names)
 
+exploratory$make_interest_abundance(tables[["raw_clade"]],
+                                    treat_names,
+                                    rep_names,
+                                    ip$taxa_of_interest)
+
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
                                  treat_names,
