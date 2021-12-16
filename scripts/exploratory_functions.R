@@ -191,14 +191,16 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names, interest_list) 
 # Alpha Diversity ---------------------------------------------------------
 # calc alpha metrics
 # assumes data in tidy format and no extra columns
-calc_diversity_df <- function(x){
-  observed_richness <- specnumber(x[,2:ncol(x)])
-  invsimpson <- diversity(x[,2:ncol(x)], index="invsimpson")
-  simpson <- diversity(x[,2:ncol(x)], index="simpson")
-  shannon <- diversity(x[,2:ncol(x)], index="shannon")
+calc_diversity_df <- function(d){
+  sample_col <- select(d, "sample")
+  sample_data <- select(d, -"sample")
+  observed_richness <- specnumber(sample_data)
+  invsimpson <- diversity(sample_data, index="invsimpson")
+  simpson <- diversity(sample_data, index="simpson")
+  shannon <- diversity(sample_data, index="shannon")
   evenness <- shannon/log(observed_richness)
   div_df <- data.frame(
-    ID = x$sample,
+    ID = sample_col,
     Observed_Richness = observed_richness,
     Inv_Simpson = invsimpson,
     Simpson = simpson,
@@ -247,11 +249,14 @@ make_all_alpha_plots <- function(data, treat_names, rep_names) {
 # calculates nmds using Bray Curtis distances using only taxa data
 calc_nmds <- function(data) {
   set.seed(1)
-  nmds_data <- data %>%
+  sample_col <- select(data, "sample")
+  
+  nmds_data <- select(data, -"sample") %>%
     as.matrix() %>%
     metaMDS(distance = "bray") %>%
     scores() %>%
-    as.data.frame()
+    as.data.frame()%>%
+    mutate(sample_col)
   
   return(nmds_data)
 }
@@ -282,9 +287,6 @@ make_nmds <- function(data, treat_names, rep_names, h_var, plot_title) {
   # calc_prop subsets data to remove samples column
   nmds_data <- calc_prop(data) %>%
     calc_nmds()
-  
-  # add back samples column
-  nmds_data$sample <- data$sample
   
   plot <- nmds_data %>%
     treat_reps(treat_names, rep_names) %>%
