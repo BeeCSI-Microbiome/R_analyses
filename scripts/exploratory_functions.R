@@ -154,6 +154,30 @@ make_interest_abundance <- function(data, treat_names, rep_names, interest_list)
   
 }
 
+# separate bar plots for each treatment vs control
+# CTX experiment specific, not necessary for any other experiment
+export("make_separate_ctx_bars")
+make_separate_ctx_bars <- function(data, treat_names, rep_names, interest_list) {
+  clo_treat <- c("Control", "CLO")
+  thi_treat <- c("Control", "THI")
+  
+  process <- filter(data, name %in% interest_list) %>%
+    tidy_data() %>%
+    calc_prop() %>%
+    treat_reps(treat_names, rep_names) 
+  
+  clo_plot <- filter(process, treatment %in% clo_treat) %>%
+    tidy_to_long() %>%
+    plot_interest_abundance()
+  
+  thi_plot <- filter(process, treatment %in% thi_treat) %>%
+    tidy_to_long() %>%
+    plot_interest_abundance()
+  
+  ggsave(plot = clo_plot, filename = 'results/clo_abundance.png', bg = 'white')
+  ggsave(plot = thi_plot, filename = 'results/thi_abundance.png', bg = 'white')
+}
+
 # Alpha Diversity ---------------------------------------------------------
 # calc alpha metrics
 # assumes data in tidy format and no extra columns

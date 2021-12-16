@@ -65,6 +65,12 @@ exploratory$make_interest_abundance(tables[["raw_clade"]],
                                     rep_names,
                                     ip$taxa_of_interest)
 
+# Do not use, only for CTX experiment
+# exploratory$make_separate_ctx_bars(tables[["raw_clade"]],
+#                                    treat_names,
+#                                    rep_names,
+#                                    ip$taxa_of_interest)
+
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
                                  treat_names,
