@@ -127,16 +127,20 @@ plot_interest_abundance <- function(d) {
 # see specific functions for details and assumptions
 export('make_genera_abundance')
 make_genera_abundance <- function(data, treat_names, rep_names) {
-  plot <- filter(data, taxRank == "G") %>%
+  
+  plot_data <- filter(data, taxRank == "G") %>%
     tidy_data() %>%
     calc_prop() %>%
     filter_core() %>%
     treat_reps(treat_names, rep_names) %>%
-    tidy_to_long() %>%
-    plot_genera_abundance()
+    tidy_to_long()
   
-  plot
+  plot <- plot_genera_abundance(plot_data)
+  
   ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
+  utils::write.csv(plot_data,
+                   file = 'results/plot_data/genera_proportions.csv',
+                   row.names = F)
 }
 
 # Returns relative abundance for taxa of interest
