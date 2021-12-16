@@ -14,34 +14,38 @@ tidy_data <- function(d) {
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")
     
-  clean_data
+  return(clean_data)
 }
 
 # calculates proportions and convert to data frame
-# subsets out the first col (typically sample names)
 calc_prop <- function(d){
-  prop_data <- apply(d[,2:ncol(d)],
-                     MARGIN = 1,
-                     FUN = function(x) x / sum(x) * 100) %>%
+  sample_col <- select(d, "sample")
+  prop_data <- select(d, -"sample") %>%
+    apply(MARGIN = 1,
+          FUN = function(x) x / sum(x) * 100) %>%
     t() %>%
-    as.data.frame()
+    as.data.frame() %>%
+    mutate(sample_col)
   
-  prop_data
+  return(prop_data)
 }
 
-# select for core taxa and add Others col
+# add others column and select for core genera
 filter_core <- function(d) {
-  core_data <- select(d,
-                      "Gilliamella",
-                      "Snodgrassella",
-                      "Bifidobacterium",
-                      "Lactobacillus",
-                      "Frischella") %>%
-    mutate(Others = 100 - (Gilliamella +
-                             Snodgrassella + 
-                             Bifidobacterium +
-                             Lactobacillus +
-                             Frischella))
+  core_data <- mutate(d, 
+                      Others = 100 - (Gilliamella +
+                                        Snodgrassella + 
+                                        Bifidobacterium +
+                                        Lactobacillus +
+                                        Frischella)) %>%
+    select("Gilliamella",
+           "Snodgrassella",
+           "Bifidobacterium",
+           "Lactobacillus",
+           "Frischella",
+           "Others",
+           "sample")
+  return(core_data)
 }
 
 # add in treatment and replicate cols
@@ -50,6 +54,7 @@ filter_core <- function(d) {
 # Example below:
 # Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, 
 # Rep 2 TreatmentA, Rep 2 TreatmentB, Rep 2 TreatmentC, ...
+# Can double check that these are correct by comparing with samples col
 treat_reps <- function(d, treat_names, rep_names) {
   num_treats <- length(treat_names)
   num_reps <- length(rep_names)
@@ -70,10 +75,9 @@ treat_reps <- function(d, treat_names, rep_names) {
 }
 
 # convert tidy data into long for abundance plot setup
-# assumes last 2 cols are treatment and replicate, so ignored
 tidy_to_long <- function(d) {
   long_data <- pivot_longer(d,
-                            cols = 1:(ncol(d)-2),
+                            cols = !c("sample", "treatment", "replicate"),
                             names_to = "taxa",
                             values_to = "value")
   return(long_data)
@@ -146,16 +150,18 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
 make_interest_abundance <- function(data, treat_names, rep_names, interest_list) {
-  plot <- filter(data, name %in% interest_list) %>%
+  plot_data <- filter(data, name %in% interest_list) %>%
     tidy_data() %>%
     calc_prop() %>%
-    treat_reps(treat_names, rep_names) %>%
-    tidy_to_long() %>%
+    treat_reps(treat_names, rep_names)
+  
+  plot <- tidy_to_long(plot_data) %>%
     plot_interest_abundance()
   
-  plot
   ggsave(plot = plot, filename = 'results/interest_abundance.png', bg = 'white')
-  
+  utils::write.csv(plot_data,
+                   file = 'results/plot_data/interest_taxa_proportions.csv',
+                   row.names = F)
 }
 
 # separate bar plots for each treatment vs control
@@ -199,7 +205,7 @@ calc_diversity_df <- function(x){
     Shannon = shannon,
     Evenness = evenness
   )
-  div_df
+  return(div_df)
 }
 
 # plot alpha diversity
@@ -209,8 +215,6 @@ plot_alpha <- function(d, alpha) {
     geom_boxplot() +
     labs(title = "Alpha Diversity",
          x = "Treatment")
-  
-  alpha_plot
 }
 
 # Returns an alpha diversity plot using specific index
@@ -249,7 +253,7 @@ calc_nmds <- function(data) {
     scores() %>%
     as.data.frame()
   
-  nmds_data
+  return(nmds_data)
 }
 
 # plots the nmds
