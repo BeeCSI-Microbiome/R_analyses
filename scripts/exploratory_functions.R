@@ -30,8 +30,24 @@ tidy_data <- function(d) {
   return(clean_data)
 }
 
+# calculates and adds Other Bacteria col
+add_other_bac <- function(d) {
+  column_index <- grepl('Reads', names(d))
+  # Get the sum counts for taxa of interest, except Bacteria (domain), then 
+  # subtract their sum from Bacteria clade count. This leaves the Bacteria row
+  # representing all taxa of non-interest 
+  df <- d[d$name!='Bacteria', column_index]
+  d[d$name=='Bacteria', column_index] <-
+    d[d$name=='Bacteria', column_index] - as.list(colSums(df, na.rm=T))
+  # Change the grouping name
+  d[d$name=='Bacteria',]$name <- 'Other Bacteria'
+  
+  return(d)
+}
+
+
 # calculates proportions and convert to data frame
-calc_prop <- function(d){
+calc_prop <- function(d) {
   sample_col <- select(d, "sample")
   prop_data <- select(d, -"sample") %>%
     apply(MARGIN = 1,
@@ -163,19 +179,9 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
 make_interest_abundance <- function(data, treat_names, rep_names) {
-  plot_data <- filter(data, name %in% interest_list)
-  
-  column_index <- grepl('Reads', names(plot_data))
-  # Get the sum counts for taxa of interest, except Bacteria (domain), then 
-  # subtract their sum from Bacteria clade count. This leaves the Bacteria row
-  # representing all taxa of non-interest 
-  df <- plot_data[plot_data$name!='Bacteria', column_index]
-  plot_data[plot_data$name=='Bacteria', column_index] <-
-    plot_data[plot_data$name=='Bacteria', column_index] - as.list(colSums(df, na.rm=T))
-  # Change the grouping name
-  plot_data[plot_data$name=='Bacteria',]$name <- 'Other Bacteria'
-  
-  plot_data <- tidy_data(plot_data) %>%
+  plot_data <- filter(data, name %in% interest_list) %>%
+    add_other_bac() %>%
+    tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names)
   
