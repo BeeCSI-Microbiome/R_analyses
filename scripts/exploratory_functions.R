@@ -165,10 +165,11 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
     tidy_data() %>%
     calc_prop() %>%
     filter_core() %>%
-    treat_reps(treat_names, rep_names) %>%
-    tidy_to_long()
+    treat_reps(treat_names, rep_names)
+    
   
-  plot <- plot_genera_abundance(plot_data)
+  plot <- tidy_to_long(plot_data) %>%
+    plot_genera_abundance(plot_data)
   
   ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
   utils::write.csv(plot_data,
@@ -240,6 +241,20 @@ calc_diversity_df <- function(d){
   return(div_df)
 }
 
+# preps and saves alpha div data
+prep_alpha_data <- function(d, treat_names, rep_names) {
+  plot_data <- filter(d, taxRank == "S") %>%
+    tidy_data() %>%
+    calc_diversity_df() %>%
+    treat_reps(treat_names, rep_names)
+  
+  utils::write.csv(plot_data,
+                   file = 'results/plot_data/alpha_div.csv',
+                   row.names = F)
+  
+  return(plot_data)
+}
+
 # plot alpha diversity
 plot_alpha <- function(d, alpha) {
   index <- sym(alpha)
@@ -249,30 +264,39 @@ plot_alpha <- function(d, alpha) {
          x = "Treatment")
 }
 
-# Returns an alpha diversity plot using specific index
-# see specific functions for details and assumptions
-make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
-  plot <- filter(data, taxRank == "S") %>%
-    tidy_data() %>%
-    calc_diversity_df() %>%
-    treat_reps(treat_names, rep_names) %>%
-    plot_alpha(alpha_index)
-  
-  plot
-}
-
 # Makes all alpha div bar plots and saves them in results
 export("make_all_alpha_plots")
 make_all_alpha_plots <- function(data, treat_names, rep_names) {
-  plot_1 <- make_alpha_bars(data, treat_names, rep_names, "Shannon")
-  plot_2 <- make_alpha_bars(data, treat_names, rep_names, "Simpson")
-  plot_3 <- make_alpha_bars(data, treat_names, rep_names, "Inv_Simpson")
-  plot_4 <- make_alpha_bars(data, treat_names, rep_names, "Evenness")
+  # plot_data <- filter(data, taxRank == "S") %>%
+  #   tidy_data() %>%
+  #   calc_diversity_df() %>%
+  #   treat_reps(treat_names, rep_names)
+  
+  plot_data <- prep_alpha_data(data, treat_names, rep_names)
+  
+  plot_1 <- plot_alpha(plot_data, "Shannon")
+  plot_2 <- plot_alpha(plot_data, "Simpson")
+  plot_3 <- plot_alpha(plot_data, "Inv_Simpson")
+  plot_4 <- plot_alpha(plot_data, "Evenness")
+  
   ggsave(plot = plot_1, filename = 'results/alpha_div_shannon.png', bg = 'white')
   ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
   ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
   ggsave(plot = plot_4, filename = 'results/alpha_div_evenness.png', bg = 'white')
 }
+
+
+
+# make_all_alpha_plots <- function(data, treat_names, rep_names) {
+#   plot_1 <- make_alpha_bars(data, treat_names, rep_names, "Shannon")
+#   plot_2 <- make_alpha_bars(data, treat_names, rep_names, "Simpson")
+#   plot_3 <- make_alpha_bars(data, treat_names, rep_names, "Inv_Simpson")
+#   plot_4 <- make_alpha_bars(data, treat_names, rep_names, "Evenness")
+#   ggsave(plot = plot_1, filename = 'results/alpha_div_shannon.png', bg = 'white')
+#   ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
+#   ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
+#   ggsave(plot = plot_4, filename = 'results/alpha_div_evenness.png', bg = 'white')
+# }
 
 
 # Beta Diversity ----------------------------------------------------------
