@@ -1,5 +1,5 @@
 # Function scripts
-# Author(s): Jonathan Ho
+# Author(s): Jonathan Ho, Lance Lansing
 
 # Load Packages -----------------------------------------------------------
 import('dplyr')
@@ -17,7 +17,8 @@ interest_list <- c('Lactobacillus Firm-4',
                    'Frischella perrara',
                    'Bartonella apis',
                    'Melissococcus plutonius',
-                   'Paenibacillus larvae')
+                   'Paenibacillus larvae',
+                   'Bacteria')
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
@@ -162,8 +163,19 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
 make_interest_abundance <- function(data, treat_names, rep_names) {
-  plot_data <- filter(data, name %in% interest_list) %>%
-    tidy_data() %>%
+  plot_data <- filter(data, name %in% interest_list)
+  
+  column_index <- grepl('Reads', names(plot_data))
+  # Get the sum counts for taxa of interest, except Bacteria (domain), then 
+  # subtract their sum from Bacteria clade count. This leaves the Bacteria row
+  # representing all taxa of non-interest 
+  df <- plot_data[plot_data$name!='Bacteria', column_index]
+  plot_data[plot_data$name=='Bacteria', column_index] <-
+    plot_data[plot_data$name=='Bacteria', column_index] - as.list(colSums(df, na.rm=T))
+  # Change the grouping name
+  plot_data[plot_data$name=='Bacteria',]$name <- 'Other Bacteria'
+  
+  plot_data <- tidy_data(plot_data) %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names)
   

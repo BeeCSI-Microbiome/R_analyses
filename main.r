@@ -21,12 +21,12 @@ exploratory <- use('scripts/exploratory_functions.R')
 # ---------------------------------- Globals -----------------------------------
 # Input file paths:
 # Counts table (clade and taxon counts, uncollapsed)
-counts_path <- "../../2020_ctx_kraken2/ctx_all_clade_taxa_reads_uncollapsed.tsv"
+counts_path <- "../data/all_clade_and_taxon_reads.tsv"
 # Percentage table (clade, uncollapsed)
 percents_path <- "../../2020_ctx_kraken2/ctx_kraken_all_percent_uncollapsed.tsv" 
 # Treatment and replicate names
-treat_names <- c("Control", "CLO", "THI")
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+treat_names <- c("exposed", "unexposed")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 # Percentile value used by CSS (default=0.5)
 css_percentile = 0.5
 # ______________________________________________________________________________
