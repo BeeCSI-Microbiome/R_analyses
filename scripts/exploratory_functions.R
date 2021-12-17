@@ -203,6 +203,7 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
   thi_treat <- c("Control", "THI")
   
   process <- filter(data, name %in% interest_list) %>%
+    add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names) 
