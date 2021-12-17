@@ -16,10 +16,6 @@ firm5_list <- paste('Lactobacillus', sep=' ', c('kimbladii',
                                            'melliventris',
                                            'helsingborgensis',
                                            'apis'))
-bifido_list <- paste('Bifidobacterium', sep=' ', c('asteroides',
-                                                   'coryneforme',
-                                                   'indicum'))
-
 # ______________________________________________________________________________
 
 # --------------------------------- Functions ----------------------------------
@@ -56,7 +52,6 @@ export('group_taxa_of_interest')
 group_taxa_of_interest <- function(tb){
   tb <- aggregate_unclassified(tb)
   tb <- group_lactobacillus(tb)
-  tb <- group_bifidobacterium(tb)
 }
 
 
@@ -145,24 +140,4 @@ reassign_wkb <- function(tb){
   tb[tb$name==wkb8_str,]$lineage <- paste(helsing_lineage, wkb8_str, sep='>')
   tb[tb$name==wkb10_str,]$lineage <- paste(kulla_lineage, wkb10_str, sep='>')
   tb
-}
-
-
-group_bifidobacterium <- function(tb){
-  # Create "Bifidiobacterium spp." grouping and update the lineage strings of
-  # member species
-  bifido_grp_name <- 'Bifidobacterium spp.'
-  bifido_str <- '>Bifidobacterium>'
-  genus_lineage <- tb[tb$name=='Bifidobacterium',]$lineage
-  
-  # Create rows for "Bifidobacterium spp."
-  tb <- tb %>% add_row(name=bifido_grp_name,
-                       taxRank='-',
-                       lineage=paste(genus_lineage, bifido_grp_name, sep='>'))
-  
-  # Update lineage strings of members
-  tb <-  tb %>% mutate(lineage = case_when(
-    name %in% bifido_list ~ 
-      gsub(bifido_str, str_c(bifido_str, bifido_grp_name, ">"), lineage),
-    TRUE ~ lineage))
 }
