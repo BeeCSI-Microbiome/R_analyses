@@ -7,6 +7,18 @@ import('tidyr')
 import('ggplot2')
 import('vegan')
 
+# Global Variables --------------------------------------------------------
+interest_list <- c('Lactobacillus Firm-4',
+                   'Lactobacillus Firm-5',
+                   'Other Lactobacillus',
+                   'Gilliamella apicola',
+                   'Bifidobacterium spp.',
+                   'Snodgrassella alvi',
+                   'Frischella perrara',
+                   'Bartonella apis',
+                   'Melissococcus plutonius',
+                   'Paenibacillus larvae')
+
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
 tidy_data <- function(d) {
@@ -149,7 +161,7 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
 
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
-make_interest_abundance <- function(data, treat_names, rep_names, interest_list) {
+make_interest_abundance <- function(data, treat_names, rep_names) {
   plot_data <- filter(data, name %in% interest_list) %>%
     tidy_data() %>%
     calc_prop() %>%
@@ -167,7 +179,7 @@ make_interest_abundance <- function(data, treat_names, rep_names, interest_list)
 # separate bar plots for each treatment vs control
 # CTX experiment specific, not necessary for any other experiment
 export("make_separate_ctx_bars")
-make_separate_ctx_bars <- function(data, treat_names, rep_names, interest_list) {
+make_separate_ctx_bars <- function(data, treat_names, rep_names) {
   clo_treat <- c("Control", "CLO")
   thi_treat <- c("Control", "THI")
   
