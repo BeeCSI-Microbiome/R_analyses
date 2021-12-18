@@ -184,10 +184,11 @@ make_genera_abundance <- function(data, treat_names, rep_names) {
     tidy_data() %>%
     calc_prop() %>%
     filter_core() %>%
-    treat_reps(treat_names, rep_names) %>%
-    tidy_to_long()
+    treat_reps(treat_names, rep_names)
+    
   
-  plot <- plot_genera_abundance(plot_data)
+  plot <- tidy_to_long(plot_data) %>%
+    plot_genera_abundance(plot_data)
   
   ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
   utils::write.csv(plot_data,
@@ -222,6 +223,7 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
   thi_treat <- c("Control", "THI")
   
   process <- filter(data, name %in% interest_list) %>%
+    add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names) 
@@ -260,6 +262,20 @@ calc_diversity_df <- function(d){
   return(div_df)
 }
 
+# preps and saves alpha div data
+prep_alpha_data <- function(d, treat_names, rep_names) {
+  plot_data <- filter(d, taxRank == "S") %>%
+    tidy_data() %>%
+    calc_diversity_df() %>%
+    treat_reps(treat_names, rep_names)
+  
+  utils::write.csv(plot_data,
+                   file = 'results/plot_data/alpha_div.csv',
+                   row.names = F)
+  
+  return(plot_data)
+}
+
 # plot alpha diversity
 plot_alpha <- function(d, alpha) {
   index <- sym(alpha)
@@ -269,25 +285,16 @@ plot_alpha <- function(d, alpha) {
          x = "Treatment")
 }
 
-# Returns an alpha diversity plot using specific index
-# see specific functions for details and assumptions
-make_alpha_bars <- function(data, treat_names, rep_names, alpha_index) {
-  plot <- filter(data, taxRank == "S") %>%
-    tidy_data() %>%
-    calc_diversity_df() %>%
-    treat_reps(treat_names, rep_names) %>%
-    plot_alpha(alpha_index)
-  
-  plot
-}
-
 # Makes all alpha div bar plots and saves them in results
 export("make_all_alpha_plots")
 make_all_alpha_plots <- function(data, treat_names, rep_names) {
-  plot_1 <- make_alpha_bars(data, treat_names, rep_names, "Shannon")
-  plot_2 <- make_alpha_bars(data, treat_names, rep_names, "Simpson")
-  plot_3 <- make_alpha_bars(data, treat_names, rep_names, "Inv_Simpson")
-  plot_4 <- make_alpha_bars(data, treat_names, rep_names, "Evenness")
+  plot_data <- prep_alpha_data(data, treat_names, rep_names)
+  
+  plot_1 <- plot_alpha(plot_data, "Shannon")
+  plot_2 <- plot_alpha(plot_data, "Simpson")
+  plot_3 <- plot_alpha(plot_data, "Inv_Simpson")
+  plot_4 <- plot_alpha(plot_data, "Evenness")
+  
   ggsave(plot = plot_1, filename = 'results/alpha_div_shannon.png', bg = 'white')
   ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
   ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
@@ -296,7 +303,7 @@ make_all_alpha_plots <- function(data, treat_names, rep_names) {
 
 
 # Beta Diversity ----------------------------------------------------------
-# calculates nmds using Bray Curtis distances using only taxa data
+# calculates nmds using Bray Curtis dissimilarity using only taxa data
 calc_nmds <- function(data) {
   set.seed(1)
   sample_col <- select(data, "sample")
@@ -309,6 +316,16 @@ calc_nmds <- function(data) {
     mutate(sample_col)
   
   return(nmds_data)
+}
+
+# preps nmds data
+prep_nmds_data <- function(d, treat_names, rep_names) {
+  genus_data <- tidy_data(d) %>%
+    calc_prop() %>%
+    calc_nmds() %>%
+    treat_reps(treat_names, rep_names)
+
+  return(genus_data)
 }
 
 # plots the nmds
@@ -331,48 +348,32 @@ plot_nmds <- function(data, h_var, plot_title) {
   plot
 }
 
-# makes an nmds plot using tidy raw read data
-make_nmds <- function(data, treat_names, rep_names, h_var, plot_title) {
-  
-  # calc_prop subsets data to remove samples column
-  nmds_data <- calc_prop(data) %>%
-    calc_nmds()
-  
-  plot <- nmds_data %>%
-    treat_reps(treat_names, rep_names) %>%
-    plot_nmds(h_var, plot_title)
-  
-  plot
-}
-
-
 # make and save nmds plots for genus and species levels using read data
-# uses raw reads to calculate proportions (for now)
+# uses raw reads to calculate proportions
 export("make_nmds_plots")
 make_nmds_plots <- function(data, treat_names, rep_names) {
   genus_data <- filter(data, taxRank == "G") %>%
-    tidy_data()
+    prep_nmds_data(treat_names, rep_names)
   speci_data <- filter(data, taxRank == "S") %>%
-    tidy_data()
+    prep_nmds_data(treat_names, rep_names)
   
-  genus_treat_nmds <- make_nmds(genus_data,
-                                treat_names,
-                                rep_names,
+  utils::write.csv(genus_data,
+                   file = 'results/plot_data/genus_nmds.csv',
+                   row.names = F)
+  utils::write.csv(speci_data,
+                   file = 'results/plot_data/species_nmds.csv',
+                   row.names = F)
+  
+  genus_treat_nmds <- plot_nmds(genus_data,
                                 "treatment",
                                 "Genus NMDS - Brays Curtis")
-  genus_reps_nmds <- make_nmds(genus_data,
-                               treat_names,
-                               rep_names,
+  genus_reps_nmds <- plot_nmds(genus_data,
                                "replicate",
                                "Genus NMDS - Brays Curtis")
-  speci_treat_nmds <- make_nmds(speci_data,
-                                treat_names,
-                                rep_names,
+  speci_treat_nmds <- plot_nmds(speci_data,
                                 "treatment",
                                 "Species NMDS - Bray Curtis")
-  speci_reps_nmds <- make_nmds(speci_data,
-                               treat_names,
-                               rep_names,
+  speci_reps_nmds <- plot_nmds(speci_data,
                                "replicate",
                                "Species NMDS - Bray Curtis")
   
