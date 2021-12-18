@@ -6,6 +6,7 @@ import('dplyr')
 import('tidyr')
 import('ggplot2')
 import('vegan')
+import('stats', 'aggregate')
 
 # Global Variables --------------------------------------------------------
 interest_list <- c('Lactobacillus Firm-4',
@@ -112,6 +113,24 @@ tidy_to_long <- function(d) {
   return(long_data)
 }
 
+# Reorders table using taxa column
+order_taxa <- function(d) {
+  taxa_order <- get_taxa_order(d)
+  d$taxa <- factor(d$taxa, levels=taxa_order)
+  d
+}
+
+# Returns a list of taxa of interest in order of descending average percent
+# but with 'Other Bacteria' always last
+get_taxa_order <- function(d) {
+  pdlong <- filter(d, taxa!='Other Bacteria')
+  
+  pd_avg <- aggregate(pdlong[,c('value')], list(pdlong$taxa), mean) %>%
+    arrange(value)
+  
+  taxa_order <- append(pd_avg$Group.1, 'Other Bacteria')
+}
+
 
 # Relative Abundance ------------------------------------------------------
 # plots relative abundance data at genus level
@@ -184,8 +203,9 @@ make_interest_abundance <- function(data, treat_names, rep_names) {
     tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names)
-  
+    
   plot <- tidy_to_long(plot_data) %>%
+    order_taxa() %>%
     plot_interest_abundance()
   
   ggsave(plot = plot, filename = 'results/interest_abundance.png', bg = 'white')
