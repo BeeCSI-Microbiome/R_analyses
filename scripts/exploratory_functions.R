@@ -384,3 +384,45 @@ make_nmds_plots <- function(data, treat_names, rep_names) {
   ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
   ggsave(plot = speci_reps_nmds, filename = 'results/speci_reps_nmds.png', bg = 'white')
 }
+
+# testing nmds using only interest list
+export("interest_nmds")
+interest_nmds <- function(data, treat_names, rep_names) {
+  interest_data <- filter(data, name %in% interest_list) %>%
+    prep_nmds_data(treat_names, rep_names)
+  
+  utils::write.csv(interest_data,
+                   file = 'results/plot_data/interest_nmds.csv',
+                   row.names = F)
+  
+  int_treat_nmds <- plot_nmds(interest_data,
+                              "treatment",
+                              "Interest NMDS - Bray Curtis")
+  int_rep_nmds <- plot_nmds(interest_data,
+                            "replicate",
+                            "Interest NMDS - Bray Curtis")
+  
+  ggsave(plot = int_treat_nmds, filename = 'results/interest_treat_nmds.png', bg = 'white')
+  ggsave(plot = int_rep_nmds, filename = 'results/interest_rep_nmds.png', bg = 'white')
+}
+
+# testing nmds using all taxa data
+export("all_taxa_nmds")
+all_taxa_nmds <- function(data, treat_names, rep_names) {
+  all_data <- data %>%
+    prep_nmds_data(treat_names, rep_names)
+  
+  utils::write.csv(all_data,
+                   file = 'results/plot_data/all_taxa_nmds.csv',
+                   row.names = F)
+  
+  all_treat_nmds <- plot_nmds(all_data,
+                              "treatment",
+                              "All NMDS - Bray Curtis")
+  all_rep_nmds <- plot_nmds(all_data,
+                            "replicate",
+                            "All NMDS - Bray Curtis")
+  
+  ggsave(plot = all_treat_nmds, filename = 'results/all_treat_nmds.png', bg = 'white')
+  ggsave(plot = all_rep_nmds, filename = 'results/all_rep_nmds.png', bg = 'white')
+}

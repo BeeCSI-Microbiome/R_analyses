@@ -80,3 +80,12 @@ exploratory$make_nmds_plots(tables[["raw_clade"]],
                             treat_names,
                             rep_names)
 
+# Interest taxa nmds
+# exploratory$interest_nmds(tables[["raw_clade"]],
+#                           treat_names,
+#                           rep_names)
+
+# All taxa nmds, uses taxon reads to avoid multi-counting
+# exploratory$all_taxa_nmds(tables[["raw_taxon"]],
+#                           treat_names,
+#                           rep_names)
