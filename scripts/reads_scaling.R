@@ -11,7 +11,7 @@ import('stats', 'setNames', 'aggregate')
 # ______________________________________________________________________________
 
 # Variables ---------------------------------------------------------------
-name_regex <- ""
+sample_regex <- ""
 
 # --------------------------------- Functions ----------------------------------
 export('scaling_procedure')
@@ -112,17 +112,17 @@ visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile){
       values_to = "scaled_reads"
     )
   
-  # set name_regex for activity type
-  if (grep("(\\w+\\d\\d_\\w{2}).*$", taxon_norm$sample)) {
+  # set sample_regex for activity type
+  if (grepl("(\\w+\\d\\d_\\w{2}).*$", taxon_norm$sample[1])) {
     # activity 1
-    name_regex <- "(\\w+\\d\\d_\\w{2}).*$"
+    sample_regex <- "(\\w+\\d\\d_\\w{2}).*$"
   } else {
     # activity 2
-    name_regex <- "(\\w+\\d\\d(u|e)).*$"
+    sample_regex <- "(\\w+\\d\\d(u|e)).*$"
   }
   
   # Clean up the sample name entries
-  taxon_norm$sample <- gsub(name_regex, "\\1", taxon_norm$sample)
+  taxon_norm$sample <- gsub(sample_regex, "\\1", taxon_norm$sample)
   
   # Aggregate to get read sums by sample
   taxon_norm <- setNames(aggregate(taxon_norm$scaled_reads,
@@ -140,7 +140,7 @@ visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile){
     )
   
   # Clean up the sample name entries
-  taxon_raw$sample <- gsub(name_regex, "\\1", taxon_raw$sample)
+  taxon_raw$sample <- gsub(sample_regex, "\\1", taxon_raw$sample)
   # replace NA with 0s
   taxon_raw[is.na(taxon_raw)] <- 0
   # Aggregate to get sums by sample

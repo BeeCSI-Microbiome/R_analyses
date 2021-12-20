@@ -230,10 +230,12 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
   
   clo_plot <- filter(process, treatment %in% clo_treat) %>%
     tidy_to_long() %>%
+    order_taxa() %>%
     plot_interest_abundance()
   
   thi_plot <- filter(process, treatment %in% thi_treat) %>%
     tidy_to_long() %>%
+    order_taxa() %>%
     plot_interest_abundance()
   
   ggsave(plot = clo_plot, filename = 'results/clo_abundance.png', bg = 'white')
