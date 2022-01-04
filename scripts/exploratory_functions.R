@@ -330,8 +330,8 @@ prep_nmds_data <- function(d, treat_names, rep_names) {
   return(genus_data)
 }
 
-# plots the nmds
-plot_nmds <- function(data, h_var, plot_title) {
+# plots the nmds for activity 1 data
+plot_nmds_1 <- function(data, h_var, plot_title) {
   hull_var <- sym(h_var)
   
   hull <- data %>%
@@ -350,6 +350,60 @@ plot_nmds <- function(data, h_var, plot_title) {
   plot
 }
 
+# plots the nmds for activity 2 data
+plot_nmds_2 <- function(data, h_var, plot_title) {
+  hull_var <- sym(h_var)
+  
+  hull <- data %>%
+    group_by(!!hull_var) %>%
+    slice(grDevices::chull(NMDS1, NMDS2))
+  
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + 
+    geom_polygon(data = hull, alpha = 0.5) +
+    geom_point(aes(shape = replicate), size = 3) +
+    aes(fill = !!hull_var) +
+    labs(title = plot_title,
+         x = "NMDS1", 
+         y = "NMDS2",
+         shape = "Replicate",
+         fill = tools::toTitleCase(h_var))
+  
+  plot
+}
+
+# plots and saves nmds' with separate hulls for replicate and treatment
+act_1_nmds <- function(genus_data, speci_data) {
+  genus_treat_nmds <- plot_nmds_1(genus_data,
+                                "treatment",
+                                "Genus NMDS - Brays Curtis")
+  genus_reps_nmds <- plot_nmds_1(genus_data,
+                               "replicate",
+                               "Genus NMDS - Brays Curtis")
+  speci_treat_nmds <- plot_nmds_1(speci_data,
+                                "treatment",
+                                "Species NMDS - Bray Curtis")
+  speci_reps_nmds <- plot_nmds_1(speci_data,
+                               "replicate",
+                               "Species NMDS - Bray Curtis")
+  
+  ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
+  ggsave(plot = genus_reps_nmds, filename = 'results/genus_reps_nmds.png', bg = 'white')
+  ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
+  ggsave(plot = speci_reps_nmds, filename = 'results/speci_reps_nmds.png', bg = 'white')
+}
+
+# plots and saves nmds' for treatment only
+act_2_nmds <- function(genus_data, speci_data) {
+  genus_treat_nmds <- plot_nmds_2(genus_data,
+                                "treatment",
+                                "Genus NMDS - Brays Curtis")
+  speci_treat_nmds <- plot_nmds_2(speci_data,
+                                "treatment",
+                                "Species NMDS - Bray Curtis")
+  ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
+  ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
+}
+
 # make and save nmds plots for genus and species levels using read data
 # uses raw reads to calculate proportions
 export("make_nmds_plots")
@@ -366,23 +420,15 @@ make_nmds_plots <- function(data, treat_names, rep_names) {
                    file = 'results/plot_data/species_nmds.csv',
                    row.names = F)
   
-  genus_treat_nmds <- plot_nmds(genus_data,
-                                "treatment",
-                                "Genus NMDS - Brays Curtis")
-  genus_reps_nmds <- plot_nmds(genus_data,
-                               "replicate",
-                               "Genus NMDS - Brays Curtis")
-  speci_treat_nmds <- plot_nmds(speci_data,
-                                "treatment",
-                                "Species NMDS - Bray Curtis")
-  speci_reps_nmds <- plot_nmds(speci_data,
-                               "replicate",
-                               "Species NMDS - Bray Curtis")
+  # split act 1 and 2 nmds here, based on number of treatments
+  if (length(treat_names) > 2) {
+    # can make convex hulls for both replicate and treatment
+    act_1_nmds(genus_data, speci_data)
+  } else {
+    # can only make hulls for treatment
+    act_2_nmds(genus_data, speci_data)
+  }
   
-  ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
-  ggsave(plot = genus_reps_nmds, filename = 'results/genus_reps_nmds.png', bg = 'white')
-  ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
-  ggsave(plot = speci_reps_nmds, filename = 'results/speci_reps_nmds.png', bg = 'white')
 }
 
 # testing nmds using only interest list
@@ -395,10 +441,10 @@ interest_nmds <- function(data, treat_names, rep_names) {
                    file = 'results/plot_data/interest_nmds.csv',
                    row.names = F)
   
-  int_treat_nmds <- plot_nmds(interest_data,
+  int_treat_nmds <- plot_nmds_1(interest_data,
                               "treatment",
                               "Interest NMDS - Bray Curtis")
-  int_rep_nmds <- plot_nmds(interest_data,
+  int_rep_nmds <- plot_nmds_1(interest_data,
                             "replicate",
                             "Interest NMDS - Bray Curtis")
   
@@ -416,10 +462,10 @@ all_taxa_nmds <- function(data, treat_names, rep_names) {
                    file = 'results/plot_data/all_taxa_nmds.csv',
                    row.names = F)
   
-  all_treat_nmds <- plot_nmds(all_data,
+  all_treat_nmds <- plot_nmds_1(all_data,
                               "treatment",
                               "All NMDS - Bray Curtis")
-  all_rep_nmds <- plot_nmds(all_data,
+  all_rep_nmds <- plot_nmds_1(all_data,
                             "replicate",
                             "All NMDS - Bray Curtis")
   
