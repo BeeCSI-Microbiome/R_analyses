@@ -365,7 +365,7 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
     labs(title = plot_title,
          x = "NMDS1", 
          y = "NMDS2",
-         shapce = "Replicate",
+         shape = "Replicate",
          fill = tools::toTitleCase(h_var))
   
   plot
