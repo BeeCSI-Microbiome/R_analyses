@@ -1,2 +1,5 @@
 results/*
 !results/**/README.md
+.RData
+.Rhistory
+*.xlsx
