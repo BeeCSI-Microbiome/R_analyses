@@ -32,9 +32,8 @@ format_count_table <- function(tb){
   # Lineage formatting
   tb$lineage <- gsub("&nbsp;", " ", tb$lineage)
   tb <-  tb %>%
-    mutate(lineage = case_when(
-      name == 'cellular organisms' ~ 'cellular organisms',
-      TRUE ~ str_c(lineage, name, sep = ">")))
+    mutate(lineage = str_replace(str_c(lineage, name, sep = ">"),
+           "cellular organisms(>)*", ""))
   
   # Remove clade read columns 
   tb %>% select(-contains("cladeReads"))
