@@ -13,6 +13,8 @@ interest_list <- c('Lactobacillus Firm-4',
                    'Lactobacillus Firm-5',
                    'Other Lactobacillus',
                    'Gilliamella apicola',
+                   'Gilliamella apis',
+                   'Pantoea agglomerans',
                    'Bifidobacterium',
                    'Snodgrassella alvi',
                    'Frischella perrara',
@@ -58,24 +60,6 @@ calc_prop <- function(d) {
     mutate(sample_col)
   
   return(prop_data)
-}
-
-# add others column and select for core genera
-filter_core <- function(d) {
-  core_data <- mutate(d, 
-                      Others = 100 - (Gilliamella +
-                                        Snodgrassella + 
-                                        Bifidobacterium +
-                                        Lactobacillus +
-                                        Frischella)) %>%
-    select("Gilliamella",
-           "Snodgrassella",
-           "Bifidobacterium",
-           "Lactobacillus",
-           "Frischella",
-           "Others",
-           "sample")
-  return(core_data)
 }
 
 # add in treatment and replicate cols
@@ -133,29 +117,6 @@ get_taxa_order <- function(d) {
 
 
 # Relative Abundance ------------------------------------------------------
-# plots relative abundance data at genus level
-# uses the taxa, value, treatment, and replicate column from data
-plot_genera_abundance <- function(d) {
-  abundance_plot <- ggplot(d, 
-                           aes(x = treatment,
-                               y = value,
-                               fill = factor(taxa,
-                                             levels = c("Bifidobacterium",
-                                                        "Frischella",
-                                                        "Gilliamella",
-                                                        "Lactobacillus",
-                                                        "Snodgrassella",
-                                                        "Others")))) +
-    geom_bar(stat = "identity", colour = "black") +
-    facet_grid(~replicate) +
-    labs(title = "Relative Abundance",
-         x = "Treatment",
-         y = "Percentage (%)",
-         fill = "Genus") +
-    theme(axis.text.x = element_text(angle = 45,
-                                     vjust = 1,
-                                     hjust = 1))
-}
 
 # plots relative abundance data for taxa of interest
 # uses the taxa, value, treatment, and replicate column from data
@@ -173,27 +134,6 @@ plot_interest_abundance <- function(d) {
     theme(axis.text.x = element_text(angle = 45,
                                      vjust = 1,
                                      hjust = 1))
-}
-
-# Returns a relative abundance plot at the genus level
-# see specific functions for details and assumptions
-export('make_genera_abundance')
-make_genera_abundance <- function(data, treat_names, rep_names) {
-  
-  plot_data <- filter(data, taxRank == "G") %>%
-    tidy_data() %>%
-    calc_prop() %>%
-    filter_core() %>%
-    treat_reps(treat_names, rep_names)
-    
-  
-  plot <- tidy_to_long(plot_data) %>%
-    plot_genera_abundance(plot_data)
-  
-  ggsave(plot = plot, filename = 'results/relative_abundance.png', bg = 'white')
-  utils::write.csv(plot_data,
-                   file = 'results/plot_data/genera_proportions.csv',
-                   row.names = F)
 }
 
 # Returns relative abundance for taxa of interest

@@ -24,7 +24,8 @@ counts_path <- "../../2020_ctx_kraken2/ctx_all_clade_taxa_reads_uncollapsed.tsv"
  
 # Treatment and replicate names
 treat_names <- c("Control", "CLO", "THI")
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
+
 # Percentile value used by CSS (default=0.5)
 css_percentile = 0.5
 # ______________________________________________________________________________
@@ -57,15 +58,10 @@ exploratory$make_interest_abundance(tables[["raw_clade"]],
                                     treat_names,
                                     rep_names)
 
-# Old relative abundance, probably don't need anymore
-# exploratory$make_genera_abundance(tables[["raw_clade"]],
-#                                   treat_names,
-#                                   rep_names)
-
 # Do not use, only for CTX experiment
-# exploratory$make_separate_ctx_bars(tables[["raw_clade"]],
-#                                    treat_names,
-#                                    rep_names)
+exploratory$make_separate_ctx_bars(tables[["raw_clade"]],
+                                   treat_names,
+                                   rep_names)
 
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
