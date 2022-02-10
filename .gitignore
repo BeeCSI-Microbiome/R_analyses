@@ -1,5 +1,8 @@
 results/*
 !results/**/README.md
+aggregated_data_for_analysis/*
 .RData
 .Rhistory
 *.xlsx
+R_analyses.Rproj
+.Rproj.user
