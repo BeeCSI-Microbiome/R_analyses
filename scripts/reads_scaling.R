@@ -8,6 +8,7 @@ import('stringr')
 import('metagenomeSeq')
 import('dplyr')
 import('stats', 'setNames', 'aggregate')
+import("glue")
 # ______________________________________________________________________________
 
 # Variables ---------------------------------------------------------------
@@ -15,7 +16,7 @@ sample_regex <- ""
 
 # --------------------------------- Functions ----------------------------------
 export('scaling_procedure')
-scaling_procedure <- function(tb, css_percentile){
+scaling_procedure <- function(tb, css_percentile, dataset_name){
   # Given the formatted and filtered table, return a list of four ordered items:
   # (Raw taxon table, raw clade table, scaled taxon table, scaled clade table)
   
@@ -25,7 +26,7 @@ scaling_procedure <- function(tb, css_percentile){
   tb_raw_clade <- get_clade_data(tb)
   
   # Perform the scaling
-  tb_scaled_list <- css_scale(tb, css_percentile)
+  tb_scaled_list <- css_scale(tb, css_percentile, dataset_name)
   
   # Get scaled taxon table by dropping taxa rows with no counts in any sample
   tb_scaled_taxon <- drop_all_NA_rows(tb_scaled_list$tb_scaled)
@@ -59,7 +60,7 @@ get_clade_data <- function(tb){
 }
 
 
-css_scale <- function(tb, css_percentile){
+css_scale <- function(tb, css_percentile, dataset_name){
   
   # get table with only counts
   counts_only <- as.data.frame(select(tb, ends_with('taxonReads')))
@@ -92,14 +93,14 @@ css_scale <- function(tb, css_percentile){
   names(tb) <- gsub(names(tb), pattern='(.*).y', replacement='\\1')
   
   # Another function, writes a visualization  'results/scaling_visualization.png'
-  visualize_scaling(taxon_raw, scaled_counts, css_percentile)
+  visualize_scaling(taxon_raw, scaled_counts, css_percentile, dataset_name)
   
   # return table
   list(tb_scaled=tb, css_MRexp=css_MRexp)
 }
 
 
-visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile){
+visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile, dataset_name){
   # Prepare normalized data -
   taxon_norm <- select(merge(taxon_raw, scaled_counts, by = 'lineage', all = T),
                        !ends_with('taxonReads.x'))
@@ -184,7 +185,7 @@ visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile){
   
   scaling_vis
   
-  ggsave(plot = scaling_vis, filename = 'results/scaling_visualization.png', bg = 'white')
+  ggsave(plot = scaling_vis, filename = glue('results/{dataset_name}/scaling_visualization.png'), bg = 'white')
 }
 
 

@@ -7,8 +7,10 @@ import('tidyr')
 import('ggplot2')
 import('vegan')
 import('stats', 'aggregate')
+import("glue")
 
 # Global Variables --------------------------------------------------------
+# Taxa of interest - common
 interest_list <- c('Lactobacillus Firm-4',
                    'Lactobacillus Firm-5',
                    'Other Lactobacillus',
@@ -22,6 +24,9 @@ interest_list <- c('Lactobacillus Firm-4',
                    'Melissococcus plutonius',
                    'Paenibacillus larvae',
                    'Bacteria')
+
+# Add taxa specific to current dataset
+interest_list <- append(interest_list, c('Gilliamella apis'))
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
@@ -138,7 +143,7 @@ plot_interest_abundance <- function(d) {
 
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
-make_interest_abundance <- function(data, treat_names, rep_names) {
+make_interest_abundance <- function(data, treat_names, rep_names, dataset_name) {
   plot_data <- filter(data, name %in% interest_list) %>%
     add_other_bac() %>%
     tidy_data() %>%
@@ -149,9 +154,11 @@ make_interest_abundance <- function(data, treat_names, rep_names) {
     order_taxa() %>%
     plot_interest_abundance()
   
-  ggsave(plot = plot, filename = 'results/interest_abundance.png', bg = 'white')
+  ggsave(plot = plot,
+         filename = glue('results/{dataset_name}/interest_abundance.png'),
+         bg = 'white')
   utils::write.csv(plot_data,
-                   file = 'results/plot_data/interest_taxa_proportions.csv',
+                   file = glue('results/{dataset_name}/plot_data/interest_taxa_proportions.csv'),
                    row.names = F)
 }
 
@@ -210,12 +217,6 @@ prep_alpha_data <- function(d, treat_names, rep_names) {
     tidy_data() %>%
     calc_diversity_df() %>%
     treat_reps(treat_names, rep_names)
-  
-  utils::write.csv(plot_data,
-                   file = 'results/plot_data/alpha_div.csv',
-                   row.names = F)
-  
-  return(plot_data)
 }
 
 # plot alpha diversity
@@ -229,18 +230,22 @@ plot_alpha <- function(d, alpha) {
 
 # Makes all alpha div bar plots and saves them in results
 export("make_all_alpha_plots")
-make_all_alpha_plots <- function(data, treat_names, rep_names) {
+make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   plot_data <- prep_alpha_data(data, treat_names, rep_names)
+  
+  utils::write.csv(plot_data,
+                   file = glue('results/{dataset_name}/plot_data/alpha_div.csv'),
+                   row.names = F)
   
   plot_1 <- plot_alpha(plot_data, "Shannon")
   plot_2 <- plot_alpha(plot_data, "Simpson")
   plot_3 <- plot_alpha(plot_data, "Inv_Simpson")
   plot_4 <- plot_alpha(plot_data, "Evenness")
   
-  ggsave(plot = plot_1, filename = 'results/alpha_div_shannon.png', bg = 'white')
-  ggsave(plot = plot_2, filename = 'results/alpha_div_simpson.png', bg = 'white')
-  ggsave(plot = plot_3, filename = 'results/alpha_div_inv_simp.png', bg = 'white')
-  ggsave(plot = plot_4, filename = 'results/alpha_div_evenness.png', bg = 'white')
+  ggsave(plot = plot_1, filename = glue('results/{dataset_name}/alpha_div_shannon.png'), bg = 'white')
+  ggsave(plot = plot_2, filename = glue('results/{dataset_name}/alpha_div_simpson.png'), bg = 'white')
+  ggsave(plot = plot_3, filename = glue('results/{dataset_name}/alpha_div_inv_simp.png'), bg = 'white')
+  ggsave(plot = plot_4, filename = glue('results/{dataset_name}/alpha_div_evenness.png'), bg = 'white')
 }
 
 
@@ -312,7 +317,7 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
 }
 
 # plots and saves nmds' with separate hulls for replicate and treatment
-act_1_nmds <- function(genus_data, speci_data) {
+act_1_nmds <- function(genus_data, speci_data, dataset_name) {
   genus_treat_nmds <- plot_nmds_1(genus_data,
                                 "treatment",
                                 "Genus NMDS - Brays Curtis")
@@ -326,59 +331,65 @@ act_1_nmds <- function(genus_data, speci_data) {
                                "replicate",
                                "Species NMDS - Bray Curtis")
   
-  ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
-  ggsave(plot = genus_reps_nmds, filename = 'results/genus_reps_nmds.png', bg = 'white')
-  ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
-  ggsave(plot = speci_reps_nmds, filename = 'results/speci_reps_nmds.png', bg = 'white')
+  ggsave(plot = genus_treat_nmds, 
+         filename = glue('results/{dataset-name}/genus_treat_nmds.png'), bg = 'white')
+  ggsave(plot = genus_reps_nmds, 
+         filename = glue('results/{dataset-name}/genus_reps_nmds.png'), bg = 'white')
+  ggsave(plot = speci_treat_nmds, 
+         filename = glue('results/{dataset-name}/speci_treat_nmds.png'), bg = 'white')
+  ggsave(plot = speci_reps_nmds, 
+         filename = glue('results/{dataset-name}/speci_reps_nmds.png'), bg = 'white')
 }
 
 # plots and saves nmds' for treatment only
-act_2_nmds <- function(genus_data, speci_data) {
+act_2_nmds <- function(genus_data, speci_data, dataset_name) {
   genus_treat_nmds <- plot_nmds_2(genus_data,
                                 "treatment",
                                 "Genus NMDS - Brays Curtis")
   speci_treat_nmds <- plot_nmds_2(speci_data,
                                 "treatment",
                                 "Species NMDS - Bray Curtis")
-  ggsave(plot = genus_treat_nmds, filename = 'results/genus_treat_nmds.png', bg = 'white')
-  ggsave(plot = speci_treat_nmds, filename = 'results/speci_treat_nmds.png', bg = 'white')
+  ggsave(plot = genus_treat_nmds,
+         filename = glue('results/{dataset_name}/genus_treat_nmds.png'), bg = 'white')
+  ggsave(plot = speci_treat_nmds,
+         filename = glue('results/{dataset_name}/speci_treat_nmds.png'), bg = 'white')
 }
 
 # make and save nmds plots for genus and species levels using read data
 # uses raw reads to calculate proportions
 export("make_nmds_plots")
-make_nmds_plots <- function(data, treat_names, rep_names) {
+make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
   genus_data <- filter(data, taxRank == "G") %>%
     prep_nmds_data(treat_names, rep_names)
   speci_data <- filter(data, taxRank == "S") %>%
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(genus_data,
-                   file = 'results/plot_data/genus_nmds.csv',
+                   file = glue('results/{dataset_name}/plot_data/genus_nmds.csv'),
                    row.names = F)
   utils::write.csv(speci_data,
-                   file = 'results/plot_data/species_nmds.csv',
+                   file = glue('results/{dataset_name}/plot_data/species_nmds.csv'),
                    row.names = F)
   
   # split act 1 and 2 nmds here, based on number of treatments
   if (length(treat_names) > 2) {
     # can make convex hulls for both replicate and treatment
-    act_1_nmds(genus_data, speci_data)
+    act_1_nmds(genus_data, speci_data, dataset_name)
   } else {
     # can only make hulls for treatment
-    act_2_nmds(genus_data, speci_data)
+    act_2_nmds(genus_data, speci_data, dataset_name)
   }
   
 }
 
 # testing nmds using only interest list
 export("interest_nmds")
-interest_nmds <- function(data, treat_names, rep_names) {
+interest_nmds <- function(data, treat_names, rep_names, dataset_name) {
   interest_data <- filter(data, name %in% interest_list) %>%
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(interest_data,
-                   file = 'results/plot_data/interest_nmds.csv',
+                   file = glue('results/{dataset_name}/plot_data/interest_nmds.csv'),
                    row.names = F)
   
   int_treat_nmds <- plot_nmds_1(interest_data,
@@ -388,18 +399,20 @@ interest_nmds <- function(data, treat_names, rep_names) {
                             "replicate",
                             "Interest NMDS - Bray Curtis")
   
-  ggsave(plot = int_treat_nmds, filename = 'results/interest_treat_nmds.png', bg = 'white')
-  ggsave(plot = int_rep_nmds, filename = 'results/interest_rep_nmds.png', bg = 'white')
+  ggsave(plot = int_treat_nmds, 
+         filename = glue('results/{dataset_name}/interest_treat_nmds.png'), bg = 'white')
+  ggsave(plot = int_rep_nmds, 
+         filename = glue('results/{dataset_name}/interest_rep_nmds.png'), bg = 'white')
 }
 
 # testing nmds using all taxa data
 export("all_taxa_nmds")
-all_taxa_nmds <- function(data, treat_names, rep_names) {
+all_taxa_nmds <- function(data, treat_names, rep_names, dataset_name) {
   all_data <- data %>%
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(all_data,
-                   file = 'results/plot_data/all_taxa_nmds.csv',
+                   file = glue('results/{dataset_name}/plot_data/all_taxa_nmds.csv'),
                    row.names = F)
   
   all_treat_nmds <- plot_nmds_1(all_data,
@@ -409,6 +422,6 @@ all_taxa_nmds <- function(data, treat_names, rep_names) {
                             "replicate",
                             "All NMDS - Bray Curtis")
   
-  ggsave(plot = all_treat_nmds, filename = 'results/all_treat_nmds.png', bg = 'white')
-  ggsave(plot = all_rep_nmds, filename = 'results/all_rep_nmds.png', bg = 'white')
+  ggsave(plot = all_treat_nmds, filename = glue('results/{dataset_name}/all_treat_nmds.png'), bg = 'white')
+  ggsave(plot = all_rep_nmds, filename = glue('results/{dataset_name}/all_rep_nmds.png'), bg = 'white')
 }
