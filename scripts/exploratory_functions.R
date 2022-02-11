@@ -24,7 +24,6 @@ interest_list <- c('Lactobacillus Firm-4',
                    'Bacteria')
 
 # Add taxa specific to current dataset
-interest_list <- append(interest_list, c('Gilliamella apis'))
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
@@ -330,13 +329,13 @@ act_1_nmds <- function(genus_data, speci_data, dataset_name) {
                                "Species NMDS - Bray Curtis")
   
   ggsave(plot = genus_treat_nmds, 
-         filename = glue('results/{dataset-name}/genus_treat_nmds.png'), bg = 'white')
+         filename = glue('results/{dataset_name}/genus_treat_nmds.png'), bg = 'white')
   ggsave(plot = genus_reps_nmds, 
-         filename = glue('results/{dataset-name}/genus_reps_nmds.png'), bg = 'white')
+         filename = glue('results/{dataset_name}/genus_reps_nmds.png'), bg = 'white')
   ggsave(plot = speci_treat_nmds, 
-         filename = glue('results/{dataset-name}/speci_treat_nmds.png'), bg = 'white')
+         filename = glue('results/{dataset_name}/speci_treat_nmds.png'), bg = 'white')
   ggsave(plot = speci_reps_nmds, 
-         filename = glue('results/{dataset-name}/speci_reps_nmds.png'), bg = 'white')
+         filename = glue('results/{dataset_name}/speci_reps_nmds.png'), bg = 'white')
 }
 
 # plots and saves nmds' for treatment only
