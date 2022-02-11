@@ -34,14 +34,9 @@ ifelse(!dir.exists(glue("results/{dataset_name}/plot_data")),
 counts_path <- "../data/cor_2020/cor_all_taxa.tsv"
  
 # Treatment and replicate names
-<<<<<<< Updated upstream
-treat_names <- c("Control", "CLO", "THI")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
-
-=======
 treat_names <- c("exposed", "unexposed")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
->>>>>>> Stashed changes
+
 # Percentile value used by CSS (default=0.5)
 css_percentile = 0.5
 # ______________________________________________________________________________
@@ -79,17 +74,9 @@ scaled_clade <- tables$scaled_clade
 # Relative Abundance ------------------------------------------------------
 exploratory$make_interest_abundance(tables[["raw_clade"]],
                                     treat_names,
-<<<<<<< Updated upstream
-                                    rep_names)
-
-# Do not use, only for CTX experiment
-# exploratory$make_separate_ctx_bars(tables[["raw_clade"]],
-#                                    treat_names,
-#                                    rep_names)
-=======
                                     rep_names,
                                     dataset_name)
->>>>>>> Stashed changes
+
 
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
