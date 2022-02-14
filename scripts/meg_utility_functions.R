@@ -618,13 +618,13 @@ meg_fitZig <- function(data_list,
     }
     
     
-    col_selection <- as.integer(which(colSums(MRcounts(local_obj[[l]]) > 0) > 1))
+    col_selection <- as.integer(which(colSums(MRcounts(local_obj[[l]]) > 0) >= 1))
     local_obj[[l]] <- local_obj[[l]][, col_selection]
     
     mod_select <- model.matrix(eval(parse(text=data_mod)), data=pData(local_obj[[l]]))
     zero_mod_select <- zero_mod[col_selection, ]
     
-    cumNorm(local_obj[[l]])  # This is a placeholder for metagenomeSeq; we don't actually use these values
+    #cumNorm(local_obj[[l]])  # This is a placeholder for metagenomeSeq; we don't actually use these values
 
     tryCatch(
       {
@@ -645,10 +645,10 @@ meg_fitZig <- function(data_list,
                              block=pData(local_obj[[l]])[, random_effect_var])
         }
       },
-      # error=function(e) {
-      #   print(paste('Model failed to converge for ', data_type, ' ', data_names[l], ' ', analysis_name,
-      #               sep='', collapse=''))
-      # },
+      error=function(e) {
+        print(paste('Encountered an error performing fitZig for', data_type, ' ', data_names[l], ' ', analysis_name,
+                    sep='', collapse=''))
+      },
       finally={
         if( length(res) != l ) {
           next

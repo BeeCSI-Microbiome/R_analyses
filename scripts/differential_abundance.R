@@ -467,12 +467,13 @@ statistical_analyses = list(
 #   )
 # )
 
-source(here('scripts','meg_utility_functions.R'))
+# Get utility functions
+source(here::here('scripts','meg_utility_functions.R'))
 
 # Apply differential abundance analysis
 for (a in 1:length(statistical_analyses)){
-  meg_fitZig(data_list=kraken_taxon_norm_analytic[2:7],
-             data_names=kraken_taxon_names[2:7],
+  meg_fitZig(data_list=kraken_taxon_norm_analytic,
+             data_names=kraken_taxon_names,
              metadata=metadata,
              zero_mod=model.matrix(~1 + log(libSize(kraken_css$taxonReads))),
              data_mod=statistical_analyses[[a]]$model_matrix,
@@ -483,13 +484,12 @@ for (a in 1:length(statistical_analyses)){
              analysis_name=statistical_analyses[[a]]$name,
              analysis_subset=statistical_analyses[[a]]$subsets,
              data_type='Microbiome_taxonReads',
-             pval=0.1,
              top_hits=1000)
 }
 
 for (a in 1:length(statistical_analyses)){
-  meg_fitZig(data_list=kraken_clade_norm_analytic[2:7],
-             data_names=kraken_clade_names[2:7],
+  meg_fitZig(data_list=kraken_clade_norm_analytic,
+             data_names=kraken_clade_names,
              metadata=metadata,
              zero_mod=model.matrix(~1 + log(libSize(kraken_css$cladeReads))),
              data_mod=statistical_analyses[[a]]$model_matrix,
@@ -500,7 +500,6 @@ for (a in 1:length(statistical_analyses)){
              analysis_name=statistical_analyses[[a]]$name,
              analysis_subset=statistical_analyses[[a]]$subsets,
              data_type='Microbiome_cladeReads',
-             pval=0.1,
              top_hits=1000)
 }
 >>>>>>> Stashed changes
