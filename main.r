@@ -75,7 +75,8 @@ scaled_clade <- tables$scaled_clade
 exploratory$make_interest_abundance(tables[["raw_clade"]],
                                     treat_names,
                                     rep_names,
-                                    dataset_name)
+                                    dataset_name,
+                                    additional_taxa)
 
 
 # Alpha Diversity ---------------------------------------------------------
