@@ -9,7 +9,7 @@ import('vegan')
 import('stats', 'aggregate')
 import("glue")
 
-# Global Variables --------------------------------------------------------
+# Scope Variables --------------------------------------------------------
 # Taxa of interest - common
 interest_list <- c('Lactobacillus Firm-4',
                    'Lactobacillus Firm-5',
@@ -23,7 +23,6 @@ interest_list <- c('Lactobacillus Firm-4',
                    'Paenibacillus larvae',
                    'Bacteria')
 
-# Add taxa specific to current dataset
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
@@ -140,7 +139,10 @@ plot_interest_abundance <- function(d) {
 
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
-make_interest_abundance <- function(data, treat_names, rep_names, dataset_name) {
+make_interest_abundance <- function(data, treat_names, rep_names,
+                                    dataset_name, additional_taxa) {
+  interest_list <- append(interest_list, additional_taxa)
+  
   plot_data <- filter(data, name %in% interest_list) %>%
     add_other_bac() %>%
     tidy_data() %>%
