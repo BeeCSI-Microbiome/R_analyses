@@ -58,7 +58,8 @@ calc_prop <- function(d) {
           FUN = function(x) x / sum(x) * 100) %>%
     t() %>%
     as.data.frame() %>%
-    mutate(sample_col)
+    mutate(sample_col) %>%
+    relocate(sample)
   
   return(prop_data)
 }
@@ -261,7 +262,8 @@ calc_nmds <- function(data) {
     metaMDS(distance = "bray") %>%
     scores() %>%
     as.data.frame()%>%
-    mutate(sample_col)
+    mutate(sample_col) %>%
+    relocate(sample)
   
   return(nmds_data)
 }
@@ -305,8 +307,6 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
   hull <- data %>%
     group_by(!!hull_var) %>%
     slice(grDevices::chull(NMDS1, NMDS2))
-  
-
   
   plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + 
     geom_polygon(data = hull, alpha = 0.5) +
