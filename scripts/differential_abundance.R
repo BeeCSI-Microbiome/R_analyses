@@ -22,8 +22,6 @@ metadata_filepath = "../data/cor_2020/cor_2020_metadata.csv"
 metadata <- read.csv(metadata_filepath, header=T)
 
 # Output paths
-# Set the output directory for graphs:
-graph_output_dir = 'results/differential_abundance_graphs'
 # Set the output directory for statistics:
 stats_output_dir = 'results/differential_abundance_stats'
 
@@ -467,8 +465,6 @@ statistical_analyses = list(
 #   )
 # )
 
-# Get utility functions
-source(here::here('scripts','meg_utility_functions.R'))
 
 # Apply differential abundance analysis
 for (a in 1:length(statistical_analyses)){
@@ -484,6 +480,7 @@ for (a in 1:length(statistical_analyses)){
              analysis_name=statistical_analyses[[a]]$name,
              analysis_subset=statistical_analyses[[a]]$subsets,
              data_type='Microbiome_taxonReads',
+             pval=0.1,
              top_hits=1000)
 }
 
@@ -500,5 +497,6 @@ for (a in 1:length(statistical_analyses)){
              analysis_name=statistical_analyses[[a]]$name,
              analysis_subset=statistical_analyses[[a]]$subsets,
              data_type='Microbiome_cladeReads',
+             pval=0.1,
              top_hits=1000)
 }
