@@ -268,12 +268,36 @@ calc_nmds <- function(data) {
   return(nmds_data)
 }
 
+# runs anosim and saves results in a text file in results folder
+calc_ano <- function(d, group_data) {
+  ano_data <- select(d, -"sample") %>%
+    as.matrix()
+  
+  rep_ano <- anosim(ano_data,
+                    group_data$replicate,
+                    distance = "bray",
+                    permutations = 9999)
+  
+  treat_ano <- anosim(ano_data,
+                      group_data$treatment,
+                      distance = "bray",
+                      permutations = 9999)
+  
+  cat("ANOSIM results:\n", file = "results/anosim.txt")
+  utils::capture.output(rep_ano, file = "results/anosim.txt", append = T)
+  utils::capture.output(treat_ano, file = "results/anosim.txt", append = T)
+}
+
 # preps nmds data
 prep_nmds_data <- function(d, treat_names, rep_names) {
-  genus_data <- tidy_data(d) %>%
-    calc_prop() %>%
+  prop_data <- tidy_data(d) %>%
+    calc_prop()
+  
+  genus_data <- prop_data %>%
     calc_nmds() %>%
     treat_reps(treat_names, rep_names)
+  
+  calc_ano(prop_data, genus_data)
 
   return(genus_data)
 }
