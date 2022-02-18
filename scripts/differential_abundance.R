@@ -1,24 +1,26 @@
 # - Differential Abundance --------------------------------------------------
 
-setwd("~/beecsi/R_analyses")
+#setwd("~/beecsi/R_analyses")
 
 # ------------------------------- Package Setup --------------------------------
-packages <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
-              "ggplot2", "here", "PMCMRplus", "broom", "statmod")
-lapply(packages, library, character.only = TRUE)
+#packages <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
+#              "ggplot2", "here", "PMCMRplus", "broom", "statmod")
+#lapply(packages, library, character.only = TRUE)
 # Adapting one-health continuum code 
 # https://github.com/ropolomx/one_health_continuum/blob/master/bcrc_comparative_analysis.R
 
 # Get utility functions
-source(here::here('scripts','meg_utility_functions.R'))
+#source(here::here('scripts','meg_utility_functions.R')) # covered by scoping rules? 
 
 
 # Globals -----------------------------------------------------------------
 
+export("kraken_differential_abundance")
+kraken_differential_abundance <- function (dataset_name) {
 # File input paths
-kraken_analytical <- Sys.glob(here::here("aggregated_data_for_analysis", "cor_2020", "krakenAnalytical_*.csv"))
+kraken_analytical <- Sys.glob(here::here("aggregated_data_for_analysis", dataset_name, "krakenAnalytical_*.csv"))
 # Metadata
-metadata_filepath = "../data/cor_2020/cor_2020_metadata.csv"
+metadata_filepath = glue("../data/{dataset_name}/{dataset_name}_metadata.csv")
 metadata <- read.csv(metadata_filepath, header=T)
 
 # Output paths
@@ -499,4 +501,5 @@ for (a in 1:length(statistical_analyses)){
              data_type='Microbiome_cladeReads',
              pval=0.1,
              top_hits=1000)
+}
 }

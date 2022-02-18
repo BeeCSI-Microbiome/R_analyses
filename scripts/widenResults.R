@@ -2,29 +2,32 @@
 # matrix with both clade and taxon reads via Pavian.
 # Load packages -----------------------------------------------------------
 
-library(tidyverse)
-library(pavian)
-library(here)
+import("tidyverse")
+import("pavian")
+import("here")
 
 # Create directory for aggregated data ------------------------------------
 
-aggregated_dir <- here("aggregated_data_for_analysis")
+#aggregated_dir <- here("aggregated_data_for_analysis")
 
-ifelse(
-  !dir.exists(aggregated_dir), 
-  dir.create((aggregated_dir), mode='777'), 
-  FALSE
-)
+#ifelse(
+ # !dir.exists(aggregated_dir), 
+ # dir.create((aggregated_dir), mode='777'), 
+ # FALSE
+#)
 
 # Read Kraken reports with Pavian ---------------------------------------------
 
 # Obtain the filenames of all Kraken reports
 
-krakenReportPaths <- Sys.glob("../data/hbb_2020/kraken_reports/*_report.txt")
+#krakenReportPaths <- Sys.glob("../data/hbb_2020/kraken_reports/*_report.txt")
 
-krakenReportNames <- list.files(path = "../data/_2020/kraken_reports/", pattern = '*_report.txt')
+#krakenReportNames <- list.files(path = "../data/_2020/kraken_reports/", pattern = '*_report.txt')
+export("widen_results_function")
 
-krakenReportNames <- 
+widen_results_function <- function(krakenReportPaths) {
+
+krakenReportNames <- #does this need to be called? 
   krakenReportNames %>%
   map(function(x) str_replace(x, "\\_report.txt$", ""))
 
@@ -77,4 +80,4 @@ krakenAnalytical <- map(tax_columns, ~ make_kraken_analytical(krakenReportsPavia
 # Write matrices
 iwalk(krakenAnalytical,
       ~ write.csv(.x, here("aggregated_data_for_analysis", paste0("krakenAnalytical", "_",.y,".csv")), row.names = FALSE))
-
+}
