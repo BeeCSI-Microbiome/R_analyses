@@ -3,7 +3,23 @@
 ###############
 ## Utility functions that can be optionally used later for producing
 ## graphs and performing reshaping operations
-
+import('here')
+import('tidyverse')
+import('vegan')
+import('modules')
+import('glue')
+import('data.table')
+import('metagenomeSeq')
+import('ggplot2')
+import('here')
+import('PMCMRplus')
+import('broom')
+import('statmod')
+import('utils')
+import('purrr')
+import('stringr')
+import('tidyr')
+import('dplyr')
 # Call variables from parent scope
 `..` <- function (..., .env = sys.parent(2)) {
   get(deparse(substitute(...)), env = .env)

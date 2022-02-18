@@ -5,6 +5,12 @@
 import("tidyverse")
 import("pavian")
 import("here")
+import("glue")
+import('dplyr')
+import('purrr')
+import('stringr')
+import('tidyr')
+import('utils')
 
 # Create directory for aggregated data ------------------------------------
 
@@ -25,9 +31,9 @@ import("here")
 #krakenReportNames <- list.files(path = "../data/_2020/kraken_reports/", pattern = '*_report.txt')
 export("widen_results_function")
 
-widen_results_function <- function(krakenReportPaths) {
+widen_results_function <- function(krakenReportPaths, krakenReportNames, stats_output_dir) {
 
-krakenReportNames <- #does this need to be called? 
+krakenReportNames <-
   krakenReportNames %>%
   map(function(x) str_replace(x, "\\_report.txt$", ""))
 
@@ -52,7 +58,7 @@ krakenReportsPavian <-
 # Remove some top-level meta groupings
 taxa_to_remove <- c("u_unclassified", "-_root", "-_cellular organisms")
 
-# Merge reports
+# Merge reports # Error is likely happening here....
 krakenReportsPavianMerged <- 
   krakenReportsPavian %>%
   map_dfr(function(x){
@@ -79,5 +85,5 @@ krakenAnalytical <- map(tax_columns, ~ make_kraken_analytical(krakenReportsPavia
 
 # Write matrices
 iwalk(krakenAnalytical,
-      ~ write.csv(.x, here("aggregated_data_for_analysis", paste0("krakenAnalytical", "_",.y,".csv")), row.names = FALSE))
+      ~ write.csv(.x, here(stats_output_dir, paste0("krakenAnalytical", "_",.y,".csv")), row.names = FALSE))
 }

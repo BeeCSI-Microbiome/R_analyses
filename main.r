@@ -13,7 +13,6 @@ packages <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
 lapply(packages, library, character.only = TRUE)
 
 # Get utility functions <DA> ---------------------------------------------------
-source(here::here('scripts','meg_utility_functions.R'))
 
 # ______________________________________________________________________________
 

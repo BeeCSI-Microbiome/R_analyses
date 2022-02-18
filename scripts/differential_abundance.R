@@ -1,35 +1,53 @@
 # - Differential Abundance --------------------------------------------------
 
-#setwd("~/beecsi/R_analyses")
+setwd("~/Github/R_analyses")
 
 # ------------------------------- Package Setup --------------------------------
-#packages <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
+#import <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
 #              "ggplot2", "here", "PMCMRplus", "broom", "statmod")
-#lapply(packages, library, character.only = TRUE)
+
 # Adapting one-health continuum code 
 # https://github.com/ropolomx/one_health_continuum/blob/master/bcrc_comparative_analysis.R
 
 # Get utility functions
-#source(here::here('scripts','meg_utility_functions.R')) # covered by scoping rules? 
+import('here')
+import('tidyverse')
+import('vegan')
+import('modules')
+import('glue')
+import('data.table')
+import('metagenomeSeq')
+import('ggplot2')
+import('here')
+import('PMCMRplus')
+import('broom')
+import('statmod')
+import('utils')
+import('purrr')
+import('stringr')
+import('tidyr')
+import('dplyr')
+meg_functions <- use('scripts/meg_utility_functions.R')
+#source("~/Github/R_analyses/scripts/meg_utility_functions.R") # covered by scoping rules? 
 
 
 # Globals -----------------------------------------------------------------
 
 export("kraken_differential_abundance")
-kraken_differential_abundance <- function (dataset_name) {
+kraken_differential_abundance <- function (dataset_name, metadata_filepath, stats_output_dir, graph_output_dir, kraken_analytical) {
 # File input paths
-kraken_analytical <- Sys.glob(here::here("aggregated_data_for_analysis", dataset_name, "krakenAnalytical_*.csv"))
+kraken_analytical <- Sys.glob(here::here(stats_output_dir, "krakenAnalytical_*.csv"))
 # Metadata
-metadata_filepath = glue("../data/{dataset_name}/{dataset_name}_metadata.csv")
+#metadata_filepath = glue("../data/{dataset_name}/{dataset_name}_metadata.csv")
 metadata <- read.csv(metadata_filepath, header=T)
 
 # Output paths
 # Set the output directory for statistics:
-stats_output_dir = 'results/differential_abundance_stats'
+#stats_output_dir = 'results/differential_abundance_stats'
 
 # Create output directories if they don't exist
-ifelse(!dir.exists(graph_output_dir), dir.create((graph_output_dir), mode='777'), FALSE)
-ifelse(!dir.exists(stats_output_dir), dir.create((stats_output_dir), mode='777'), FALSE)
+#ifelse(!dir.exists(graph_output_dir), dir.create((graph_output_dir), mode='777'), FALSE)
+#ifelse(!dir.exists(stats_output_dir), dir.create((stats_output_dir), mode='777'), FALSE)
 
 
 # Main --------------------------------------------------------------------
@@ -364,7 +382,7 @@ kraken_clade_raw_analytic <- map(
 
 kraken_taxon_norm_melted <- imap_dfr(
   kraken_taxon_norm_analytic,
-  ~ melt_dt(MRcounts(.x), .y)
+  ~ meg_functions$melt_dt(MRcounts(.x), .y)
 ) # getting warning: binding character and factor vector, coercing into character vector
 
 kraken_taxon_raw_melted <- imap_dfr(
