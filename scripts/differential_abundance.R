@@ -34,7 +34,7 @@ meg_functions <- use('scripts/meg_utility_functions.R')
 # Globals -----------------------------------------------------------------
 
 export("kraken_differential_abundance")
-kraken_differential_abundance <- function (dataset_name, metadata_filepath, stats_output_dir, graph_output_dir, kraken_analytical) {
+kraken_differential_abundance <- function (dataset_name, metadata_filepath, stats_output_dir, graph_output_dir) {
 # File input paths
 kraken_analytical <- Sys.glob(here::here(stats_output_dir, "krakenAnalytical_*.csv"))
 # Metadata

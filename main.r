@@ -73,7 +73,7 @@ css_percentile = 0.5
 # Output paths <DA>; can these just be placed in internal functions? 
 # Set the output directory for statistics:
 stats_output_dir = glue('results/{dataset_name}/differential_abundance_stats')
-stats_output_dir = glue('results/{dataset_name}/differential_abundance_graphs')
+graph_output_dir = glue('results/{dataset_name}/differential_abundance_graphs')
 
 # Create output directories if they don't exist
 ifelse(!dir.exists(graph_output_dir), dir.create((graph_output_dir), mode='777'), FALSE)
@@ -93,7 +93,7 @@ reads_summary <- rsummary$create_summary_table(ct, dataset_name)
 
 # Differential Abundance ----------------------------------------------------------
 widen_results$widen_results_function(krakenReportPaths, krakenReportNames, stats_output_dir)
-differential_abundance_kraken$kraken_differential_abundance(dataset_name, metadata_filepath, stats_output_dir, graph_output_dir, kraken_analytical)
+differential_abundance_kraken$kraken_differential_abundance(dataset_name, metadata_filepath, stats_output_dir, graph_output_dir)
 
 
 # -------------------- Formatting, Filtering, and Scaling ----------------------
