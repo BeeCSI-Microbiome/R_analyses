@@ -269,7 +269,8 @@ calc_nmds <- function(data) {
 }
 
 # runs anosim and saves results in a text file in results folder
-calc_ano <- function(d, group_data) {
+calc_ano <- function(d, group_data, taxa_level, dataset_name) {
+  heading <- paste(taxa_level, "ANOSIM results:\n")
   ano_data <- select(d, -"sample") %>%
     as.matrix()
   
@@ -283,13 +284,13 @@ calc_ano <- function(d, group_data) {
                       distance = "bray",
                       permutations = 9999)
   
-  cat("ANOSIM results:\n", file = "results/anosim.txt")
-  utils::capture.output(rep_ano, file = "results/anosim.txt", append = T)
-  utils::capture.output(treat_ano, file = "results/anosim.txt", append = T)
+  cat(heading, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+  utils::capture.output(rep_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+  utils::capture.output(treat_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
 }
 
-# preps nmds data
-prep_nmds_data <- function(d, treat_names, rep_names) {
+# preps nmds data and runs ANOSIM on data
+prep_and_ano <- function(d, treat_names, rep_names, taxa_level, dataset_name) {
   prop_data <- tidy_data(d) %>%
     calc_prop()
   
@@ -297,7 +298,7 @@ prep_nmds_data <- function(d, treat_names, rep_names) {
     calc_nmds() %>%
     treat_reps(treat_names, rep_names)
   
-  calc_ano(prop_data, group_data)
+  calc_ano(prop_data, group_data, taxa_level, dataset_name)
 
   return(group_data)
 }
@@ -389,9 +390,9 @@ act_2_nmds <- function(genus_data, speci_data, dataset_name) {
 export("make_nmds_plots")
 make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
   genus_data <- filter(data, taxRank == "G") %>%
-    prep_nmds_data(treat_names, rep_names)
+    prep_and_ano(treat_names, rep_names, "Genus", dataset_name)
   speci_data <- filter(data, taxRank == "S") %>%
-    prep_nmds_data(treat_names, rep_names)
+    prep_and_ano(treat_names, rep_names, "Species", dataset_name)
   
   utils::write.csv(genus_data,
                    file = glue('results/{dataset_name}/plot_data/genus_nmds.csv'),
@@ -409,48 +410,4 @@ make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
     act_2_nmds(genus_data, speci_data, dataset_name)
   }
   
-}
-
-# testing nmds using only interest list
-export("interest_nmds")
-interest_nmds <- function(data, treat_names, rep_names, dataset_name) {
-  interest_data <- filter(data, name %in% interest_list) %>%
-    prep_nmds_data(treat_names, rep_names)
-  
-  utils::write.csv(interest_data,
-                   file = glue('results/{dataset_name}/plot_data/interest_nmds.csv'),
-                   row.names = F)
-  
-  int_treat_nmds <- plot_nmds_1(interest_data,
-                              "treatment",
-                              "Interest NMDS - Bray Curtis")
-  int_rep_nmds <- plot_nmds_1(interest_data,
-                            "replicate",
-                            "Interest NMDS - Bray Curtis")
-  
-  ggsave(plot = int_treat_nmds, 
-         filename = glue('results/{dataset_name}/interest_treat_nmds.png'), bg = 'white')
-  ggsave(plot = int_rep_nmds, 
-         filename = glue('results/{dataset_name}/interest_rep_nmds.png'), bg = 'white')
-}
-
-# testing nmds using all taxa data
-export("all_taxa_nmds")
-all_taxa_nmds <- function(data, treat_names, rep_names, dataset_name) {
-  all_data <- data %>%
-    prep_nmds_data(treat_names, rep_names)
-  
-  utils::write.csv(all_data,
-                   file = glue('results/{dataset_name}/plot_data/all_taxa_nmds.csv'),
-                   row.names = F)
-  
-  all_treat_nmds <- plot_nmds_1(all_data,
-                              "treatment",
-                              "All NMDS - Bray Curtis")
-  all_rep_nmds <- plot_nmds_1(all_data,
-                            "replicate",
-                            "All NMDS - Bray Curtis")
-  
-  ggsave(plot = all_treat_nmds, filename = glue('results/{dataset_name}/all_treat_nmds.png'), bg = 'white')
-  ggsave(plot = all_rep_nmds, filename = glue('results/{dataset_name}/all_rep_nmds.png'), bg = 'white')
 }
