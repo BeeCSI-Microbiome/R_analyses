@@ -20,14 +20,18 @@ import('purrr')
 import('stringr')
 import('tidyr')
 import('dplyr')
+import('reshape2')
+import('Biobase')
+import('stats')
+import('limma')
 # Call variables from parent scope
 `..` <- function (..., .env = sys.parent(2)) {
   get(deparse(substitute(...)), env = .env)
 }
 
 # Misc reshape function for data table
-melt_dt <- function(D, level_id) {
-  temp <- melt(D, variable.name='Sample', value.name='Normalized_Count')
+melt_dt <- function(D, level_id) { # where is it pulling D, and level_id
+  temp <- melt(D, variable.name='Sample', value.name='Normalized_Count') # error occurs here. 
   names(temp) <- c('Name', 'ID', 'Normalized_Count')
   temp <- data.table(cbind(rep(level_id, nrow(temp)), temp))
   names(temp)[1] <- 'Level_ID'

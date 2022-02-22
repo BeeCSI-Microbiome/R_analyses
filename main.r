@@ -73,10 +73,9 @@ css_percentile = 0.5
 # Output paths <DA>; can these just be placed in internal functions? 
 # Set the output directory for statistics:
 stats_output_dir = glue('results/{dataset_name}/differential_abundance_stats')
-graph_output_dir = glue('results/{dataset_name}/differential_abundance_graphs')
+graph_output_dir = stats_output_dir # jenky fix 
 
 # Create output directories if they don't exist
-ifelse(!dir.exists(graph_output_dir), dir.create((graph_output_dir), mode='777'), FALSE)
 ifelse(!dir.exists(stats_output_dir), dir.create((stats_output_dir), mode='777'), FALSE)
 # ______________________________________________________________________________
 

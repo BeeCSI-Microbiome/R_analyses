@@ -27,6 +27,10 @@ import('purrr')
 import('stringr')
 import('tidyr')
 import('dplyr')
+import('reshape2')
+import('Biobase')
+import('stats')
+import('limma')
 meg_functions <- use('scripts/meg_utility_functions.R')
 #source("~/Github/R_analyses/scripts/meg_utility_functions.R") # covered by scoping rules? 
 
@@ -382,22 +386,22 @@ kraken_clade_raw_analytic <- map(
 
 kraken_taxon_norm_melted <- imap_dfr(
   kraken_taxon_norm_analytic,
-  ~ meg_functions$melt_dt(MRcounts(.x), .y)
+  ~ meg_functions$melt_dt(MRcounts(.x), .y) # check if some of this is correct or not? 
 ) # getting warning: binding character and factor vector, coercing into character vector
 
 kraken_taxon_raw_melted <- imap_dfr(
   kraken_taxon_raw_analytic,
-  ~ melt_dt(MRcounts(.x), .y)
+  ~ meg_functions$melt_dt(MRcounts(.x), .y)
 ) # getting warning: binding character and factor vector, coercing into character vector
 
 kraken_clade_norm_melted <- imap_dfr(
   kraken_clade_norm_analytic,
-  ~ melt_dt(MRcounts(.x), .y)
+  ~ meg_functions$melt_dt(MRcounts(.x), .y)
 )
 
 kraken_clade_raw_melted <- imap_dfr(
   kraken_clade_raw_analytic,
-  ~ melt_dt(MRcounts(.x), .y)
+  ~ meg_functions$melt_dt(MRcounts(.x), .y)
 ) # getting warning: binding character and factor vector, coercing into character vector
 
 
@@ -488,7 +492,7 @@ statistical_analyses = list(
 
 # Apply differential abundance analysis
 for (a in 1:length(statistical_analyses)){
-  meg_fitZig(data_list=kraken_taxon_norm_analytic,
+  meg_functions$meg_fitZig(data_list=kraken_taxon_norm_analytic,
              data_names=kraken_taxon_names,
              metadata=metadata,
              zero_mod=model.matrix(~1 + log(libSize(kraken_css$taxonReads))),
@@ -505,7 +509,7 @@ for (a in 1:length(statistical_analyses)){
 }
 
 for (a in 1:length(statistical_analyses)){
-  meg_fitZig(data_list=kraken_clade_norm_analytic,
+  meg_functions$meg_fitZig(data_list=kraken_clade_norm_analytic,
              data_names=kraken_clade_names,
              metadata=metadata,
              zero_mod=model.matrix(~1 + log(libSize(kraken_css$cladeReads))),
