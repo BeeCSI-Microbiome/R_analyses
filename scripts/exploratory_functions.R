@@ -293,13 +293,13 @@ prep_nmds_data <- function(d, treat_names, rep_names) {
   prop_data <- tidy_data(d) %>%
     calc_prop()
   
-  genus_data <- prop_data %>%
+  group_data <- prop_data %>%
     calc_nmds() %>%
     treat_reps(treat_names, rep_names)
   
-  calc_ano(prop_data, genus_data)
+  calc_ano(prop_data, group_data)
 
-  return(genus_data)
+  return(group_data)
 }
 
 # plots the nmds for activity 1 data
