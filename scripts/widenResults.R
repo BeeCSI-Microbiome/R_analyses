@@ -68,4 +68,5 @@ widen_results_function <- function(krakenReportPaths, krakenReportNames, outdir)
   iwalk(krakenAnalytical,
         ~ write.csv(.x, glue("{outdir}/krakenAnalytical_{.y}.csv"),
                     row.names = FALSE))
+  krakenAnalytical
 }
