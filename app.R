@@ -21,12 +21,14 @@ ui <- fluidPage(
             accept = c(".txt"),
             multiple = TRUE),
   
-  tableOutput(outputId = "k_analytic")
+  tableOutput(outputId = "k_analytic"),
+  
+  textOutput("widen_results_message")
 )
 
 server <- function(input, output, session) {
   
-  output$k_analytic <- renderTable({
+  k_analytic <- observe({
     req(input$dataset_name,
         input$kraken_files)
     
@@ -39,6 +41,8 @@ server <- function(input, output, session) {
                                          input$kraken_files$name,
                                          kraken_matrix_dir)
   })
+  
+  # output$k_analytic <- k_analytic
   
   # ct <- reactive({
   #   req(input$count_file)
