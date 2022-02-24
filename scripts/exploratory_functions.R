@@ -123,8 +123,6 @@ get_taxa_order <- function(d) {
 # plots relative abundance data for taxa of interest
 # uses the taxa, value, treatment, and replicate column from data
 plot_interest_abundance <- function(d) {
-  d$treatment <-  d$treatment %>%
-    factor(levels = c("unexposed", "exposed"))
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
                                y = value,
@@ -325,8 +323,6 @@ plot_nmds_1 <- function(data, h_var, plot_title) {
 
 # plots the nmds for activity 2 data
 plot_nmds_2 <- function(data, h_var, plot_title) {
-  data$treatment <-  data$treatment %>%
-    factor(levels = c("unexposed", "exposed"))
   hull_var <- sym(h_var)
   
   hull <- data %>%
