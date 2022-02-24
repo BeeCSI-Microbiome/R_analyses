@@ -124,8 +124,6 @@ get_taxa_order <- function(d) {
 # plots relative abundance data for taxa of interest
 # uses the taxa, value, treatment, and replicate column from data
 plot_interest_abundance <- function(d) {
-  d$treatment <-  d$treatment %>%
-    factor(levels = c("unexposed", "exposed"))
   abundance_plot <- ggplot(d, 
                            aes(x = treatment,
                                y = value,
@@ -170,7 +168,11 @@ make_interest_abundance <- function(data, treat_names, rep_names,
 # separate bar plots for each treatment vs control
 # CTX experiment specific, not necessary for any other experiment
 export("make_separate_ctx_bars")
-make_separate_ctx_bars <- function(data, treat_names, rep_names) {
+make_separate_ctx_bars <- function(data, treat_names, rep_names,
+                                   dataset_name, additional_taxa) {
+  
+  interest_list <- append(interest_list, additional_taxa)
+  
   clo_treat <- c("Control", "CLO")
   thi_treat <- c("Control", "THI")
   
@@ -190,8 +192,8 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
     order_taxa() %>%
     plot_interest_abundance()
   
-  ggsave(plot = clo_plot, filename = "results/clo_abundance.png", bg = "white")
-  ggsave(plot = thi_plot, filename = "results/thi_abundance.png", bg = "white")
+  ggsave(plot = clo_plot, filename = glue("results/{dataset_name}/clo_abundance.png"), bg = "white")
+  ggsave(plot = thi_plot, filename = glue("results/{dataset_name}/thi_abundance.png"), bg = "white")
 }
 
 # Alpha Diversity ---------------------------------------------------------
@@ -216,12 +218,24 @@ calc_diversity_df <- function(d){
   return(div_df)
 }
 
-# preps and saves alpha div data
+# preps alpha div data
 prep_alpha_data <- function(d, treat_names, rep_names) {
   plot_data <- filter(d, taxRank == "S") %>%
     tidy_data() %>%
     calc_diversity_df() %>%
     treat_reps(treat_names, rep_names)
+}
+
+# runs and saves kruskal wallis on shannon index for both 
+# replicates and treatments
+alpha_stats <- function(d, dataset_name) {
+  heading <- "Shannon Index - Kruskal Wallis Results:\n"
+  rep_alpha <- stats::kruskal.test(Shannon~replicate, d)
+  treat_alpha <- stats::kruskal.test(Shannon~treatment, d)
+  
+  cat(heading, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+  utils::capture.output(rep_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+  utils::capture.output(treat_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
 }
 
 # plot alpha diversity
@@ -233,7 +247,7 @@ plot_alpha <- function(d, alpha) {
          x = "Treatment")
 }
 
-# Makes all alpha div bar plots and saves them in results
+# Makes all alpha div bar plots, calculates simple stats and saves them in results
 export("make_all_alpha_plots")
 make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   plot_data <- prep_alpha_data(data, treat_names, rep_names)
@@ -241,6 +255,8 @@ make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   utils::write.csv(plot_data,
                    file = glue("results/{dataset_name}/plot_data/alpha_div.csv"),
                    row.names = F)
+  
+  alpha_stats(plot_data, dataset_name)
   
   plot_1 <- plot_alpha(plot_data, "Shannon")
   plot_2 <- plot_alpha(plot_data, "Simpson")
@@ -271,14 +287,39 @@ calc_nmds <- function(data) {
   return(nmds_data)
 }
 
-# preps nmds data
-prep_nmds_data <- function(d, treat_names, rep_names) {
-  genus_data <- tidy_data(d) %>%
-    calc_prop() %>%
+# runs anosim and saves results in a text file in results folder
+calc_ano <- function(d, group_data, taxa_level, dataset_name) {
+  heading <- paste(taxa_level, "ANOSIM results:\n")
+  ano_data <- select(d, -"sample") %>%
+    as.matrix()
+  
+  rep_ano <- anosim(ano_data,
+                    group_data$replicate,
+                    distance = "bray",
+                    permutations = 9999)
+  
+  treat_ano <- anosim(ano_data,
+                      group_data$treatment,
+                      distance = "bray",
+                      permutations = 9999)
+  
+  cat(heading, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+  utils::capture.output(rep_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+  utils::capture.output(treat_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+}
+
+# preps nmds data and runs ANOSIM on data
+prep_and_ano <- function(d, treat_names, rep_names, taxa_level, dataset_name) {
+  prop_data <- tidy_data(d) %>%
+    calc_prop()
+  
+  group_data <- prop_data %>%
     calc_nmds() %>%
     treat_reps(treat_names, rep_names)
   
-  return(genus_data)
+  calc_ano(prop_data, group_data, taxa_level, dataset_name)
+
+  return(group_data)
 }
 
 # plots the nmds for activity 1 data
@@ -303,8 +344,6 @@ plot_nmds_1 <- function(data, h_var, plot_title) {
 
 # plots the nmds for activity 2 data
 plot_nmds_2 <- function(data, h_var, plot_title) {
-  data$treatment <-  data$treatment %>%
-    factor(levels = c("unexposed", "exposed"))
   hull_var <- sym(h_var)
   
   hull <- data %>%
@@ -368,9 +407,9 @@ act_2_nmds <- function(genus_data, speci_data, dataset_name) {
 export("make_nmds_plots")
 make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
   genus_data <- filter(data, taxRank == "G") %>%
-    prep_nmds_data(treat_names, rep_names)
+    prep_and_ano(treat_names, rep_names, "Genus", dataset_name)
   speci_data <- filter(data, taxRank == "S") %>%
-    prep_nmds_data(treat_names, rep_names)
+    prep_and_ano(treat_names, rep_names, "Species", dataset_name)
   
   utils::write.csv(genus_data,
                    file = glue("results/{dataset_name}/plot_data/genus_nmds.csv"),
@@ -387,49 +426,4 @@ make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
     # can only make hulls for treatment
     act_2_nmds(genus_data, speci_data, dataset_name)
   }
-  
-}
-
-# testing nmds using only interest list
-export("interest_nmds")
-interest_nmds <- function(data, treat_names, rep_names, dataset_name) {
-  interest_data <- filter(data, name %in% interest_list) %>%
-    prep_nmds_data(treat_names, rep_names)
-  
-  utils::write.csv(interest_data,
-                   file = glue("results/{dataset_name}/plot_data/interest_nmds.csv"),
-                   row.names = F)
-  
-  int_treat_nmds <- plot_nmds_1(interest_data,
-                                "treatment",
-                                "Interest NMDS - Bray Curtis")
-  int_rep_nmds <- plot_nmds_1(interest_data,
-                              "replicate",
-                              "Interest NMDS - Bray Curtis")
-  
-  ggsave(plot = int_treat_nmds, 
-         filename = glue("results/{dataset_name}/interest_treat_nmds.png"), bg = "white")
-  ggsave(plot = int_rep_nmds, 
-         filename = glue("results/{dataset_name}/interest_rep_nmds.png"), bg = "white")
-}
-
-# testing nmds using all taxa data
-export("all_taxa_nmds")
-all_taxa_nmds <- function(data, treat_names, rep_names, dataset_name) {
-  all_data <- data %>%
-    prep_nmds_data(treat_names, rep_names)
-  
-  utils::write.csv(all_data,
-                   file = glue("results/{dataset_name}/plot_data/all_taxa_nmds.csv"),
-                   row.names = F)
-  
-  all_treat_nmds <- plot_nmds_1(all_data,
-                                "treatment",
-                                "All NMDS - Bray Curtis")
-  all_rep_nmds <- plot_nmds_1(all_data,
-                              "replicate",
-                              "All NMDS - Bray Curtis")
-  
-  ggsave(plot = all_treat_nmds, filename = glue("results/{dataset_name}/all_treat_nmds.png"), bg = "white")
-  ggsave(plot = all_rep_nmds, filename = glue("results/{dataset_name}/all_rep_nmds.png"), bg = "white")
 }

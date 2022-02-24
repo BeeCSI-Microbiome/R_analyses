@@ -20,11 +20,11 @@ library(vegan)
 library(ggplot2)
 
 # TODO: change file path
-datapath <- '../2020_clo_kraken2/clo_kraken_all_rawread_uncollapsed.tsv'
+datapath <- '../../2020_clo_kraken2/clo_kraken_all_rawread_uncollapsed.tsv'
 # TODO: setup treatment info
 treat_names <- c("Control", "Acute", "Sublethal")
 # TODO: setup replicate info
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 
 # read data
@@ -117,9 +117,17 @@ nmds_plot
 
 # stats: ANOSIM
 
-ano = anosim(taxa_mat,
-             nmds_data$replicate,
-             distance = "bray",
-             permutations = 9999)
+rep_ano <- anosim(taxa_mat,
+                 nmds_data$replicate,
+                 distance = "bray",
+                 permutations = 9999)
 
-ano
+treat_ano <- anosim(taxa_mat,
+                 nmds_data$treatment,
+                 distance = "bray",
+                 permutations = 9999)
+
+sink('results/test.txt')
+rep_ano
+treat_ano
+sink()
