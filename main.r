@@ -16,9 +16,6 @@ packages <- c("tidyverse",
               "metagenomeSeq",
               "ggplot2",
               "glue")
-              # "PMCMRplus",
-              # "broom",
-              # "statmod")
 lapply(packages, library, character.only = TRUE)
 
 # ______________________________________________________________________________
@@ -76,6 +73,37 @@ rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 # Percentile value used by CSS (default = 0.5)
 css_percentile = 0.5
+
+# Statistical analyses list for DA
+statistical_analyses = list(
+  # ACTIVITY 2 - CORN (likely applicable to most activity 2 datasets)
+  # Description: , control for replicate using random effect
+  list(
+    name = "Exposure",
+    subsets = list(),
+    model_matrix = "~ 0 + Exposed",
+    contrasts = list(
+      "ExposedTRUE - ExposedFALSE"
+    ),
+    random_effect = "Replicate"
+  )
+)
+
+# statistical_analyses = list(
+#   # ACTIVITY 1 - CTX
+#   # Description: , control for replicate using random effect
+#   list(
+#     name = "Treatment",
+#     subsets = list(),
+#     model_matrix = "~ 0 + Treatment",
+#     contrasts = list(
+#       "Treatmentcontrol - Treatmentclothianidin",
+#       "Treatmentcontrol - Treatmentthiamethoxam",
+#       "Treatmentclothianidin - Treatmentthiamethoxam"
+#     ),
+#     random_effect = "Replicate"
+#   )
+# )
 # ______________________________________________________________________________
 
 
@@ -98,7 +126,8 @@ widen_results$widen_results_function(krakenReportPaths,
                                      kraken_matrix_dir)
 da$kraken_differential_abundance(kraken_matrix_dir,
                                  metadata_filepath,
-                                 da_stats_dir)
+                                 da_stats_dir,
+                                 statistical_analyses)
 
 
 # -------------------- Formatting, Filtering, and Scaling ----------------------

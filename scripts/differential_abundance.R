@@ -19,7 +19,10 @@ meg_functions <- use("scripts/meg_utility_functions.R")
 
 
 export("kraken_differential_abundance")
-kraken_differential_abundance <- function (kraken_matrix_dir, metadata_filepath, stats_outdir) {
+kraken_differential_abundance <- function (kraken_matrix_dir,
+                                           metadata_filepath,
+                                           stats_outdir,
+                                           statistical_analyses) {
   # File input paths
   kraken_analytical <- Sys.glob(glue("{kraken_matrix_dir}/krakenAnalytical_*.csv"))
 
@@ -435,38 +438,6 @@ kraken_differential_abundance <- function (kraken_matrix_dir, metadata_filepath,
   kraken_taxon_names <- names(kraken_taxon_raw_analytic)
   kraken_clade_names <- names(kraken_clade_raw_analytic)
   
-  
-  # Statistical Analysis Initialization -------------------------------------
-  
-  statistical_analyses = list(
-    # ACTIVITY 2 - CORN (likely applicable to most activity 2 datasets)
-    # Description: , control for replicate using random effect
-    list(
-      name = "Exposure",
-      subsets = list(),
-      model_matrix = "~ 0 + Exposed",
-      contrasts = list(
-        "ExposedTRUE - ExposedFALSE"
-      ),
-      random_effect = "Replicate"
-    )
-  )
-  
-  # statistical_analyses = list(
-  #   # ACTIVITY 1 - CTX
-  #   # Description: , control for replicate using random effect
-  #   list(
-  #     name = "Treatment",
-  #     subsets = list(),
-  #     model_matrix = "~ 0 + Treatment",
-  #     contrasts = list(
-  #       "Treatmentcontrol - Treatmentclothianidin",
-  #       "Treatmentcontrol - Treatmentthiamethoxam",
-  #       "Treatmentclothianidin - Treatmentthiamethoxam"
-  #     ),
-  #     random_effect = "Replicate"
-  #   )
-  # )
   
   
   # Apply differential abundance analysis
