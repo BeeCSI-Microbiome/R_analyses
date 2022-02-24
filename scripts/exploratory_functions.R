@@ -219,6 +219,18 @@ prep_alpha_data <- function(d, treat_names, rep_names) {
     treat_reps(treat_names, rep_names)
 }
 
+# runs and saves kruskal wallis on shannon index for both 
+# replicates and treatments
+alpha_stats <- function(d, dataset_name) {
+  heading <- "Shannon Index - Kruskal Wallis Results:\n"
+  rep_alpha <- stats::kruskal.test(Shannon~replicate, d)
+  treat_alpha <- stats::kruskal.test(Shannon~treatment, d)
+  
+  cat(heading, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+  utils::capture.output(rep_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+  utils::capture.output(treat_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+}
+
 # plot alpha diversity
 plot_alpha <- function(d, alpha) {
   index <- sym(alpha)
@@ -228,7 +240,7 @@ plot_alpha <- function(d, alpha) {
          x = "Treatment")
 }
 
-# Makes all alpha div bar plots and saves them in results
+# Makes all alpha div bar plots, calculates simple stats and saves them in results
 export("make_all_alpha_plots")
 make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   plot_data <- prep_alpha_data(data, treat_names, rep_names)
@@ -236,6 +248,8 @@ make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   utils::write.csv(plot_data,
                    file = glue('results/{dataset_name}/plot_data/alpha_div.csv'),
                    row.names = F)
+  
+  alpha_stats(plot_data, dataset_name)
   
   plot_1 <- plot_alpha(plot_data, "Shannon")
   plot_2 <- plot_alpha(plot_data, "Simpson")
