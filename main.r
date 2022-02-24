@@ -1,88 +1,89 @@
-# Author(s): Lance Lansing, Jonathan Ho
-# Nov 2021
-# Main script for analysis of taxonomic classification results
-#
-# Input: table from Pavian with clades AND taxon counts, not collapsed
+# Author(s): Lance Lansing, Jonathan Ho, Kurt Clarke
 
-setwd("~/Github/R_analyses") # commented out for local use.
+# Main script for analysis of taxonomic classification results
+
+# Input: table from Pavian with clades AND taxon counts, not collapsed
+# User defined inputs (eg input file paths) must be set under section "Globals"
+
+setwd("~/beecsi/R_analyses")
 
 # ------------------------------- Package Setup --------------------------------
-# "here", "PMCMRplus", "broom", "statmod" added for differential_abundance.R <DA>
-packages <- c('tidyverse', 'vegan', 'modules', "data.table", "metagenomeSeq",
-              "ggplot2", "glue", "here", "PMCMRplus", "broom", "statmod")
+# "PMCMRplus", "broom", "statmod" added for differential_abundance.R <DA>
+packages <- c("tidyverse",
+              "vegan",
+              "modules",
+              "data.table",
+              "metagenomeSeq",
+              "ggplot2",
+              "glue")
+              # "PMCMRplus",
+              # "broom",
+              # "statmod")
 lapply(packages, library, character.only = TRUE)
-
-# Get utility functions <DA> ---------------------------------------------------
-#source(here::here('scripts','meg_utility_functions.R'))
 
 # ______________________________________________________________________________
 
+
 # ------------------------- Load Aux Files as Modules --------------------------
 rsummary <- use("scripts/reads_summary.R") 
-ip <- use('scripts/initial_processing.R')
-scaling <- use('scripts/reads_scaling.R')
-exploratory <- use('scripts/exploratory_functions.R')
-widen_results <- use('scripts/widenResults.R')
-differential_abundance_kraken <- use('scripts/differential_abundance.R')
+ip <- use("scripts/initial_processing.R")
+scaling <- use("scripts/reads_scaling.R")
+exploratory <- use("scripts/exploratory_functions.R")
+widen_results <- use("scripts/widenResults.R")
+da <- use("scripts/differential_abundance.R")
 # ______________________________________________________________________________
 
 
 # ---------------------------------- Globals -----------------------------------
+
 # dataset name for file writing purposes
-dataset_name <- "soy_2020"
-# create result folders using the dataset name
+dataset_name <- "cor_2020"
+
+# <DA> add sub directory for kraken report matrices
+kraken_matrix_dir = glue("results/{dataset_name}/aggregated_kraken_reports")
+# <DA> Set the output directory for DA statistics:
+da_stats_dir = glue("results/{dataset_name}/differential_abundance_stats")
+
+# Create output directories ####
+
 ifelse(!dir.exists(glue("results/{dataset_name}")),
-       dir.create(glue("results/{dataset_name}"), mode='777'), FALSE)
+       dir.create(glue("results/{dataset_name}"), mode = "777"), FALSE)
 ifelse(!dir.exists(glue("results/{dataset_name}/plot_data")),
-       dir.create(glue("results/{dataset_name}/plot_data"), mode='777'), FALSE)
-# <DA> add sub directory for DA analysis
-ifelse(!dir.exists(glue("results/{dataset_name}/aggregated_dir")),
-       dir.create(glue("results/{dataset_name}/aggregated_dir"), mode='777'), FALSE)
-# <DA> aggreagated data directory for use by differential_abundance.R
-aggregated_dir <- here("aggregated_data_for_analysis")
+       dir.create(glue("results/{dataset_name}/plot_data"), mode = "777"), FALSE)
 
-ifelse(
-  !dir.exists(aggregated_dir), 
-  dir.create((aggregated_dir), mode='777'), 
-  FALSE
-)
+ifelse(!dir.exists(kraken_matrix_dir), dir.create(kraken_matrix_dir, mode = "777"), FALSE)
+ifelse(!dir.exists(da_stats_dir), dir.create((da_stats_dir), mode = "777"), FALSE)
 
-# Input file paths:
-# Counts table (clade and taxon counts, uncollapsed)
-# these may be unique so probably best to leave as manual entry. 
-counts_path <- "C:/Users/clarkeKu/OneDrive - AGR-AGR/Documents/BeeCSI-MicrobiomeR/SoyData - 2022-02-08/all taxa.tsv"
-metadata_filepath <- "C:/Users/clarkeKu/OneDrive - AGR-AGR/Documents/BeeCSI-MicrobiomeR/SoyData - 2022-02-08/soy_2020_metadata.csv" # can this be better? <DA>
 
-# Kraken Paths <DA>
-krakenReportPaths <- Sys.glob("C:/Users/clarkeKu/OneDrive - AGR-AGR/Documents/BeeCSI-MicrobiomeR/SoyData - 2022-02-08/*_report.txt") # set to global
-krakenReportNames <- list.files(path = "C:/Users/clarkeKu/OneDrive - AGR-AGR/Documents/BeeCSI-MicrobiomeR/SoyData - 2022-02-08/", pattern = '*_report.txt')
+# Input file paths ####
 
-# <DA> unsure if this is correct -kurt. 
-#kraken_analytical <- Sys.glob(here::here("aggregated_data_for_analysis", dataset_name, "krakenAnalytical_*.csv"))
+# Counts (clade and taxon counts, uncollapsed) and metadata tables
+counts_path <- "../data/cor_2020/cor_all_taxa.tsv"
+metadata_filepath <- "../data/cor_2020/cor_2020_metadata.csv"
 
-# Metadata
-metadata <- read.csv(metadata_filepath, header=T)
- 
+# Kraken report paths <DA>
+krakenReportPaths <- Sys.glob("../data/cor_2020/kraken_reports/*_report.txt")
+krakenReportNames <- list.files(path = "../data/cor_2020/kraken_reports",
+                                pattern = "*_report.txt")
+
+# Dataset-specific taxa of interest (provide a list of taxa strings)
+# e.g. c("Lactobacillus", "Gilliamella apis")
+additional_taxa <- NA
+
 # Treatment and replicate names
 treat_names <- c("exposed", "unexposed")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
-# Percentile value used by CSS (default=0.5)
+# Percentile value used by CSS (default = 0.5)
 css_percentile = 0.5
-
-# Output paths <DA>; can these just be placed in internal functions? 
-# Set the output directory for statistics:
-stats_output_dir = glue('results/{dataset_name}/differential_abundance_stats')
-graph_output_dir = stats_output_dir # jenky fix 
-
-# Create output directories if they don't exist
-ifelse(!dir.exists(stats_output_dir), dir.create((stats_output_dir), mode='777'), FALSE)
 # ______________________________________________________________________________
 
 
 # -------------------------------- Read Input ----------------------------------
 # Read in count table
 ct <- read_tsv(counts_path)
+# Metadata
+metadata <- read.csv(metadata_filepath, header = T)
 # ______________________________________________________________________________
 
 
@@ -90,9 +91,14 @@ ct <- read_tsv(counts_path)
 reads_summary <- rsummary$create_summary_table(ct, dataset_name)
 # ______________________________________________________________________________
 
+
 # Differential Abundance ----------------------------------------------------------
-widen_results$widen_results_function(krakenReportPaths, krakenReportNames, stats_output_dir)
-differential_abundance_kraken$kraken_differential_abundance(dataset_name, metadata_filepath, stats_output_dir, graph_output_dir)
+widen_results$widen_results_function(krakenReportPaths,
+                                     krakenReportNames,
+                                     kraken_matrix_dir)
+da$kraken_differential_abundance(kraken_matrix_dir,
+                                 metadata_filepath,
+                                 da_stats_dir)
 
 
 # -------------------- Formatting, Filtering, and Scaling ----------------------
@@ -132,10 +138,3 @@ exploratory$make_nmds_plots(tables[["raw_clade"]],
                             rep_names,
                             dataset_name)
 # ______________________________________________________________________________
-
-
-
-
-
-
-

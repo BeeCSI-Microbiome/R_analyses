@@ -2,26 +2,27 @@
 # Author(s): Jonathan Ho, Lance Lansing
 
 # Load Packages -----------------------------------------------------------
-import('dplyr')
-import('tidyr')
-import('ggplot2')
-import('vegan')
-import('stats', 'aggregate')
+import("dplyr")
+import("tidyr")
+import("ggplot2")
+import("vegan")
+import("stats", "aggregate")
 import("glue")
 
 # Scope Variables --------------------------------------------------------
 # Taxa of interest - common
-interest_list <- c('Lactobacillus Firm-4',
-                   'Lactobacillus Firm-5',
-                   'Other Lactobacillus',
-                   'Gilliamella apicola',
-                   'Bifidobacterium',
-                   'Snodgrassella alvi',
-                   'Frischella perrara',
-                   'Bartonella apis',
-                   'Melissococcus plutonius',
-                   'Paenibacillus larvae',
-                   'Bacteria')
+interest_list <- c("Lactobacillus Firm-4",
+                   "Lactobacillus Firm-5",
+                   "Other Lactobacillus",
+                   "Gilliamella apicola",
+                   "Gilliamella apis",
+                   "Bifidobacterium",
+                   "Snodgrassella alvi",
+                   "Frischella perrara",
+                   "Bartonella apis",
+                   "Melissococcus plutonius",
+                   "Paenibacillus larvae",
+                   "Bacteria")
 
 
 # Wrangling Functions -----------------------------------------------------
@@ -30,21 +31,21 @@ tidy_data <- function(d) {
   clean_data <- select(d, -taxRank, -lineage) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")
-    
+  
   return(clean_data)
 }
 
 # calculates and adds Other Bacteria col
 add_other_bac <- function(d) {
-  column_index <- grepl('Reads', names(d))
+  column_index <- grepl("Reads", names(d))
   # Get the sum counts for taxa of interest, except Bacteria (domain), then 
   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
   # representing all taxa of non-interest 
-  df <- d[d$name!='Bacteria', column_index]
-  d[d$name=='Bacteria', column_index] <-
-    d[d$name=='Bacteria', column_index] - as.list(colSums(df, na.rm=T))
+  df <- d[d$name!="Bacteria", column_index]
+  d[d$name=="Bacteria", column_index] <-
+    d[d$name=="Bacteria", column_index] - as.list(colSums(df, na.rm=T))
   # Change the grouping name
-  d[d$name=='Bacteria',]$name <- 'Other Bacteria'
+  d[d$name=="Bacteria",]$name <- "Other Bacteria"
   
   return(d)
 }
@@ -107,14 +108,14 @@ order_taxa <- function(d) {
 }
 
 # Returns a list of taxa of interest in order of descending average percent
-# but with 'Other Bacteria' always last
+# but with "Other Bacteria" always last
 get_taxa_order <- function(d) {
-  pdlong <- filter(d, taxa!='Other Bacteria')
+  pdlong <- filter(d, taxa!="Other Bacteria")
   
-  pd_avg <- aggregate(pdlong[,c('value')], list(pdlong$taxa), mean) %>%
+  pd_avg <- aggregate(pdlong[,c("value")], list(pdlong$taxa), mean) %>%
     arrange(value)
   
-  taxa_order <- append(pd_avg$Group.1, 'Other Bacteria')
+  taxa_order <- append(pd_avg$Group.1, "Other Bacteria")
 }
 
 
@@ -144,23 +145,25 @@ plot_interest_abundance <- function(d) {
 export("make_interest_abundance")
 make_interest_abundance <- function(data, treat_names, rep_names,
                                     dataset_name, additional_taxa) {
-  interest_list <- append(interest_list, additional_taxa)
+  if (!is.na(additional_taxa)) {
+    interest_list <- append(interest_list, additional_taxa)
+  }
   
   plot_data <- filter(data, name %in% interest_list) %>%
     add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
     treat_reps(treat_names, rep_names)
-    
+  
   plot <- tidy_to_long(plot_data) %>%
     order_taxa() %>%
     plot_interest_abundance()
   
   ggsave(plot = plot,
-         filename = glue('results/{dataset_name}/interest_abundance.png'),
-         bg = 'white')
+         filename = glue("results/{dataset_name}/interest_abundance.png"),
+         bg = "white")
   utils::write.csv(plot_data,
-                   file = glue('results/{dataset_name}/plot_data/interest_taxa_proportions.csv'),
+                   file = glue("results/{dataset_name}/plot_data/interest_taxa_proportions.csv"),
                    row.names = F)
 }
 
@@ -187,8 +190,8 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
     order_taxa() %>%
     plot_interest_abundance()
   
-  ggsave(plot = clo_plot, filename = 'results/clo_abundance.png', bg = 'white')
-  ggsave(plot = thi_plot, filename = 'results/thi_abundance.png', bg = 'white')
+  ggsave(plot = clo_plot, filename = "results/clo_abundance.png", bg = "white")
+  ggsave(plot = thi_plot, filename = "results/thi_abundance.png", bg = "white")
 }
 
 # Alpha Diversity ---------------------------------------------------------
@@ -236,7 +239,7 @@ make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   plot_data <- prep_alpha_data(data, treat_names, rep_names)
   
   utils::write.csv(plot_data,
-                   file = glue('results/{dataset_name}/plot_data/alpha_div.csv'),
+                   file = glue("results/{dataset_name}/plot_data/alpha_div.csv"),
                    row.names = F)
   
   plot_1 <- plot_alpha(plot_data, "Shannon")
@@ -244,10 +247,10 @@ make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name) {
   plot_3 <- plot_alpha(plot_data, "Inv_Simpson")
   plot_4 <- plot_alpha(plot_data, "Evenness")
   
-  ggsave(plot = plot_1, filename = glue('results/{dataset_name}/alpha_div_shannon.png'), bg = 'white')
-  ggsave(plot = plot_2, filename = glue('results/{dataset_name}/alpha_div_simpson.png'), bg = 'white')
-  ggsave(plot = plot_3, filename = glue('results/{dataset_name}/alpha_div_inv_simp.png'), bg = 'white')
-  ggsave(plot = plot_4, filename = glue('results/{dataset_name}/alpha_div_evenness.png'), bg = 'white')
+  ggsave(plot = plot_1, filename = glue("results/{dataset_name}/alpha_div_shannon.png"), bg = "white")
+  ggsave(plot = plot_2, filename = glue("results/{dataset_name}/alpha_div_simpson.png"), bg = "white")
+  ggsave(plot = plot_3, filename = glue("results/{dataset_name}/alpha_div_inv_simp.png"), bg = "white")
+  ggsave(plot = plot_4, filename = glue("results/{dataset_name}/alpha_div_evenness.png"), bg = "white")
 }
 
 
@@ -274,7 +277,7 @@ prep_nmds_data <- function(d, treat_names, rep_names) {
     calc_prop() %>%
     calc_nmds() %>%
     treat_reps(treat_names, rep_names)
-
+  
   return(genus_data)
 }
 
@@ -324,40 +327,40 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
 # plots and saves nmds' with separate hulls for replicate and treatment
 act_1_nmds <- function(genus_data, speci_data, dataset_name) {
   genus_treat_nmds <- plot_nmds_1(genus_data,
-                                "treatment",
-                                "Genus NMDS - Brays Curtis")
+                                  "treatment",
+                                  "Genus NMDS - Brays Curtis")
   genus_reps_nmds <- plot_nmds_1(genus_data,
-                               "replicate",
-                               "Genus NMDS - Brays Curtis")
+                                 "replicate",
+                                 "Genus NMDS - Brays Curtis")
   speci_treat_nmds <- plot_nmds_1(speci_data,
-                                "treatment",
-                                "Species NMDS - Bray Curtis")
+                                  "treatment",
+                                  "Species NMDS - Bray Curtis")
   speci_reps_nmds <- plot_nmds_1(speci_data,
-                               "replicate",
-                               "Species NMDS - Bray Curtis")
+                                 "replicate",
+                                 "Species NMDS - Bray Curtis")
   
   ggsave(plot = genus_treat_nmds, 
-         filename = glue('results/{dataset_name}/genus_treat_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/genus_treat_nmds.png"), bg = "white")
   ggsave(plot = genus_reps_nmds, 
-         filename = glue('results/{dataset_name}/genus_reps_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/genus_reps_nmds.png"), bg = "white")
   ggsave(plot = speci_treat_nmds, 
-         filename = glue('results/{dataset_name}/speci_treat_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/speci_treat_nmds.png"), bg = "white")
   ggsave(plot = speci_reps_nmds, 
-         filename = glue('results/{dataset_name}/speci_reps_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/speci_reps_nmds.png"), bg = "white")
 }
 
 # plots and saves nmds' for treatment only
 act_2_nmds <- function(genus_data, speci_data, dataset_name) {
   genus_treat_nmds <- plot_nmds_2(genus_data,
-                                "treatment",
-                                "Genus NMDS - Brays Curtis")
+                                  "treatment",
+                                  "Genus NMDS - Brays Curtis")
   speci_treat_nmds <- plot_nmds_2(speci_data,
-                                "treatment",
-                                "Species NMDS - Bray Curtis")
+                                  "treatment",
+                                  "Species NMDS - Bray Curtis")
   ggsave(plot = genus_treat_nmds,
-         filename = glue('results/{dataset_name}/genus_treat_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/genus_treat_nmds.png"), bg = "white")
   ggsave(plot = speci_treat_nmds,
-         filename = glue('results/{dataset_name}/speci_treat_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/speci_treat_nmds.png"), bg = "white")
 }
 
 # make and save nmds plots for genus and species levels using read data
@@ -370,10 +373,10 @@ make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(genus_data,
-                   file = glue('results/{dataset_name}/plot_data/genus_nmds.csv'),
+                   file = glue("results/{dataset_name}/plot_data/genus_nmds.csv"),
                    row.names = F)
   utils::write.csv(speci_data,
-                   file = glue('results/{dataset_name}/plot_data/species_nmds.csv'),
+                   file = glue("results/{dataset_name}/plot_data/species_nmds.csv"),
                    row.names = F)
   
   # split act 1 and 2 nmds here, based on number of treatments
@@ -394,20 +397,20 @@ interest_nmds <- function(data, treat_names, rep_names, dataset_name) {
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(interest_data,
-                   file = glue('results/{dataset_name}/plot_data/interest_nmds.csv'),
+                   file = glue("results/{dataset_name}/plot_data/interest_nmds.csv"),
                    row.names = F)
   
   int_treat_nmds <- plot_nmds_1(interest_data,
-                              "treatment",
-                              "Interest NMDS - Bray Curtis")
+                                "treatment",
+                                "Interest NMDS - Bray Curtis")
   int_rep_nmds <- plot_nmds_1(interest_data,
-                            "replicate",
-                            "Interest NMDS - Bray Curtis")
+                              "replicate",
+                              "Interest NMDS - Bray Curtis")
   
   ggsave(plot = int_treat_nmds, 
-         filename = glue('results/{dataset_name}/interest_treat_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/interest_treat_nmds.png"), bg = "white")
   ggsave(plot = int_rep_nmds, 
-         filename = glue('results/{dataset_name}/interest_rep_nmds.png'), bg = 'white')
+         filename = glue("results/{dataset_name}/interest_rep_nmds.png"), bg = "white")
 }
 
 # testing nmds using all taxa data
@@ -417,16 +420,16 @@ all_taxa_nmds <- function(data, treat_names, rep_names, dataset_name) {
     prep_nmds_data(treat_names, rep_names)
   
   utils::write.csv(all_data,
-                   file = glue('results/{dataset_name}/plot_data/all_taxa_nmds.csv'),
+                   file = glue("results/{dataset_name}/plot_data/all_taxa_nmds.csv"),
                    row.names = F)
   
   all_treat_nmds <- plot_nmds_1(all_data,
-                              "treatment",
-                              "All NMDS - Bray Curtis")
+                                "treatment",
+                                "All NMDS - Bray Curtis")
   all_rep_nmds <- plot_nmds_1(all_data,
-                            "replicate",
-                            "All NMDS - Bray Curtis")
+                              "replicate",
+                              "All NMDS - Bray Curtis")
   
-  ggsave(plot = all_treat_nmds, filename = glue('results/{dataset_name}/all_treat_nmds.png'), bg = 'white')
-  ggsave(plot = all_rep_nmds, filename = glue('results/{dataset_name}/all_rep_nmds.png'), bg = 'white')
+  ggsave(plot = all_treat_nmds, filename = glue("results/{dataset_name}/all_treat_nmds.png"), bg = "white")
+  ggsave(plot = all_rep_nmds, filename = glue("results/{dataset_name}/all_rep_nmds.png"), bg = "white")
 }
