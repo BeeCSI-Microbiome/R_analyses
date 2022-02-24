@@ -7,9 +7,9 @@ library(ggplot2)
 library(glue)
 
 # TODO: change file path
-dataset_name <- 'ctx_2020'
-datapath <- 'results/ctx_2020/ctx_2020_read_summary.csv'
-treat_names <- c('Control', 'CLO', 'THI')
+dataset_name <- 'thi_2020'
+datapath <- 'results/thi_2020/thi_2020_read_summary.csv'
+treat_names <- c('Control', 'Acute', 'Sublethal')
 rep_names <- c('Rep 1', 'Rep 2', 'Rep 3', 'Rep 4', 'Rep 5')
 
 # function for adding treatment and replicate info
@@ -50,16 +50,17 @@ read_plot <- ggplot(data,
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Percent Classified Nosema Reads",
        x = "Replicate",
-       y = "Reads",
+       y = "Percentage(%)",
        fill = "Treatment")
 
 read_plot
 
 ggsave(plot = read_plot, filename = glue('results/{dataset_name}/nosema.png'), bg = 'white')
 
-# wilcox test (nonparametric since we don't know distribution)
+# kruskal test
 kruskal.test(percent_classified_Nosema~treatment, data)
 
-# control_vs_clo <- filter(data, treatment %in% c("Control", "CLO"))
-# wilcox.test(percent_classified_Nosema~treatment, data=control_vs_clo)
+# use wilcox if a particular pair-wise seems interesting
+# control_vs_acute <- filter(data, treatment %in% c("Control", "Acute"))
+# wilcox.test(percent_classified_Nosema~treatment, control_vs_acute)
 
