@@ -58,6 +58,8 @@ read_plot
 ggsave(plot = read_plot, filename = glue('results/{dataset_name}/nosema.png'), bg = 'white')
 
 # wilcox test (nonparametric since we don't know distribution)
-control_vs_clo <- filter(data, treatment %in% c("Control", "CLO"))
-wilcox.test(percent_classified_Nosema~treatment, data=control_vs_clo)
+kruskal.test(percent_classified_Nosema~treatment, data)
+
+# control_vs_clo <- filter(data, treatment %in% c("Control", "CLO"))
+# wilcox.test(percent_classified_Nosema~treatment, data=control_vs_clo)
 
