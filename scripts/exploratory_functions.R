@@ -165,7 +165,11 @@ make_interest_abundance <- function(data, treat_names, rep_names,
 # separate bar plots for each treatment vs control
 # CTX experiment specific, not necessary for any other experiment
 export("make_separate_ctx_bars")
-make_separate_ctx_bars <- function(data, treat_names, rep_names) {
+make_separate_ctx_bars <- function(data, treat_names, rep_names,
+                                   dataset_name, additional_taxa) {
+  
+  interest_list <- append(interest_list, additional_taxa)
+  
   clo_treat <- c("Control", "CLO")
   thi_treat <- c("Control", "THI")
   
@@ -185,8 +189,8 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names) {
     order_taxa() %>%
     plot_interest_abundance()
   
-  ggsave(plot = clo_plot, filename = 'results/clo_abundance.png', bg = 'white')
-  ggsave(plot = thi_plot, filename = 'results/thi_abundance.png', bg = 'white')
+  ggsave(plot = clo_plot, filename = glue('results/{dataset_name}/clo_abundance.png'), bg = 'white')
+  ggsave(plot = thi_plot, filename = glue('results/{dataset_name}/thi_abundance.png'), bg = 'white')
 }
 
 # Alpha Diversity ---------------------------------------------------------
