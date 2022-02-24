@@ -211,7 +211,7 @@ calc_diversity_df <- function(d){
   return(div_df)
 }
 
-# preps and saves alpha div data
+# preps alpha div data
 prep_alpha_data <- function(d, treat_names, rep_names) {
   plot_data <- filter(d, taxRank == "S") %>%
     tidy_data() %>%
