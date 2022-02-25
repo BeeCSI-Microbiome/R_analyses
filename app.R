@@ -21,6 +21,8 @@ ui <- fluidPage(
             accept = c(".txt"),
             multiple = TRUE),
   
+  actionButton("aggregate_button", "Aggregate reports", class = "btn-primary"),
+  
   tableOutput(outputId = "k_analytic"),
   
   textOutput("widen_results_message")
@@ -28,21 +30,31 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  k_analytic <- observe({
-    req(input$dataset_name,
-        input$kraken_files)
+  dataset_name <- eventReactive(input$aggregate_button, {
+    input$dataset_name
+  })
+  
+  kraken_files <- eventReactive(input$aggregate_button, {
+    input$kraken_files
+  })
+  
+  k_analytic <- reactive({
+    req(dataset_name,
+        kraken_files)
     
-    dataset_name <- input$dataset_name
-    kraken_matrix_dir <- glue("results/{dataset_name}/aggregated_kraken_reports")
+    kraken_matrix_dir <- glue("results/{dataset_name()}/aggregated_kraken_reports")
     
     print(glue("Saving analytic matrices to {kraken_matrix_dir}"))
     
-    widen_results$widen_results_function(input$kraken_files$datapath,
-                                         input$kraken_files$name,
+    widen_results$widen_results_function(kraken_files()$datapath,
+                                         kraken_files()$name,
                                          kraken_matrix_dir)
   })
   
-  # output$k_analytic <- k_analytic
+  output$k_analytic <- renderTable({
+    req(k_analytic)
+    k_analytic()
+  })
   
   # ct <- reactive({
   #   req(input$count_file)
