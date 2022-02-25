@@ -66,7 +66,7 @@ treat_names <- c("exposed", "unexposed")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 # Percentile value used by CSS (default = 0.5)
-css_percentile = 0.5
+css_percentile <- 0.5
 
 # Statistical analyses list for DA
 statistical_analyses <- list(
