@@ -29,25 +29,17 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  
-  dataset_name <- eventReactive(input$aggregate_button, {
-    input$dataset_name
-  })
-  
-  kraken_files <- eventReactive(input$aggregate_button, {
-    input$kraken_files
-  })
-  
-  k_analytic <- reactive({
-    req(dataset_name,
-        kraken_files)
+
+  k_analytic <- eventReactive(input$aggregate_button, {
+    req(input$dataset_name,
+        input$kraken_files)
     
-    kraken_matrix_dir <- glue("results/{dataset_name()}/aggregated_kraken_reports")
+    kraken_matrix_dir <- glue("results/{input$dataset_name}/aggregated_kraken_reports")
     
     print(glue("Saving analytic matrices to {kraken_matrix_dir}"))
     
-    widen_results$widen_results_function(kraken_files()$datapath,
-                                         kraken_files()$name,
+    widen_results$widen_results_function(input$kraken_files$datapath,
+                                         input$kraken_files$name,
                                          kraken_matrix_dir)
   })
   
