@@ -123,7 +123,8 @@ widen_results$widen_results_function(krakenReportPaths,
 da$kraken_differential_abundance(kraken_matrix_dir,
                                  metadata_filepath,
                                  da_stats_dir,
-                                 statistical_analyses)
+                                 statistical_analyses,
+                                 css_percentile)
 
 
 # Formatting, filtering, and scaling --------------------------------------

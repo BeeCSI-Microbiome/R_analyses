@@ -22,7 +22,8 @@ export("kraken_differential_abundance")
 kraken_differential_abundance <- function (kraken_matrix_dir,
                                            metadata_filepath,
                                            da_stats_dir,
-                                           statistical_analyses) {
+                                           statistical_analyses,
+                                           css_percentile=0.5) {
   # File input paths
   kraken_analytical <- Sys.glob(glue("{kraken_matrix_dir}/krakenAnalytical_*.csv"))
 
@@ -90,7 +91,7 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
   
   kraken_css <- 
     kraken_new_mr %>%
-    map(~ cumNorm(.x,p=0.5))
+    map(~ cumNorm(.x,p=css_percentile))
   
   # Extract the normalized counts into data tables for aggregation
   
