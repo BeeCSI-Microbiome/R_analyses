@@ -52,7 +52,7 @@ meg_fitZig <- function(data_list,
                        metadata,
                        zero_mod,
                        data_mod,
-                       filter_min_threshold,
+                       filter_min_threshold=0.15,
                        contrast_list,
                        random_effect_var,
                        outdir,
@@ -67,8 +67,9 @@ meg_fitZig <- function(data_list,
   res <- list()
   for( l in 1:length(local_obj) ) {
     
+    # Default min threshold is 0.15
     filter_threshold <- quantile(rowSums(MRcounts(local_obj[[l]])), filter_min_threshold)
-    if( filter_threshold > filter_min_threshold ) filter_threshold <- filter_min_threshold
+    
     local_obj[[l]] <- local_obj[[l]][which(rowSums(MRcounts(local_obj[[l]])) >= filter_threshold ), ]
     
     if(length(analysis_subset) > 0) {
