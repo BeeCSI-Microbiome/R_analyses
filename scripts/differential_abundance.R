@@ -91,7 +91,11 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
   
   kraken_css <- 
     kraken_new_mr %>%
-    map(~ cumNorm(.x,p=css_percentile))
+    map(~ cumNorm(.x, p = css_percentile))
+  # Save normalization stats
+  exportStats(kraken_css[[1]], file=file.path(da_stats_dir, "clade_normalization_stats.tsv"))
+  exportStats(kraken_css[[2]], file=file.path(da_stats_dir, "taxa_normalization_stats.tsv"))
+  
   
   # Extract the normalized counts into data tables for aggregation
   
