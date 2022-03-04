@@ -55,7 +55,10 @@ create_summary_table <- function(read_table, dataset_name){
                   .after = sample) %>%
     # percent classified
     dplyr::mutate(percent_classified = classified_reads/total_reads * 100,
-                  .after = classified_reads)
+                  .after = classified_reads) %>%
+    # percent unclassified
+    dplyr::mutate(percent_unclassified = unclassified_reads/total_reads * 100,
+                  .after = unclassified_reads)
   
   # create "percent of classified reads" columns for taxa
   ta <- ta %>% dplyr::mutate(across(
@@ -65,7 +68,7 @@ create_summary_table <- function(read_table, dataset_name){
   ))
   
   # Drop read # columns for taxa
-  ta <- ta %>% select(!matches("(?<!total|classified)_reads", perl = TRUE))
+  ta <- ta %>% select(!matches("(?<!total|classified|Bacteria|Apis_mellifera)_reads", perl = TRUE))
   ta <- ta %>% relocate("percent_classified_Bacteria", .after = "percent_classified_Apis_mellifera")
   
   write.table(ta, file = glue("results/{dataset_name}/{dataset_name}_read_summary.csv"), quote = F, sep = ",", row.names = F)
