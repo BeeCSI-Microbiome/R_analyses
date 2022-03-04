@@ -14,9 +14,9 @@ library(glue)
 
 
 # User Defined Variables --------------------------------------------------
-dataset_name <- 'clo_2020'
-datapath <- 'results/clo_2020/plot_data/clo_raw_clade.csv'
-treat_names <- c("Control", "Acute", "Sublethal")
+dataset_name <- 'ctx_2020'
+datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
+treat_names <- c("Control", "THI")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 
@@ -229,5 +229,7 @@ make_nmds_plots <- function(data, treat_names, rep_names, dataset_name) {
 
 
 # Call --------------------------------------------------------------------
-data <- read_csv(datapath)
+data <- read_csv(datapath) %>%
+  select(-contains('_dT'))
+
 make_nmds_plots(data, treat_names, rep_names, dataset_name)
