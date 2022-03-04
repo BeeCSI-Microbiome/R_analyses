@@ -34,9 +34,9 @@ da <- use("scripts/differential_abundance.R")
 dataset_name <- "cas_2020"
 
 # <DA> Subdirectory for kraken report matrices
-kraken_matrix_dir = glue("results/{dataset_name}/aggregated_kraken_reports")
+kraken_matrix_dir <- glue("results/{dataset_name}/aggregated_kraken_reports")
 # <DA> Subdirectory for DA statistics:
-da_stats_dir = glue("results/{dataset_name}/differential_abundance_stats")
+da_stats_dir <- glue("results/{dataset_name}/differential_abundance_stats")
 
 ## Create output directories ####
 ifelse(!dir.exists(glue("results/{dataset_name}")),
@@ -66,10 +66,10 @@ treat_names <- c("exposed", "unexposed")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
 
 # Percentile value used by CSS (default = 0.5)
-css_percentile = 0.5
+css_percentile <- 0.5
 
 # Statistical analyses list for DA
-statistical_analyses = list(
+statistical_analyses <- list(
   # ACTIVITY 2 - Example: Corn (likely applicable to most activity 2 datasets)
   # Description: Compare exposed vs. unexposed, use replicate as random effect
   list(
@@ -123,7 +123,8 @@ widen_results$widen_results_function(krakenReportPaths,
 da$kraken_differential_abundance(kraken_matrix_dir,
                                  metadata_filepath,
                                  da_stats_dir,
-                                 statistical_analyses)
+                                 statistical_analyses,
+                                 css_percentile)
 
 
 # Formatting, filtering, and scaling --------------------------------------

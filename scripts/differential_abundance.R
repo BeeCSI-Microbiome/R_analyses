@@ -21,8 +21,9 @@ meg_functions <- use("scripts/meg_utility_functions.R")
 export("kraken_differential_abundance")
 kraken_differential_abundance <- function (kraken_matrix_dir,
                                            metadata_filepath,
-                                           stats_outdir,
-                                           statistical_analyses) {
+                                           da_stats_dir,
+                                           statistical_analyses,
+                                           css_percentile=0.5) {
   # File input paths
   kraken_analytical <- Sys.glob(glue("{kraken_matrix_dir}/krakenAnalytical_*.csv"))
 
@@ -90,7 +91,11 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
   
   kraken_css <- 
     kraken_new_mr %>%
-    map(~ cumNorm(.x,p=0.5))
+    map(~ cumNorm(.x, p = css_percentile))
+  # Save normalization stats
+  exportStats(kraken_css[[1]], file=file.path(da_stats_dir, "clade_normalization_stats.tsv"))
+  exportStats(kraken_css[[2]], file=file.path(da_stats_dir, "taxa_normalization_stats.tsv"))
+  
   
   # Extract the normalized counts into data tables for aggregation
   
@@ -450,7 +455,7 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
                              filter_min_threshold=0.15,
                              contrast_list=statistical_analyses[[a]]$contrasts,
                              random_effect_var=statistical_analyses[[a]]$random_effect,
-                             outdir=stats_outdir,
+                             outdir=da_stats_dir,
                              analysis_name=statistical_analyses[[a]]$name,
                              analysis_subset=statistical_analyses[[a]]$subsets,
                              data_type="Microbiome_taxonReads",
@@ -467,7 +472,7 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
                              filter_min_threshold=0.15,
                              contrast_list=statistical_analyses[[a]]$contrasts,
                              random_effect_var=statistical_analyses[[a]]$random_effect,
-                             outdir=stats_outdir,
+                             outdir=da_stats_dir,
                              analysis_name=statistical_analyses[[a]]$name,
                              analysis_subset=statistical_analyses[[a]]$subsets,
                              data_type="Microbiome_cladeReads",
