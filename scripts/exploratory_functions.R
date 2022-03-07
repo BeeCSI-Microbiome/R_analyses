@@ -303,9 +303,9 @@ calc_ano <- function(d, group_data, taxa_level, dataset_name) {
                       distance = "bray",
                       permutations = 9999)
   
-  cat(heading, file = glue("results/{dataset_name}/anosim.txt"))
-  utils::capture.output(rep_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
-  utils::capture.output(treat_ano, file = glue("results/{dataset_name}/anosim.txt"), append = T)
+  cat(heading, file = glue("results/{dataset_name}/{tolower(taxa_level)}_anosim.txt"))
+  utils::capture.output(rep_ano, file = glue("results/{dataset_name}/{tolower(taxa_level)}_anosim.txt"), append = T)
+  utils::capture.output(treat_ano, file = glue("results/{dataset_name}/{tolower(taxa_level)}_anosim.txt"), append = T)
 }
 
 # preps nmds data and runs ANOSIM on data
