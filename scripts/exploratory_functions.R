@@ -233,7 +233,7 @@ alpha_stats <- function(d, dataset_name) {
   rep_alpha <- stats::kruskal.test(Shannon~replicate, d)
   treat_alpha <- stats::kruskal.test(Shannon~treatment, d)
   
-  cat(heading, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
+  cat(heading, file = glue("results/{dataset_name}/alpha_stats.txt"))
   utils::capture.output(rep_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
   utils::capture.output(treat_alpha, file = glue("results/{dataset_name}/alpha_stats.txt"), append = T)
 }
