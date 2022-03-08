@@ -10,12 +10,12 @@ import('dplyr')
 
 # ------------------------------ Scope variables -------------------------------
 firm4_list <- paste('Lactobacillus', sep=' ', c('mellifer',
-                                           'mellis'))
+                                                'mellis'))
 firm5_list <- paste('Lactobacillus', sep=' ', c('kimbladii',
-                                           'kullabergensis',
-                                           'melliventris',
-                                           'helsingborgensis',
-                                           'apis'))
+                                                'kullabergensis',
+                                                'melliventris',
+                                                'helsingborgensis',
+                                                'apis'))
 # ______________________________________________________________________________
 
 # --------------------------------- Functions ----------------------------------
@@ -33,7 +33,7 @@ format_count_table <- function(tb){
   tb$lineage <- gsub("&nbsp;", " ", tb$lineage)
   tb <-  tb %>%
     mutate(lineage = str_replace(str_c(lineage, name, sep = ">"),
-           "cellular organisms(>)*", ""))
+                                 "cellular organisms(>)*", ""))
   
   # Remove clade read columns 
   tb %>% select(-contains("cladeReads"))
@@ -97,16 +97,27 @@ group_lactobacillus <- function(tb){
   lacto_str <- '>Lactobacillus>'
   lacto_lineage <- tb[tb$name=='Lactobacillus',]$lineage
   
-    # Create rows for Firm-4, Firm-5, and Other
-  tb <- tb %>% add_row(name=firm4_name,
-                       taxRank='-',
-                       lineage=paste(lacto_lineage, firm4_name, sep='>'))
-  tb <- tb %>% add_row(name=firm5_name,
-                       taxRank='-',
-                       lineage=paste(lacto_lineage, firm5_name, sep='>'))
-  tb <- tb %>% add_row(name=other_name,
-                       taxRank='-',
-                       lineage=paste(lacto_lineage, other_name, sep='>'))
+  # Return table if this function has already been ran
+  if(firm4_name %in% tb$name & firm5_name %in% tb$name & other_name %in% tb$name) {
+    return(tb)
+  }
+  
+  # Create rows for Firm-4, Firm-5, and Other
+  if(!firm4_name %in% tb$name) {
+    tb <- tb %>% add_row(name=firm4_name,
+                         taxRank='-',
+                         lineage=paste(lacto_lineage, firm4_name, sep='>'))
+  }
+  if(!firm5_name %in% tb$name) {
+    tb <- tb %>% add_row(name=firm5_name,
+                         taxRank='-',
+                         lineage=paste(lacto_lineage, firm5_name, sep='>'))
+  }
+  if(!other_name %in% tb$name) {
+    tb <- tb %>% add_row(name=other_name,
+                         taxRank='-',
+                         lineage=paste(lacto_lineage, other_name, sep='>'))
+  }
   
   # Update lineage strings of members
   tb <-  tb %>% mutate(lineage = case_when(
