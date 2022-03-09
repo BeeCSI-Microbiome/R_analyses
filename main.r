@@ -31,29 +31,38 @@ da <- use("scripts/differential_abundance.R")
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
-dataset_name <- "cas_2020"
+dataset_name <- "ctx_2020"
 
+# Create strings for output directories
+main_outdir <- glue("results/{dataset_name}")
+nmds_dir <- glue("{main_outdir}/nmds_anosim")
+alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
+rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
 # <DA> Subdirectory for kraken report matrices
-kraken_matrix_dir <- glue("results/{dataset_name}/aggregated_kraken_reports")
-# <DA> Subdirectory for DA statistics:
-da_stats_dir <- glue("results/{dataset_name}/differential_abundance_stats")
+kraken_matrix_dir <- glue("{main_outdir}/aggregated_kraken_reports")
+# <DA> Subdirectory for DA results
+da_dir <- glue("{main_outdir}/differential_abundance")
 
 ## Create output directories ####
-ifelse(!dir.exists(glue("results/{dataset_name}")),
-       dir.create(glue("results/{dataset_name}"), mode = "777"), FALSE)
-ifelse(!dir.exists(glue("results/{dataset_name}/plot_data")),
-       dir.create(glue("results/{dataset_name}/plot_data"), mode = "777"), FALSE)
+ifelse(!dir.exists(main_outdir), dir.create(main_outdir, mode = "777"), FALSE)
+ifelse(!dir.exists(nmds_dir), dir.create(nmds_dir, mode = "777"), FALSE)
+ifelse(!dir.exists(alpha_div_dir), dir.create(alpha_div_dir, mode = "777"), FALSE)
+ifelse(!dir.exists(rel_abund_dir), dir.create(rel_abund_dir, mode = "777"), FALSE)
 ifelse(!dir.exists(kraken_matrix_dir), dir.create(kraken_matrix_dir, mode = "777"), FALSE)
-ifelse(!dir.exists(da_stats_dir), dir.create((da_stats_dir), mode = "777"), FALSE)
+ifelse(!dir.exists(da_dir), dir.create((da_dir), mode = "777"), FALSE)
+
+
 
 ## Input file paths ####
 # Counts (clade and taxon counts, uncollapsed) and metadata tables
 counts_path <- "../data/cas_2020/cas_all_taxa.tsv"
 metadata_filepath <- "../data/cas_2020/cas_2020_metadata.csv"
 
+# Path to directory with kraken reports
+kraken_report_dir <- "../data/ctx_2020/kraken_reports"
 # Kraken report paths <DA>
-krakenReportPaths <- Sys.glob("../data/cas_2020/kraken_reports/*_report.txt")
-krakenReportNames <- list.files(path = "../data/cas_2020/kraken_reports",
+krakenReportPaths <- Sys.glob(glue("{kraken_report_dir}/*_report.txt"))
+krakenReportNames <- list.files(path = kraken_report_dir,
                                 pattern = "*_report.txt")
 
 ## User-defined values ####
@@ -62,50 +71,48 @@ krakenReportNames <- list.files(path = "../data/cas_2020/kraken_reports",
 additional_taxa <- NA
 
 # Treatment and replicate names
-treat_names <- c("exposed", "unexposed")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 4", "Rep 5")
+treat_names <- c("control", "clothianidin", "thiamethoxam")
+rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 
 # Percentile value used by CSS (default = 0.5)
 css_percentile <- 0.5
 
-# Statistical analyses list for DA
-statistical_analyses <- list(
-  # ACTIVITY 2 - Example: Corn (likely applicable to most activity 2 datasets)
-  # Description: Compare exposed vs. unexposed, use replicate as random effect
-  list(
-    name = "Exposure",
-    subsets = list(),
-    model_matrix = "~ 0 + Exposed",
-    contrasts = list(
-      "ExposedTRUE - ExposedFALSE"
-    ),
-    random_effect = "Replicate"
-  )
-)
-
-# statistical_analyses = list(
-#   # ACTIVITY 1 - Example: CTX
-#   # Description: Compare control and 2 treatments, use replicate as random effect
+# # Statistical analyses list for DA
+# statistical_analyses <- list(
+#   # ACTIVITY 2 - Example: Corn (likely applicable to most activity 2 datasets)
+#   # Description: Compare exposed vs. unexposed, use replicate as random effect
 #   list(
-#     name = "Treatment",
+#     name = "Exposure",
 #     subsets = list(),
-#     model_matrix = "~ 0 + Treatment",
+#     model_matrix = "~ 0 + Exposed",
 #     contrasts = list(
-#       "Treatmentcontrol - Treatmentclothianidin",
-#       "Treatmentcontrol - Treatmentthiamethoxam",
-#       "Treatmentclothianidin - Treatmentthiamethoxam"
+#       "ExposedTRUE - ExposedFALSE"
 #     ),
 #     random_effect = "Replicate"
 #   )
 # )
+
+statistical_analyses = list(
+  # ACTIVITY 1 - Example: CTX
+  # Description: Compare control and 2 treatments, use replicate as random effect
+  list(
+    name = "Treatment",
+    subsets = list(),
+    model_matrix = "~ 0 + Treatment",
+    contrasts = list(
+      "Treatmentcontrol - Treatmentclothianidin",
+      "Treatmentcontrol - Treatmentthiamethoxam",
+      "Treatmentclothianidin - Treatmentthiamethoxam"
+    ),
+    random_effect = "Replicate"
+  )
+)
 # _________________________________________________________________________
 
 
 # Read input files --------------------------------------------------------
 # Count table
 ct <- read_tsv(counts_path)
-# Metadata
-metadata <- read.csv(metadata_filepath, header = T)
 # _________________________________________________________________________
 
 
@@ -122,7 +129,7 @@ widen_results$widen_results_function(krakenReportPaths,
                                      kraken_matrix_dir)
 da$kraken_differential_abundance(kraken_matrix_dir,
                                  metadata_filepath,
-                                 da_stats_dir,
+                                 da_dir,
                                  statistical_analyses,
                                  css_percentile)
 
@@ -143,19 +150,23 @@ exploratory$make_interest_abundance(tables[["raw_clade"]],
                                     treat_names,
                                     rep_names,
                                     dataset_name,
-                                    additional_taxa)
+                                    additional_taxa,
+                                    rel_abund_dir)
 
 
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
                                  treat_names,
                                  rep_names,
-                                 dataset_name)
+                                 dataset_name,
+                                 alpha_div_dir)
 
 
 # Beta Diversity ----------------------------------------------------------
 exploratory$make_nmds_plots(tables[["raw_clade"]],
                             treat_names,
                             rep_names,
-                            dataset_name)
+                            dataset_name,
+                            nmds_dir)
 # _________________________________________________________________________
+
