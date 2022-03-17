@@ -13,7 +13,7 @@ library(qwraps2)
 # User Defined Variables --------------------------------------------------
 dataset_name <- 'ctx_2020'
 datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
-treat_names <- c("Control", "CLO", "THI")
+treat_names <- c("Control", "CLO")
 rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 
 
@@ -57,6 +57,7 @@ treat_reps <- function(d, treat_names, rep_names) {
 # Setup -------------------------------------------------------------------
 
 data <- read_csv(datapath) %>%
+  select(-contains('_dT')) %>%
   filter(taxRank == "G")
 
 abun_data <- select(data, -taxRank, -lineage) %>%
