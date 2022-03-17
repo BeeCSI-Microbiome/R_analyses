@@ -27,20 +27,6 @@ tidy_data <- function(d) {
   return(clean_data)
 }
 
-# calculates proportions and convert to data frame
-calc_prop <- function(d) {
-  sample_col <- select(d, "sample")
-  prop_data <- select(d, -"sample") %>%
-    apply(MARGIN = 1,
-          FUN = function(x) x / sum(x) * 100) %>%
-    t() %>%
-    as.data.frame() %>%
-    mutate(sample_col) %>%
-    relocate(sample)
-  
-  return(prop_data)
-}
-
 # add in treatment and replicate cols
 # assumes same number of replicates for each treatment and vice versa. 
 # assumes that samples are grouped by replicates first, then treatments.
@@ -86,19 +72,24 @@ OTU <- otu_table(abun_data, taxa_are_rows = T)
 samples <- sample_data(metadata)
 
 phylo_obj <- phyloseq(OTU, samples)
-phylo_obj
 
 
 # Call --------------------------------------------------------------------
+# 2 different models differing in their formulas
 res1 <- ancombc(phylo_obj,
                 formula = 'treatment',
                 group = 'treatment',
                 global = T)
 
+# includes replicate as confounding variable?
 res2 <- ancombc(phylo_obj,
                 formula = 'treatment + replicate',
                 group = 'treatment',
                 global = T)
 
+
+res1$res$diff_abn
 res1$res_global
+
+res2$res$diff_abn
 res2$res_global
