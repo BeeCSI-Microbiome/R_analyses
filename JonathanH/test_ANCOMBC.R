@@ -3,12 +3,11 @@
 # Takes some functions from exploratory_functions.R
 
 # Author(s): Jonathan Ho
-# Updated: Mar 16, 2022
+# Updated: Mar 19, 2022
 
 library(tidyverse)
 library(ANCOMBC)
 library(microbiome)
-library(qwraps2)
 
 # User Defined Variables --------------------------------------------------
 dataset_name <- 'ctx_2020'
@@ -77,20 +76,31 @@ phylo_obj <- phyloseq(OTU, samples)
 
 # Call --------------------------------------------------------------------
 # 2 different models differing in their formulas
-res1 <- ancombc(phylo_obj,
+mod1 <- ancombc(phylo_obj,
                 formula = 'treatment',
+                p_adj_method = "BH",
                 group = 'treatment',
                 global = T)
 
-# includes replicate as confounding variable?
-res2 <- ancombc(phylo_obj,
-                formula = 'treatment + replicate',
+# includes replicate as confounding variable
+mod2 <- ancombc(phylo_obj,
+                formula = 'treatment+replicate',
+                p_adj_method = "BH",
                 group = 'treatment',
                 global = T)
 
 
-res1$res$diff_abn
-res1$res_global
+write.csv(mod1$res,
+          file = "ctx_2020_clo_genus_mod1.csv",
+          row.names = T)
 
-res2$res$diff_abn
-res2$res_global
+write.csv(mod2$res,
+          file = "ctx_2020_clo_genus_mod2.csv",
+          row.names = T)
+
+
+mod1$res
+mod1$res_global
+
+mod2$res
+mod2$res_global
