@@ -12,8 +12,9 @@ library(microbiome)
 # User Defined Variables --------------------------------------------------
 dataset_name <- 'ctx_2020'
 datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
-treat_names <- c("Control", "CLO")
+treat_names <- c("Control", "CLO", "THI")
 rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
+lab_names <- c("Lab 1", "Lab 2")
 
 
 # Functions ---------------------------------------------------------------
@@ -52,11 +53,27 @@ treat_reps <- function(d, treat_names, rep_names) {
   return(d)
 }
 
+# adds lab metadata for ctx experiment
+add_ctx_labs <- function(d, lab_names, treat_names) {
+  # calculate num of each lab from number of treatments given
+  num_lab1 <- length(treat_names)*2
+  num_lab2 <- length(treat_names)*3
+  
+  # add lab1
+  lab = c(rep(lab_names[1], num_lab1))
+  
+  # add lab2
+  lab = c(lab, rep(lab_names[2], num_lab2))
+
+  d$lab <- lab
+  return(d)
+}
+
 
 # Setup -------------------------------------------------------------------
 
 data <- read_csv(datapath) %>%
-  select(-contains('_dT')) %>%
+  # select(-contains('_dT')) %>%
   filter(taxRank == "G")
 
 abun_data <- select(data, -taxRank, -lineage) %>%
@@ -66,7 +83,8 @@ abun_data <- select(data, -taxRank, -lineage) %>%
 metadata <- tidy_data(data) %>%
   select(sample) %>%
   treat_reps(treat_names, rep_names) %>%
-  column_to_rownames('sample')
+  column_to_rownames('sample') %>%
+  add_ctx_labs(lab_names, treat_names)
 
 OTU <- otu_table(abun_data, taxa_are_rows = T)
 samples <- sample_data(metadata)
@@ -75,7 +93,7 @@ phylo_obj <- phyloseq(OTU, samples)
 
 
 # Call --------------------------------------------------------------------
-# 2 different models differing in their formulas
+# 3 different models differing in their formulas
 mod1 <- ancombc(phylo_obj,
                 formula = 'treatment',
                 p_adj_method = "BH",
@@ -89,14 +107,20 @@ mod2 <- ancombc(phylo_obj,
                 group = 'treatment',
                 global = T)
 
+# includes lab as confounding variable
+mod3 <- ancombc(phylo_obj,
+                formula = 'treatment+lab',
+                p_adj_method = "BH",
+                group = 'treatment',
+                global = T)
 
-write.csv(mod1$res,
-          file = "ctx_2020_clo_genus_mod1.csv",
-          row.names = T)
-
-write.csv(mod2$res,
-          file = "ctx_2020_clo_genus_mod2.csv",
-          row.names = T)
+# write.csv(mod1$res,
+#           file = "ctx_2020_clo_genus_mod1.csv",
+#           row.names = T)
+# 
+# write.csv(mod2$res,
+#           file = "ctx_2020_clo_genus_mod2.csv",
+#           row.names = T)
 
 
 mod1$res
@@ -104,3 +128,6 @@ mod1$res_global
 
 mod2$res
 mod2$res_global
+
+mod3$res
+mod3$res_global
