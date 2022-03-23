@@ -12,7 +12,7 @@ library(microbiome)
 # User Defined Variables --------------------------------------------------
 dataset_name <- 'ctx_2020'
 datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
-treat_names <- c("Control", "CLO", "THI")
+treat_names <- c("Control","CLO")
 rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 lab_names <- c("Lab 1", "Lab 2")
 
@@ -73,7 +73,7 @@ add_ctx_labs <- function(d, lab_names, treat_names) {
 # Setup -------------------------------------------------------------------
 
 data <- read_csv(datapath) %>%
-  # select(-contains('_dT')) %>%
+  select(-contains('_dT')) %>%
   filter(taxRank == "G")
 
 abun_data <- select(data, -taxRank, -lineage) %>%
@@ -131,3 +131,39 @@ mod2$res_global
 
 mod3$res
 mod3$res_global
+
+
+# Visualize ---------------------------------------------------------------
+
+df <- data.frame(mod2$res) %>%
+  select(contains('treatmentCLO')) %>%
+  select(contains('beta')|contains('q_val')|contains('diff')) %>%
+  mutate(diff_abun = ifelse(df$q_val.treatmentCLO < 0.05,
+                            ifelse(abs(df$beta.treatmentCLO) >= 0,
+                                   'Positive',
+                                   'Negative'),
+                            'No Change'))
+
+# adjust factor levels for plotting
+df$diff_abun <- factor(df$diff_abun,
+                      levels = c('Positive', 'No Change', 'Negative'))
+
+da_plot <- ggplot(df,
+                  aes(x = beta.treatmentCLO,
+                      y = -log10(q_val.treatmentCLO),
+                      colour = diff_abun)) +
+  geom_point(alpha=0.4, size=3) +
+  scale_color_manual(values=c('red', 'blue')) +
+  xlim(c(-1.5,1.5)) +
+  geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
+  geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
+  labs(x = "ln(fold change)",
+       y = "-log10(adj. p-value)",
+       title = "Colony Control vs CLO - Genus Differential Abundance") +
+  theme(legend.position = "right",
+        legend.title = element_blank())
+
+da_plot
+
+ggsave(da_plot,
+       filename = 'ctx_control_clo_genus_da.png')
