@@ -3,7 +3,7 @@
 # Takes some functions from exploratory_functions.R
 
 # Author(s): Jonathan Ho
-# Updated: Mar 19, 2022
+# Updated: Mar 23, 2022
 
 library(tidyverse)
 library(ANCOMBC)
@@ -74,7 +74,7 @@ add_ctx_labs <- function(d, lab_names, treat_names) {
 
 data <- read_csv(datapath) %>%
   select(-contains('_dT')) %>%
-  filter(taxRank == "G")
+  filter(taxRank == "S")
 
 abun_data <- select(data, -taxRank, -lineage) %>%
   column_to_rownames('name') %>%
@@ -94,11 +94,11 @@ phylo_obj <- phyloseq(OTU, samples)
 
 # Call --------------------------------------------------------------------
 # 3 different models differing in their formulas
-mod1 <- ancombc(phylo_obj,
-                formula = 'treatment',
-                p_adj_method = "BH",
-                group = 'treatment',
-                global = T)
+# mod1 <- ancombc(phylo_obj,
+#                 formula = 'treatment',
+#                 p_adj_method = "BH",
+#                 group = 'treatment',
+#                 global = T)
 
 # includes replicate as confounding variable
 mod2 <- ancombc(phylo_obj,
@@ -114,17 +114,17 @@ mod3 <- ancombc(phylo_obj,
                 group = 'treatment',
                 global = T)
 
-# write.csv(mod1$res,
-#           file = "ctx_2020_clo_genus_mod1.csv",
+# write.csv(mod2$res,
+#           file = "ctx_2020_clo_species_mod2.csv",
 #           row.names = T)
 # 
-# write.csv(mod2$res,
-#           file = "ctx_2020_clo_genus_mod2.csv",
+# write.csv(mod3$res,
+#           file = "ctx_2020_clo_species_mod3.csv",
 #           row.names = T)
 
 
-mod1$res
-mod1$res_global
+# mod1$res
+# mod1$res_global
 
 mod2$res
 mod2$res_global
@@ -137,12 +137,13 @@ mod3$res_global
 
 df <- data.frame(mod2$res) %>%
   select(contains('treatmentCLO')) %>%
-  select(contains('beta')|contains('q_val')|contains('diff')) %>%
-  mutate(diff_abun = ifelse(df$q_val.treatmentCLO < 0.05,
-                            ifelse(abs(df$beta.treatmentCLO) >= 0,
-                                   'Positive',
-                                   'Negative'),
-                            'No Change'))
+  select(contains('beta')|contains('q_val')|contains('diff'))
+
+df <- mutate(df, diff_abun = ifelse(df$q_val.treatmentCLO < 0.05,
+                              ifelse(df$beta.treatmentCLO >= 0,
+                                     'Positive',
+                                     'Negative'),
+                              'No Change'))
 
 # adjust factor levels for plotting
 df$diff_abun <- factor(df$diff_abun,
@@ -152,18 +153,18 @@ da_plot <- ggplot(df,
                   aes(x = beta.treatmentCLO,
                       y = -log10(q_val.treatmentCLO),
                       colour = diff_abun)) +
-  geom_point(alpha=0.4, size=3) +
-  scale_color_manual(values=c('red', 'blue')) +
+  geom_point(alpha=0.5, size=3) +
+  scale_color_manual(values=c('blue', 'black', 'red')) +
   xlim(c(-1.5,1.5)) +
   geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
   geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
   labs(x = "ln(fold change)",
        y = "-log10(adj. p-value)",
-       title = "Colony Control vs CLO - Genus Differential Abundance") +
+       title = "Colony Control vs CLO - Species Differential Abundance") +
   theme(legend.position = "right",
         legend.title = element_blank())
 
 da_plot
 
-ggsave(da_plot,
-       filename = 'ctx_control_clo_genus_da.png')
+# ggsave(da_plot,
+#        filename = 'ctx_control_clo_species_treatrep.png')
