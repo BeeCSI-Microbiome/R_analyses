@@ -45,7 +45,6 @@ widen_results_function <- function(krakenReportPaths, krakenReportNames, outdir)
     map_dfr(function(x){
       x <- x$result %>%
         filter(!name %in% taxa_to_remove) %>%
-        filter(taxRank != "-") %>%
         mutate(taxLineage = str_replace(taxLineage, "-_root\\|-_cellular organisms\\|", "")) %>%
         mutate(taxLineage = str_replace(taxLineage, "-_root\\|", ""))
       x
