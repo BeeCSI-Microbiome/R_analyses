@@ -3,20 +3,20 @@
 # Takes some functions from exploratory_functions.R
 
 # Author(s): Jonathan Ho
-# Updated: Mar 29, 2022
+# Updated: Apr 11, 2022
 
 library(tidyverse)
 library(ANCOMBC)
 library(microbiome)
 
 # User Defined Variables --------------------------------------------------
-datapath <- 'results/clo_2020/plot_data/clo_raw_clade.csv'
+datapath <- 'results/thi_2020/plot_data/thi_raw_clade.csv'
 treat_names <- c("Control","Acute", "Sublethal")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
+rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 lab_names <- c("Lab 1", "Lab 2")
-plot_title <- "Caged Control vs Acute CLO - Species DA"
-plot_file_name <- 'clo_control_acute_species_treatrep.png'
-summary_file_name <- "clo_2020_species_mod2_trunc.csv"
+plot_title <- "Caged Control vs Acute THI - Genus DA"
+plot_file_name <- 'thi_control_acute_genus_treatrep.png'
+summary_file_name <- "thi_2020_genus_mod2_trunc.csv"
 
 # Functions ---------------------------------------------------------------
 # cleans data into tidy format
@@ -51,14 +51,19 @@ treat_reps <- function(d, treat_names, rep_names) {
   # adjust factor levels for future plotting
   d$treatment <- factor(d$treatment,
                         levels = treat_names)
+  
+  # test for baseline replicate
+  # d$replicate <- factor(d$replicate,
+  #                       levels = rep_names) %>%
+  #   relevel("Rep 2")
   return(d)
 }
 
-# adds lab metadata for ctx experiment
+# adds lab metadata for experiment
 add_labs <- function(d, lab_names, treat_names) {
   # calculate num of each lab from number of treatments given
-  num_lab1 <- length(treat_names)*3
-  num_lab2 <- length(treat_names)*2
+  num_lab1 <- length(treat_names)*2
+  num_lab2 <- length(treat_names)*3
   
   # add lab1
   lab = c(rep(lab_names[1], num_lab1))
@@ -74,7 +79,7 @@ add_labs <- function(d, lab_names, treat_names) {
 # Setup -------------------------------------------------------------------
 
 data <- read_csv(datapath) %>%
-  filter(taxRank == "S")
+  filter(taxRank == "G")
 
 abun_data <- select(data, -taxRank, -lineage) %>%
   column_to_rownames('name') %>%
@@ -136,9 +141,9 @@ mod2 <- ancombc(phylo_obj,
 # mod1$res
 # mod1$res_global
 
-# mod2$res$diff_abn
+# mod2$res
 # mod2$res_global
-# 
+
 # mod3$res
 # mod3$res_global
 
