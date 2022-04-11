@@ -15,13 +15,77 @@ import("tidyr")
 import("dplyr")
 import("Biobase")
 import("stats")
+import("tibble")
+
 meg_functions <- use("scripts/meg_utility_functions.R")
 
 
+# This function is for recalculating clade counts from scaled taxon counts
+calc_clade_counts <- function(tb){
+  
+  # make row names into lineage column
+  tb <- cbind(rownames(tb), data.frame(tb, row.names=NULL))
+  colnames(tb)[1] <- "lineage"
+  
+  # Count lineage_depth. Clade counts will be counted from the deepest leaves up
+  tb <- tb %>%
+    mutate(lineage_depth = str_count(lineage, '\\|'), .after = lineage)
+  
+  # '|' characters must be changed because they interfere with regex functions
+  tb <- tb %>% 
+    mutate(lineage = str_replace_all(lineage, "\\|", ">"))
+  
+  # Set remaining NA values to 0
+  tb[is.na(tb)] <- 0
+  
+  # Pivot samples into 1 column
+  tb <- tb %>% 
+    tidyr::pivot_longer(
+      cols = -c(lineage, lineage_depth),
+      names_to = "sample",
+      values_to = "scaled_reads"
+    )
+  
+  # Sort rows by lineage depth
+  tb <- arrange(tb, desc(lineage_depth))
+  
+  # Sum reads from rows with the following conditions:
+  #   - samples match
+  #   - lineage depth is equal (to get taxon count of that taxa), or 1 greater, 
+  #     to sum up subtaxa
+  #   - lineage is contained within the subtaxa lineage   
+  # TODO: This implementation is likely exponential in time. There is probably a better way
+  for(i in 1:nrow(tb)){
+    row <- tb[i, ]
+    row$scaled_reads <- sum(
+      dplyr::filter(tb,
+             sample == row$sample,
+             lineage_depth == row$lineage_depth + 1 | lineage_depth == row$lineage_depth,
+             str_detect(lineage, row$lineage))$scaled_reads)
+    tb[i, ] <- row
+  }
+  
+  # Pivot samples back into their own columns
+  tb <- tb %>% 
+    tidyr::pivot_wider(
+      names_from = "sample",
+      values_from = c("scaled_reads")
+    )
+  
+  # Remove the "lineage_depth" column
+  tb <- tb[, !(colnames(tb) %in% c("lineage_depth"))]
+  # Reinsert '|' to and move lineages to row names again
+  tb <- tb %>% 
+    mutate(lineage = str_replace_all(lineage, ">", "\\|"))
+  tb <- column_to_rownames(tb, var = "lineage")
+}
+
+
+# This function is called from main.R to perform differential abundance analysis
 export("kraken_differential_abundance")
 kraken_differential_abundance <- function (kraken_matrix_dir,
                                            metadata_filepath,
-                                           da_stats_dir,
+                                           da_dir,
                                            statistical_analyses,
                                            css_percentile=0.5) {
   # File input paths
@@ -88,20 +152,34 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
   
   
   # Normalizing unsplit Kraken --------------------------------------
-  
   kraken_css <- 
     kraken_new_mr %>%
     map(~ cumNorm(.x, p = css_percentile))
-  # Save normalization stats
-  exportStats(kraken_css[[1]], file=file.path(da_stats_dir, "CSS_clade_normalization_stats.tsv"))
-  exportStats(kraken_css[[2]], file=file.path(da_stats_dir, "CSS_taxa_normalization_stats.tsv"))
+  
+  clade_lineages <- row.names(MRcounts(kraken_new_mr[[1]]))
+  taxon_lineages <- row.names(MRcounts(kraken_new_mr[[2]]))
+  
+  # taxa in clade list but not in taxon list are those with 0 taxon counts
+  zero_count_lineages <- setdiff(clade_lineages, taxon_lineages)
+  # extract rows of those taxa, then set counts to NA
+  zero_count_rows <- MRcounts(kraken_new_mr[[1]])[zero_count_lineages,]
+  zero_count_rows[TRUE] <- NA
+  
+  # append the zero-clades to taxon count table, which will be used to
+  # recalculate clade counts using scaled taxon counts
+  new_clade_counts <- rbind(MRcounts(kraken_css[[2]], norm = TRUE), zero_count_rows)
+  new_clade_counts <- calc_clade_counts(new_clade_counts)
+  
+  exportStats(kraken_css[[2]], file=file.path(da_dir, "CSS_taxa_normalization_stats.tsv"))
   
   
   # Extract the normalized counts into data tables for aggregation
-  
   kraken_norm <- 
     kraken_css %>%
     map(~ data.table(MRcounts(.x, norm=T)))
+  
+  # Replace clade norm with new experiment with recalculated clade counts
+  kraken_norm[[1]] <- data.table(new_clade_counts)
   
   kraken_raw <- 
     kraken_css %>%
@@ -118,7 +196,6 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
   kraken_taxonomy_split <- 
     kraken_taxonomy %>%
     map(~ str_split(string = .x$id, pattern = "\\|"))
-  
   
   
   # Kraken taxonomy - splitting lineages ----
@@ -409,18 +486,10 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
     rownames(pData(kraken_taxon_norm_analytic[[l]])) <- metadata[sample_idx, .SD, .SDcols="ID"][["ID"]]
     fData(kraken_taxon_norm_analytic[[l]]) <- data.frame(Feature=rownames(MRcounts(kraken_taxon_norm_analytic[[l]])))
     rownames(fData(kraken_taxon_norm_analytic[[l]])) <- rownames(MRcounts(kraken_taxon_norm_analytic[[l]]))
-    pData(kraken_taxon_norm_analytic[[l]]@expSummary$expSummary)$normFactors <- calcNormFactors(kraken_new_mr$cladeReads, p=0.5)
+    pData(kraken_taxon_norm_analytic[[l]]@expSummary$expSummary)$normFactors <- calcNormFactors(kraken_new_mr$taxonReads, p=0.5)
   }
   
-  for( l in 1:length(kraken_taxon_raw_analytic) ) {
-    sample_idx <- match(colnames(MRcounts(kraken_taxon_raw_analytic[[l]])), metadata[["ID"]])
-    pData(kraken_taxon_raw_analytic[[l]]) <- data.frame(
-      metadata[sample_idx, .SD, .SDcols=!"ID"])
-    rownames(pData(kraken_taxon_raw_analytic[[l]])) <- metadata[sample_idx, .SD, .SDcols="ID"][["ID"]]
-    fData(kraken_taxon_raw_analytic[[l]]) <- data.frame(Feature=rownames(MRcounts(kraken_taxon_raw_analytic[[l]])))
-    rownames(fData(kraken_taxon_raw_analytic[[l]])) <- rownames(MRcounts(kraken_taxon_raw_analytic[[l]]))
-  }
-  
+  # Use the taxon norm factors because scaled clade counts were calculated from scaled taxon counts
   for( l in 1:length(kraken_clade_norm_analytic) ) {
     sample_idx <- match(colnames(MRcounts(kraken_clade_norm_analytic[[l]])), metadata[["ID"]])
     pData(kraken_clade_norm_analytic[[l]]) <- data.frame(
@@ -431,19 +500,8 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
     pData(kraken_clade_norm_analytic[[l]]@expSummary$expSummary)$normFactors <- calcNormFactors(kraken_new_mr$taxonReads, p=0.5)
   }
   
-  for( l in 1:length(kraken_clade_raw_analytic) ) {
-    sample_idx <- match(colnames(MRcounts(kraken_clade_raw_analytic[[l]])), metadata[["ID"]])
-    pData(kraken_clade_raw_analytic[[l]]) <- data.frame(
-      metadata[sample_idx, .SD, .SDcols=!"ID"])
-    rownames(pData(kraken_clade_raw_analytic[[l]])) <- metadata[sample_idx, .SD, .SDcols="ID"][["ID"]]
-    fData(kraken_clade_raw_analytic[[l]]) <- data.frame(Feature=rownames(MRcounts(kraken_clade_raw_analytic[[l]])))
-    rownames(fData(kraken_clade_raw_analytic[[l]])) <- rownames(MRcounts(kraken_clade_raw_analytic[[l]]))
-  }
-  
   kraken_taxon_names <- names(kraken_taxon_raw_analytic)
   kraken_clade_names <- names(kraken_clade_raw_analytic)
-  
-  
   
   # Apply differential abundance analysis
   for (a in 1:length(statistical_analyses)){
@@ -455,7 +513,7 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
                              filter_min_threshold=0.15,
                              contrast_list=statistical_analyses[[a]]$contrasts,
                              random_effect_var=statistical_analyses[[a]]$random_effect,
-                             outdir=da_stats_dir,
+                             outdir=da_dir,
                              analysis_name=statistical_analyses[[a]]$name,
                              analysis_subset=statistical_analyses[[a]]$subsets,
                              data_type="Microbiome_taxonReads",
@@ -472,7 +530,7 @@ kraken_differential_abundance <- function (kraken_matrix_dir,
                              filter_min_threshold=0.15,
                              contrast_list=statistical_analyses[[a]]$contrasts,
                              random_effect_var=statistical_analyses[[a]]$random_effect,
-                             outdir=da_stats_dir,
+                             outdir=da_dir,
                              analysis_name=statistical_analyses[[a]]$name,
                              analysis_subset=statistical_analyses[[a]]$subsets,
                              data_type="Microbiome_cladeReads",

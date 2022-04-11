@@ -92,14 +92,14 @@ meg_fitZig <- function(data_list,
                              mod = mod_select,
                              zeroMod = zero_mod_select,
                              control = settings,
-                             useCSSoffset = F)
+                             useCSSoffset = T)
         }
         else {
           res[[l]] <- fitZig(obj = local_obj[[l]],
                              mod = mod_select,
                              zeroMod = zero_mod_select,
                              control = settings,
-                             useCSSoffset = F,
+                             useCSSoffset = T,
                              useMixedModel = T,
                              block = pData(local_obj[[l]])[, random_effect_var])
         }
@@ -117,8 +117,7 @@ meg_fitZig <- function(data_list,
     
     local_contrasts <- contrast_list
     local_contrasts[[length(local_contrasts)+1]] <- res[[l]]@fit$design
-    # $ S4 error caused here
-    
+
     names(local_contrasts)[length(local_contrasts)] <- "levels"
     
     contrast_matrix <- do.call(makeContrasts, local_contrasts)
@@ -143,7 +142,7 @@ meg_fitZig <- function(data_list,
     for( c in 1:ncol(contrast_fit$contrasts) ) {
       tophits <- topTable(contrast_fit, p.value = pval, confint = T,
                           number = top_hits, sort.by = "AveExpr", coef = c)
-      
+
       if( nrow(tophits) > 0) {
         temp_res <- data.table(
           Node.Name = rownames(tophits),
