@@ -99,13 +99,71 @@ mod <- ancombc(genus_obj,
 
 # Visualize ---------------------------------------------------------------
 
+prep_plot <- function(ancombc_mod, treat_names) {
+  
+  # only get treatment related betas, adj p-vals, and diffs
+  df <- data.frame(mod$res) %>%
+    select(contains('treatment')) %>%
+    select(contains('beta')|contains('q_val')|contains('diff'))
+  
+  
+  # probably loop through treatment names and do everything inside
+  controls <- c('Control', 'unexposed')
+  just_treats <- treat_names[!treat_names %in% controls]
+  for (i in just_treats) {
+    diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
+      sym()
+    
+    
+  }
+  
+  
+  paste('treatment', treat_names[2], sep = '')
+  
+  
+  
+  return(df)
+}
 # only get treatment related betas, adj p-vals, and diffs
 df <- data.frame(mod$res) %>%
   select(contains('treatment')) %>%
   select(contains('beta')|contains('q_val')|contains('diff'))
 
 # should work regardless of number of treatments and for every treatment
-# paste('treatment', treat_names[2], sep = '')
+# diff_abun_i <- paste('diff_abun_', treat_names[2], sep = '')%>%
+#   sym()
+# 
+# q_val_i <- paste('q_val.treatment', treat_names[2], sep = '') %>%
+#   sym()
+# 
+# beta_i <- paste('beta.treatment', treat_names[2], sep = '') %>%
+#   sym()
+
+controls <- c('Control', 'unexposed')
+just_treats <- treat_names[!treat_names %in% controls]
+for (i in just_treats) {
+  diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
+    sym()
+  
+  q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+    sym()
+  
+  beta_i <- paste('beta.treatment', i, sep = '') %>%
+    sym()
+  
+  df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
+                                                    colnames(df))] < 0.05,
+                                           ifelse(df[,grep(beta_i,
+                                                           colnames(df))] >= 0,
+                                                  'Increase',
+                                                  'Decrease'),
+                                           'No Change'))
+  
+}
+
+
+
+############################## Testing above
 
 df <- mutate(df, acute_diff_abun = ifelse(df$q_val.treatmentAcute < 0.05,
                                           ifelse(df$beta.treatmentAcute >= 0,
