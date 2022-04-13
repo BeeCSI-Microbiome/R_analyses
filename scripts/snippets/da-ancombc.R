@@ -98,7 +98,7 @@ mod <- ancombc(genus_obj,
 # mod$res
 
 # Visualize ---------------------------------------------------------------
-
+# setup data frame for plotting and later saving
 prep_plot <- function(ancombc_mod, treat_names) {
   
   # only get treatment related betas, adj p-vals, and diffs
@@ -106,63 +106,92 @@ prep_plot <- function(ancombc_mod, treat_names) {
     select(contains('treatment')) %>%
     select(contains('beta')|contains('q_val')|contains('diff'))
   
-  
-  # probably loop through treatment names and do everything inside
+  # loop through treatment names and do everything inside
   controls <- c('Control', 'unexposed')
   just_treats <- treat_names[!treat_names %in% controls]
   for (i in just_treats) {
+    # setup identifiable strings for i-th treatment
     diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
       sym()
+    q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+      sym()
+    beta_i <- paste('beta.treatment', i, sep = '') %>%
+      sym()
     
+    # determines whether DA are increases or decreases
+    df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
+                                                      colnames(df))] < 0.05,
+                                             ifelse(df[,grep(beta_i,
+                                                             colnames(df))] >= 0,
+                                                    'Increase',
+                                                    'Decrease'),
+                                             'No Change'))
+    
+    # adjust factor levels for plotting
+    df[,grep(diff_abun_i, colnames(df))] <- factor(df[,grep(diff_abun_i, colnames(df))],
+                                                   levels = c('Increase', 'No Change', 'Decrease'))
     
   }
-  
-  
-  paste('treatment', treat_names[2], sep = '')
-  
-  
-  
+
   return(df)
 }
-# only get treatment related betas, adj p-vals, and diffs
-df <- data.frame(mod$res) %>%
-  select(contains('treatment')) %>%
-  select(contains('beta')|contains('q_val')|contains('diff'))
 
-# should work regardless of number of treatments and for every treatment
-# diff_abun_i <- paste('diff_abun_', treat_names[2], sep = '')%>%
-#   sym()
-# 
-# q_val_i <- paste('q_val.treatment', treat_names[2], sep = '') %>%
-#   sym()
-# 
-# beta_i <- paste('beta.treatment', treat_names[2], sep = '') %>%
-#   sym()
+df <- prep_plot(mod, treat_names)
+
+# generates and saves? volcano plot for every pairwise treatment
+plot_and_save <- function(df, treat_names) {
+  # loop through treatment names and do everything inside
+  controls <- c('Control', 'unexposed')
+  just_treats <- treat_names[!treat_names %in% controls]
+  for (i in just_treats) {
+    # setup identifiable strings for i-th treatment
+    diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
+      sym()
+    q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+      sym()
+    beta_i <- paste('beta.treatment', i, sep = '') %>%
+      sym()
+  
+    # give info to a plotting function, but save here
+    ggplot(df,
+           aes(x = beta.treatmentAcute,
+               y = -log10(q_val.treatmentAcute),
+               colour = diff_abun_Acute)) +
+      geom_point(alpha=0.5, size=3) +
+      # may need to modify colour values based on whether there are any increases/decreases
+      scale_color_manual(values=c('Increase' = 'blue',
+                                  'No Change' = 'black',
+                                  'Decrease' = 'red')) +
+      # should check that limits allow all points to be visible
+      xlim(c(-2,2)) +
+      geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
+      geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
+      labs(x = "ln(fold change)",
+           y = "-log10(adj. p-value)",
+           title = plot_title) +
+      theme(legend.position = "right",
+            legend.title = element_blank())
+    
+    da_plot
+    
+    
+    
+    
+    }
+  
+}
 
 controls <- c('Control', 'unexposed')
 just_treats <- treat_names[!treat_names %in% controls]
 for (i in just_treats) {
+  # setup identifiable strings for i-th treatment
   diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
     sym()
-  
   q_val_i <- paste('q_val.treatment', i, sep = '') %>%
     sym()
-  
   beta_i <- paste('beta.treatment', i, sep = '') %>%
     sym()
-  
-  df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
-                                                    colnames(df))] < 0.05,
-                                           ifelse(df[,grep(beta_i,
-                                                           colnames(df))] >= 0,
-                                                  'Increase',
-                                                  'Decrease'),
-                                           'No Change'))
-  
 }
-
-
-
 ############################## Testing above
 
 df <- mutate(df, acute_diff_abun = ifelse(df$q_val.treatmentAcute < 0.05,
@@ -186,12 +215,13 @@ df$sublethal_diff_abun <- factor(df$sublethal_diff_abun,
 da_plot <- ggplot(df,
                   aes(x = beta.treatmentAcute,
                       y = -log10(q_val.treatmentAcute),
-                      colour = acute_diff_abun)) +
+                      colour = diff_abun_Acute)) +
   geom_point(alpha=0.5, size=3) +
-  # may need to modify colour values based on whether there are any increases/decreases
-  scale_color_manual(values=c('blue', 'black', 'red')) +
-  # should check that limits allow all points to be visible
-  xlim(c(-2,2)) +
+  scale_color_manual(values=c('Increase' = 'blue',
+                              'No Change' = 'black',
+                              'Decrease' = 'red')) +
+  xlim(0-abs(max(df$beta.treatmentAcute)+0.25), 
+       0+abs(max(df$beta.treatmentAcute)+0.25)) +
   geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
   geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
   labs(x = "ln(fold change)",
