@@ -19,7 +19,6 @@ treat_names <- c("Control","Acute","Sublethal")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
 base_title <- 'Caged Control vs'
 dataset_name <- 'clo_2020'
-# plot_file_name <- 'thi_control_acute_genus_treatrep.png'
 summary_file_name <- "thi_2020_genus_mod_trunc.csv"
 
 
@@ -135,28 +134,38 @@ visualize_save <- function(ancombc_mod, treat_names) {
            filename = paste(plot_title_i, '.png', sep = ''))
   }
 
-  # return(df)
 }
           
 # plots volcano plot for given data and column names in data frame
-volc_plot <- function(df, beta, qval, da, plot_title) {
+volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
 
+  # determine x range
+  x_default = 1.5
+  x_data = max(abs(df[,grep(beta_i,colnames(df))])+0.25)
+  x_use = max(x_default, x_data)
+  
+  # determine y range
+  y_default = 1.5
+  y_data = max(abs(df[,grep(q_val_i,colnames(df))])+0.25)
+  y_use = max(y_default, y_data) 
+  
+  # plot
   da_plot <- ggplot(df,
-                    aes(x = !!beta,
-                        y = -log10(!!qval),
-                        colour = !!da)) +
+                    aes(x = !!beta_i,
+                        y = -log10(!!q_val_i),
+                        colour = !!diff_abun_i)) +
     geom_point(alpha=0.5, size=3) +
     scale_color_manual(values=c('Increase' = 'blue',
                                 'No Change' = 'black',
                                 'Decrease' = 'red')) +
-    # TODO: use ifelse to set default so lines always visible?
-    xlim(0-max(abs(df[,grep(beta,colnames(df))])+0.25), 
-         0+max(abs(df[,grep(beta,colnames(df))])+0.25)) +
+    xlim(0-x_use, 
+         0+x_use) +
+    ylim(0, y_use) +
     geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
     geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
     labs(x = "ln(fold change)",
          y = "-log10(adj. p-value)",
-         title = plot_title) +
+         title = plot_title_i) +
     theme(legend.position = "right",
           legend.title = element_blank())
   
@@ -171,6 +180,70 @@ mod <- ancombc(genus_obj,
                formula = 'treatment+replicate',
                p_adj_method = "BH")
 visualize_save(mod, treat_names)
+
+
+
+######## Testing
+
+# only get treatment related betas, adj p-vals, and diffs
+df <- data.frame(mod$res) %>%
+  select(contains('treatment')) %>%
+  select(contains('beta')|contains('q_val')|contains('diff'))
+
+# loop through treatment names and do everything inside
+controls <- c('Control', 'unexposed')
+just_treats <- treat_names[!treat_names %in% controls]
+
+# setup identifiable strings for i-th treatment
+diff_abun_i <- paste('diff_abun_', just_treats[1], sep = '') %>%
+  sym()
+q_val_i <- paste('q_val.treatment', just_treats[1], sep = '') %>%
+  sym()
+beta_i <- paste('beta.treatment', just_treats[1], sep = '') %>%
+  sym()
+plot_title_i <- paste(base_title, just_treats[1], '-', dataset_name)
+
+# determines whether DA are increases or decreases
+df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
+                                                  colnames(df))] < 0.05,
+                                         ifelse(df[,grep(beta_i,
+                                                         colnames(df))] >= 0,
+                                                'Increase',
+                                                'Decrease'),
+                                         'No Change'))
+
+# adjust factor levels for plotting
+df[,grep(diff_abun_i, colnames(df))] <- factor(df[,grep(diff_abun_i, colnames(df))],
+                                               levels = c('Increase', 'No Change', 'Decrease'))
+
+# determine x range
+x_default = 1.5
+x_data = max(abs(df[,grep(beta_i,colnames(df))])+0.25)
+x_use = max(x_default, x_data)
+
+# determine y range
+y_default = 1.5
+y_data = max(abs(df[,grep(q_val_i,colnames(df))])+0.25)
+y_use = max(y_default, y_data)  
+
+ggplot(df,
+       aes(x = !!beta_i,
+           y = -log10(!!q_val_i),
+           colour = !!diff_abun_i)) +
+  geom_point(alpha=0.5, size=3) +
+  scale_color_manual(values=c('Increase' = 'blue',
+                              'No Change' = 'black',
+                              'Decrease' = 'red')) +
+  xlim(0-x_use, 
+       0+x_use) +
+  ylim(0, y_use) +
+  geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
+  geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
+  labs(x = "ln(fold change)",
+       y = "-log10(adj. p-value)",
+       title = plot_title_i) +
+  theme(legend.position = "right",
+        legend.title = element_blank())
 
 
 
