@@ -2,24 +2,23 @@
 # abundance analysis and producing volcano plots.
 # Takes two functions from exploratory_functions.R for data wrangling:
 # tidy_data and treat_reps
-# Takes as input: raw clade counts (should not be scaled/normalized)
+# Takes as input: raw clade counts (should *not* be scaled/normalized)
 # Uses treatment+replicate for as the model, but this can be 
 # customized in the ancombc function itself.
 
 # Author(s): Jonathan Ho
-# Updated: Apr 11, 2022
+# Updated: Apr 14, 2022
 
 library(tidyverse)
 library(ANCOMBC)
 library(microbiome)
 
 # User Defined Variables --------------------------------------------------
-datapath <- 'results/clo_2020/plot_data/clo_raw_clade.csv'
-treat_names <- c("Control","Acute","Sublethal")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
-base_title <- 'Caged Control vs'
-dataset_name <- 'clo_2020'
-summary_file_name <- "clo_2020_genus_mod_trunc.csv"
+datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
+treat_names <- c("Control","CLO","THI")
+rep_names <- c("Rep 2", "Rep 3", "Rep 5", "Rep 4", "Rep 6")
+base_title <- 'Colony Control vs'
+dataset_name <- 'ctx_2020'
 
 
 # Functions from exploratory_functions.R ----------------------------------
@@ -61,40 +60,31 @@ treat_reps <- function(d, treat_names, rep_names) {
 }
 
 
-# ANCOM-BC ----------------------------------------------------------------
+# Functions for ANCOM-BC --------------------------------------------------
+# setup data and object for ancombc
 prep_data <- function(datapath, treat_names, rep_names, rank) {
   data <- read_csv(datapath) %>%
     filter(taxRank == rank)
   
-  # setup abundance data
   abun_data <- select(data, -taxRank, -lineage) %>%
     column_to_rownames('name') %>%
     as.matrix()
   
-  # setup metadata
   metadata <- tidy_data(data) %>%
     select(sample) %>%
     treat_reps(treat_names, rep_names) %>%
     column_to_rownames('sample')
   
-  # combine into phyloseq object
   OTU <- otu_table(abun_data, taxa_are_rows = T)
   samples <- sample_data(metadata)
   
   phylo_obj <- phyloseq(OTU, samples)
   
   return(phylo_obj)
-  
 }
 
-
-
-# optionally inspect result using
-# mod$res
-
-# Visualize ---------------------------------------------------------------
-# setup data frame for plotting and later saving
-visualize_save <- function(ancombc_mod, treat_names, dataset_name, rank) {
+# visualizes and saves plots and csv 
+visualize_save <- function(mod, treat_names, dataset_name, rank) {
   
   # only get treatment related betas, adj p-vals, and diffs
   df <- data.frame(mod$res) %>%
@@ -112,7 +102,7 @@ visualize_save <- function(ancombc_mod, treat_names, dataset_name, rank) {
       sym()
     beta_i <- paste('beta.treatment', i, sep = '') %>%
       sym()
-    plot_title_i <- paste(base_title, i, '-', dataset_name)
+    plot_title_i <- paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
     
     # determines whether DA are increases or decreases
     df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
@@ -139,7 +129,7 @@ visualize_save <- function(ancombc_mod, treat_names, dataset_name, rank) {
 
 }
           
-# plots volcano plot for given data and column names in data frame
+# volcano plot helper
 volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
 
   # determine x range
@@ -175,85 +165,28 @@ volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
   return(da_plot)
 }
 
+# main function
+main <- function() {
+  # genus level
+  genus_obj <- prep_data(datapath, treat_names, rep_names, "G")
+  
+  genus_mod <- ancombc(genus_obj,
+                 formula = 'treatment+replicate',
+                 p_adj_method = "BH")
+  
+  visualize_save(genus_mod, treat_names, dataset_name, 'genus')
+  
+  # species level
+  species_obj <- prep_data(datapath, treat_names, rep_names, "S")
+  
+  species_mod <- ancombc(species_obj,
+                       formula = 'treatment+replicate',
+                       p_adj_method = "BH")
+  
+  visualize_save(species_mod, treat_names, dataset_name, 'species')
+}
 
 
-
-
-######## Testing
-
-# only get treatment related betas, adj p-vals, and diffs
-df <- data.frame(mod$res) %>%
-  select(contains('treatment')) %>%
-  select(contains('beta')|contains('q_val')|contains('diff'))
-
-# loop through treatment names and do everything inside
-controls <- c('Control', 'unexposed')
-just_treats <- treat_names[!treat_names %in% controls]
-
-# setup identifiable strings for i-th treatment
-diff_abun_i <- paste('diff_abun_', just_treats[2], sep = '') %>%
-  sym()
-q_val_i <- paste('q_val.treatment', just_treats[2], sep = '') %>%
-  sym()
-beta_i <- paste('beta.treatment', just_treats[2], sep = '') %>%
-  sym()
-plot_title_i <- paste(base_title, just_treats[2], '-', dataset_name)
-
-# determines whether DA are increases or decreases
-df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
-                                                  colnames(df))] < 0.05,
-                                         ifelse(df[,grep(beta_i,
-                                                         colnames(df))] >= 0,
-                                                'Increase',
-                                                'Decrease'),
-                                         'No Change'))
-
-# adjust factor levels for plotting
-df[,grep(diff_abun_i, colnames(df))] <- factor(df[,grep(diff_abun_i, colnames(df))],
-                                               levels = c('Increase', 'No Change', 'Decrease'))
-
-# determine x range
-x_default = 1.35
-x_data = max(abs(df[,grep(beta_i,colnames(df))]))
-x_use = max(x_default, x_data)+0.15
-
-# determine y range
-y_default = 1.40
-y_data = -log10(min(df[,grep(q_val_i,colnames(df))]))
-y_use = max(y_default, y_data)+0.10
-
-ggplot(df,
-       aes(x = !!beta_i,
-           y = -log10(!!q_val_i),
-           colour = !!diff_abun_i)) +
-  geom_point(alpha=0.5, size=3) +
-  scale_color_manual(values=c('Increase' = 'blue',
-                              'No Change' = 'black',
-                              'Decrease' = 'red')) +
-  xlim(0-x_use, 
-       0+x_use) +
-  ylim(0, y_use) +
-  geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
-  geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
-  labs(x = "ln(fold change)",
-       y = "-log10(adj. p-value)",
-       title = plot_title_i) +
-  theme(legend.position = "right",
-        legend.title = element_blank())
-
-
-
-
-
-
-# TODO: use single function to combine these 3 and do both genus and species
-genus_obj <- prep_data(datapath, treat_names, rep_names, "G")
-
-# run ancombc
-mod <- ancombc(genus_obj,
-               formula = 'treatment+replicate',
-               p_adj_method = "BH")
-
-visualize_save(mod, treat_names, dataset_name, 'genus')
-
+# Run ---------------------------------------------------------------------
+main()
 
