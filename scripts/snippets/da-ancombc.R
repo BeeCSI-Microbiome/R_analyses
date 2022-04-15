@@ -19,7 +19,7 @@ treat_names <- c("Control","Acute","Sublethal")
 rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
 base_title <- 'Caged Control vs'
 dataset_name <- 'clo_2020'
-summary_file_name <- "thi_2020_genus_mod_trunc.csv"
+summary_file_name <- "clo_2020_genus_mod_trunc.csv"
 
 
 # Functions from exploratory_functions.R ----------------------------------
@@ -94,7 +94,7 @@ prep_data <- function(datapath, treat_names, rep_names, rank) {
 
 # Visualize ---------------------------------------------------------------
 # setup data frame for plotting and later saving
-visualize_save <- function(ancombc_mod, treat_names) {
+visualize_save <- function(ancombc_mod, treat_names, dataset_name, rank) {
   
   # only get treatment related betas, adj p-vals, and diffs
   df <- data.frame(mod$res) %>%
@@ -133,6 +133,9 @@ visualize_save <- function(ancombc_mod, treat_names) {
     ggsave(da_plot,
            filename = paste(plot_title_i, '.png', sep = ''))
   }
+  write.csv(df,
+            file = paste(dataset_name, rank, 'ancombc.csv', sep = '_'),
+            row.names = T)
 
 }
           
@@ -140,14 +143,14 @@ visualize_save <- function(ancombc_mod, treat_names) {
 volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
 
   # determine x range
-  x_default = 1.25
+  x_default = 1.35
   x_data = max(abs(df[,grep(beta_i,colnames(df))]))
-  x_use = max(x_default, x_data)
+  x_use = max(x_default, x_data)+0.15
   
   # determine y range
-  y_default = 1.5
+  y_default = 1.40
   y_data = -log10(min(df[,grep(q_val_i,colnames(df))]))
-  y_use = max(y_default, y_data) 
+  y_use = max(y_default, y_data)+0.10
   
   # plot
   da_plot <- ggplot(df,
@@ -172,14 +175,7 @@ volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
   return(da_plot)
 }
 
-# TODO: use single function to combine these 3 and do both genus and species
-genus_obj <- prep_data(datapath, treat_names, rep_names, "G")
 
-# run ancombc
-mod <- ancombc(genus_obj,
-               formula = 'treatment+replicate',
-               p_adj_method = "BH")
-visualize_save(mod, treat_names)
 
 
 
@@ -217,14 +213,14 @@ df[,grep(diff_abun_i, colnames(df))] <- factor(df[,grep(diff_abun_i, colnames(df
                                                levels = c('Increase', 'No Change', 'Decrease'))
 
 # determine x range
-x_default = 1.25
+x_default = 1.35
 x_data = max(abs(df[,grep(beta_i,colnames(df))]))
-x_use = max(x_default, x_data)
+x_use = max(x_default, x_data)+0.15
 
 # determine y range
-y_default = 1.5
+y_default = 1.40
 y_data = -log10(min(df[,grep(q_val_i,colnames(df))]))
-y_use = max(y_default, y_data) 
+y_use = max(y_default, y_data)+0.10
 
 ggplot(df,
        aes(x = !!beta_i,
@@ -245,26 +241,19 @@ ggplot(df,
   theme(legend.position = "right",
         legend.title = element_blank())
 
-# sort and reorder data frame
-df <- rename(df,
-             adj_p_val = q_val.treatmentTHI ,
-             ln_fold_change = beta.treatmentTHI) %>%
-  select(-diff_abn.treatmentTHI)
 
-df <- df[with(df, order(q_val_i, -ln_fold_change)),]
 
-# Save Results ------------------------------------------------------------
-# TODO: incorporate saving df and sorting by significant q values
 
-# sort and reorder data frame
-# df <- rename(df,
-#              adj_p_val = q_val.treatmentTHI ,
-#              ln_fold_change = beta.treatmentTHI) %>%
-#   select(-diff_abn.treatmentTHI)
-# 
-# df <- df[with(df, order(adj_p_val, -ln_fold_change)),]
 
-write.csv(df,
-          file = summary_file_name,
-          row.names = T)
+
+# TODO: use single function to combine these 3 and do both genus and species
+genus_obj <- prep_data(datapath, treat_names, rep_names, "G")
+
+# run ancombc
+mod <- ancombc(genus_obj,
+               formula = 'treatment+replicate',
+               p_adj_method = "BH")
+
+visualize_save(mod, treat_names, dataset_name, 'genus')
+
 
