@@ -140,13 +140,13 @@ visualize_save <- function(ancombc_mod, treat_names) {
 volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
 
   # determine x range
-  x_default = 1.5
-  x_data = max(abs(df[,grep(beta_i,colnames(df))])+0.25)
+  x_default = 1.25
+  x_data = max(abs(df[,grep(beta_i,colnames(df))]))
   x_use = max(x_default, x_data)
   
   # determine y range
   y_default = 1.5
-  y_data = max(abs(df[,grep(q_val_i,colnames(df))])+0.25)
+  y_data = -log10(min(df[,grep(q_val_i,colnames(df))]))
   y_use = max(y_default, y_data) 
   
   # plot
@@ -195,13 +195,13 @@ controls <- c('Control', 'unexposed')
 just_treats <- treat_names[!treat_names %in% controls]
 
 # setup identifiable strings for i-th treatment
-diff_abun_i <- paste('diff_abun_', just_treats[1], sep = '') %>%
+diff_abun_i <- paste('diff_abun_', just_treats[2], sep = '') %>%
   sym()
-q_val_i <- paste('q_val.treatment', just_treats[1], sep = '') %>%
+q_val_i <- paste('q_val.treatment', just_treats[2], sep = '') %>%
   sym()
-beta_i <- paste('beta.treatment', just_treats[1], sep = '') %>%
+beta_i <- paste('beta.treatment', just_treats[2], sep = '') %>%
   sym()
-plot_title_i <- paste(base_title, just_treats[1], '-', dataset_name)
+plot_title_i <- paste(base_title, just_treats[2], '-', dataset_name)
 
 # determines whether DA are increases or decreases
 df <- mutate(df, !!diff_abun_i := ifelse(df[,grep(q_val_i, 
@@ -217,14 +217,14 @@ df[,grep(diff_abun_i, colnames(df))] <- factor(df[,grep(diff_abun_i, colnames(df
                                                levels = c('Increase', 'No Change', 'Decrease'))
 
 # determine x range
-x_default = 1.5
-x_data = max(abs(df[,grep(beta_i,colnames(df))])+0.25)
+x_default = 1.25
+x_data = max(abs(df[,grep(beta_i,colnames(df))]))
 x_use = max(x_default, x_data)
 
 # determine y range
 y_default = 1.5
-y_data = max(abs(df[,grep(q_val_i,colnames(df))])+0.25)
-y_use = max(y_default, y_data)  
+y_data = -log10(min(df[,grep(q_val_i,colnames(df))]))
+y_use = max(y_default, y_data) 
 
 ggplot(df,
        aes(x = !!beta_i,
@@ -245,7 +245,13 @@ ggplot(df,
   theme(legend.position = "right",
         legend.title = element_blank())
 
+# sort and reorder data frame
+df <- rename(df,
+             adj_p_val = q_val.treatmentTHI ,
+             ln_fold_change = beta.treatmentTHI) %>%
+  select(-diff_abn.treatmentTHI)
 
+df <- df[with(df, order(q_val_i, -ln_fold_change)),]
 
 # Save Results ------------------------------------------------------------
 # TODO: incorporate saving df and sorting by significant q values
