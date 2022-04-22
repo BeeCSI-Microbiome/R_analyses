@@ -412,7 +412,7 @@ act_2_nmds <- function(genus_data, speci_data, dataset_name, outdir) {
          filename = glue("{outdir}/nmds_plot_treatment_genus.png"),
          bg = "white")
   ggsave(plot = speci_treat_nmds,
-         filename = glue("{outdir}/nmds_plot_treatment_species"),
+         filename = glue("{outdir}/nmds_plot_treatment_species.png"),
          bg = "white")
 }
 
