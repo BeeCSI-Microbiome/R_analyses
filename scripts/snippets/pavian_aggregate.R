@@ -11,7 +11,7 @@ packages <- c("pavian",
 lapply(packages, library, character.only = TRUE)
 
 
-widen_results_function <- function(krakenReportPaths, outdir) {
+widen_results_function <- function(krakenReportPaths, outpath) {
   
   krakenReportNames <-
     krakenReportPaths %>%
@@ -36,35 +36,19 @@ widen_results_function <- function(krakenReportPaths, outdir) {
            taxLineage = str_replace_all(taxLineage, "\\|", ">"),
            taxLineage = str_replace_all(taxLineage, "._", ""))
   
+  krakenReportsPavianMerged$taxonReads[krakenReportsPavianMerged$taxonReads == 0] <- NA
+  
   merged_wide <- krakenReportsPavianMerged %>% 
     select(-percentage) %>% 
     pivot_wider(names_from = Sample, 
-                values_from = c(cladeReads, taxonReads),
-                values_fill = 0) %>% 
+                values_from = c(cladeReads, taxonReads)) %>% 
     relocate(name)
   
-  # make_kraken_analytical <- function(x, column){
-  #   x <- x %>%
-  #     select(Sample, name, taxRank, taxID, column, taxLineage) %>%
-  #     pivot_wider(names_from = Sample, values_from = column, values_fill = 0) %>%
-  #     rename(Lineage = taxLineage)
-  #   x
-  # }
-  # 
-  # tax_columns <- c("cladeReads", "taxonReads")
-  # 
-  # krakenAnalytical <- map(tax_columns, ~ make_kraken_analytical(krakenReportsPavianMerged, .x)) %>%
-  #   set_names(nm = tax_columns)
-  
-  # # Write matrices
-  # iwalk(krakenAnalytical,
-  #       ~ write.csv(.x, glue("{outdir}/krakenAnalytical_{.y}.csv"),
-  #                   row.names = FALSE))
-  
-  write.csv(merged_wide, glue("{outdir}/krakenAnalytical.csv"), row.names = FALSE)
+  write.csv(merged_wide, outpath, row.names = FALSE)
 }
 
-krakenReportPaths <- c("../data/cor_2020/kraken_reports/COR01e_report.txt",
-           "../data/cor_2020/kraken_reports/COR01u_report.txt")
-outdir <- "results/cor_2020_test" 
-widen_results_function(krakenReportPaths, outdir)
+krakenReportPaths <- Sys.glob("../data/ctx_2020/kraken_reports/*d0*_report.txt") %>% 
+  c(Sys.glob("../data/ctx_2020/kraken_reports/*dC*_report.txt"))
+
+outpath <- "../data/ctx_2020/CTX_dC_all_taxa.csv" 
+widen_results_function(krakenReportPaths, outpath)
