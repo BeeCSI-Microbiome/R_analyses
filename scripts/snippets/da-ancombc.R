@@ -89,7 +89,11 @@ visualize_save <- function(mod, treat_names, dataset_name, rank) {
   # only get treatment related betas, adj p-vals, and diffs
   df <- data.frame(mod$res) %>%
     select(contains('treatment')) %>%
-    select(contains('beta')|contains('q_val')|contains('diff'))
+    select(contains('beta')|contains('q_val')|contains('diff')) %>% 
+    mutate(across(contains('beta'),
+                     .fns = function(x) log2(exp(x)),
+                     .names = "log2_{col}")) %>% 
+    relocate(contains("log2"))
   
   # loop through treatment names and do everything inside
   controls <- c('Control', 'unexposed')
@@ -100,7 +104,7 @@ visualize_save <- function(mod, treat_names, dataset_name, rank) {
       sym()
     q_val_i <- paste('q_val.treatment', i, sep = '') %>%
       sym()
-    beta_i <- paste('beta.treatment', i, sep = '') %>%
+    beta_i <- paste('log2_beta.treatment', i, sep = '') %>%
       sym()
     plot_title_i <- paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
     
@@ -156,7 +160,7 @@ volc_plot <- function(df, beta_i, q_val_i, diff_abun_i, plot_title_i) {
     ylim(0, y_use) +
     geom_vline(xintercept=c(-1,1),lty=4,col="black",lwd=0.8) +
     geom_hline(yintercept = -log10(0.05), lty=4,col="black",lwd=0.8) +
-    labs(x = "ln(fold change)",
+    labs(x = "log2(fold change)",
          y = "-log10(adj. p-value)",
          title = plot_title_i) +
     theme(legend.position = "right",
