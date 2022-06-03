@@ -20,12 +20,13 @@ lapply(packages, library, character.only = TRUE)
 
 
 # Load aux scripts as modules ---------------------------------------------
-rsummary <- use("scripts/reads_summary.R") 
+rsummary <- use("scripts/reads_summary.R")
 ip <- use("scripts/initial_processing.R")
 scaling <- use("scripts/reads_scaling.R")
 exploratory <- use("scripts/exploratory_functions.R")
 widen_results <- use("scripts/widenResults.R")
-da <- use("scripts/differential_abundance.R")
+da_fitzig <- use("scripts/da_fitzig.R")
+da_ancombc <- use("scripts/da-ancombc.R")
 # _________________________________________________________________________
 
 
@@ -42,15 +43,28 @@ rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
 kraken_matrix_dir <- glue("{main_outdir}/aggregated_kraken_reports")
 # <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
+da_fitzig_dir <- glue("{da_dir}/fitzig")
+da_ancombc_dir <- glue("{da_dir}/ancombc")
 
 ## Create output directories ####
-ifelse(!dir.exists(main_outdir), dir.create(main_outdir, mode = "777"), FALSE)
-ifelse(!dir.exists(nmds_dir), dir.create(nmds_dir, mode = "777"), FALSE)
-ifelse(!dir.exists(alpha_div_dir), dir.create(alpha_div_dir, mode = "777"), FALSE)
-ifelse(!dir.exists(rel_abund_dir), dir.create(rel_abund_dir, mode = "777"), FALSE)
-ifelse(!dir.exists(kraken_matrix_dir), dir.create(kraken_matrix_dir, mode = "777"), FALSE)
+ifelse(!dir.exists(main_outdir),
+       dir.create(main_outdir, mode = "777"),
+       FALSE)
+ifelse(!dir.exists(nmds_dir),
+       dir.create(nmds_dir, mode = "777"),
+       FALSE)
+ifelse(!dir.exists(alpha_div_dir),
+       dir.create(alpha_div_dir, mode = "777"),
+       FALSE)
+ifelse(!dir.exists(rel_abund_dir),
+       dir.create(rel_abund_dir, mode = "777"),
+       FALSE)
+ifelse(!dir.exists(kraken_matrix_dir),
+       dir.create(kraken_matrix_dir, mode = "777"),
+       FALSE)
 ifelse(!dir.exists(da_dir), dir.create((da_dir), mode = "777"), FALSE)
-
+ifelse(!dir.exists(da_fitzig_dir), dir.create((da_fitzig_dir), mode = "777"), FALSE)
+ifelse(!dir.exists(da_ancombc_dir), dir.create((da_ancombc_dir), mode = "777"), FALSE)
 
 
 ## Input file paths ####
@@ -61,7 +75,8 @@ metadata_filepath <- "../data/cas_2020/cas_2020_metadata.csv"
 # Path to directory with kraken reports
 kraken_report_dir <- "../data/ctx_2020/kraken_reports"
 # Kraken report paths <DA>
-krakenReportPaths <- Sys.glob(glue("{kraken_report_dir}/*_report.txt"))
+krakenReportPaths <-
+  Sys.glob(glue("{kraken_report_dir}/*_report.txt"))
 krakenReportNames <- list.files(path = kraken_report_dir,
                                 pattern = "*_report.txt")
 
@@ -101,8 +116,7 @@ statistical_analyses = list(
     model_matrix = "~ 0 + Treatment",
     contrasts = list(
       "Treatmentcontrol - Treatmentclothianidin",
-      "Treatmentcontrol - Treatmentthiamethoxam",
-      "Treatmentclothianidin - Treatmentthiamethoxam"
+      "Treatmentcontrol - Treatmentthiamethoxam"
     ),
     random_effect = "Replicate"
   )
@@ -127,11 +141,13 @@ reads_summary <- rsummary$create_summary_table(ct, dataset_name)
 widen_results$widen_results_function(krakenReportPaths,
                                      krakenReportNames,
                                      kraken_matrix_dir)
-da$kraken_differential_abundance(kraken_matrix_dir,
-                                 metadata_filepath,
-                                 da_dir,
-                                 statistical_analyses,
-                                 css_percentile)
+da_fitzig$kraken_differential_abundance(
+  kraken_matrix_dir,
+  metadata_filepath,
+  da_fitzig_dir,
+  statistical_analyses,
+  css_percentile
+)
 
 
 # Formatting, filtering, and scaling --------------------------------------
@@ -141,9 +157,29 @@ ct <- ip$format_count_table(ct) %>%
   ip$group_taxa_of_interest()
 
 # Return list of MRexperiment object, and raw and scaled taxon and clade tables
-tables <- scaling$scaling_procedure(ct, css_percentile, dataset_name)
+tables <-
+  scaling$scaling_procedure(ct, css_percentile, dataset_name)
+write.csv(tables[["raw_clade"]],
+          glue("{main_outdir}/raw_clade_counts.csv"),
+          row.names = FALSE)
+write.csv(tables[["raw_taxon"]],
+          glue("{main_outdir}/raw_taxon_counts.csv"),
+          row.names = FALSE)
 # __________________________________________________________________________
 
+# ANCOMBC Differential Abundance ------------------------------------------
+da_ancombc$run_ancombc(tables[["raw_clade"]],
+                       dataset_name,
+                       treat_names,
+                       rep_names,
+                       "S",
+                       da_ancombc_dir)
+da_ancombc$run_ancombc(tables[["raw_clade"]],
+                       dataset_name,
+                       treat_names,
+                       rep_names,
+                       "G",
+                       da_ancombc_dir)
 
 # Relative Abundance ------------------------------------------------------
 exploratory$make_interest_abundance(tables[["raw_clade"]],
@@ -169,4 +205,3 @@ exploratory$make_nmds_plots(tables[["raw_clade"]],
                             dataset_name,
                             nmds_dir)
 # _________________________________________________________________________
-

@@ -9,16 +9,23 @@
 # Author(s): Jonathan Ho
 # Updated: Apr 14, 2022
 
-library(tidyverse)
-library(ANCOMBC)
-library(microbiome)
+import("tidyr")
+import("stringr")
+import("ANCOMBC")
+import("microbiome")
+import("dplyr")
+import("tibble")
+import("ggplot2")
+import("utils")
+import("glue")
+import("phyloseq")
 
 # User Defined Variables --------------------------------------------------
-datapath <- 'results/ctx_2020/plot_data/ctx_raw_clade.csv'
-treat_names <- c("Control","CLO","THI")
-rep_names <- c("Rep 2", "Rep 3", "Rep 5", "Rep 4", "Rep 6")
-base_title <- 'Colony Control vs'
-dataset_name <- 'ctx_2020'
+datapath <- 'results/clo_2020/raw_clade_counts.csv'
+treat_names <- c("Control", "sublethal", "acute")
+rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
+base_title <- 'Cage Control vs'
+dataset_name <- 'clo_2020'
 
 
 # Functions from exploratory_functions.R ----------------------------------
@@ -48,22 +55,20 @@ treat_reps <- function(d, treat_names, rep_names) {
   for (r in 1:num_reps) {
     replicates = c(replicates, rep(rep_names[r], num_treats))
   }
-  
   d$treatment <- treatments
   d$replicate <- replicates
-  
   # adjust factor levels for future plotting
   d$treatment <- factor(d$treatment,
                         levels = treat_names)
-  
+
   return(d)
 }
 
 
 # Functions for ANCOM-BC --------------------------------------------------
 # setup data and object for ancombc
-prep_data <- function(datapath, treat_names, rep_names, rank) {
-  data <- read_csv(datapath) %>%
+prep_data <- function(count_table, treat_names, rep_names, rank) {
+  data <- count_table %>%
     filter(taxRank == rank)
   
   abun_data <- select(data,-taxRank,-lineage) %>%
@@ -74,7 +79,7 @@ prep_data <- function(datapath, treat_names, rep_names, rank) {
     select(sample) %>%
     treat_reps(treat_names, rep_names) %>%
     column_to_rownames('sample')
-  
+
   OTU <- otu_table(abun_data, taxa_are_rows = T)
   samples <- sample_data(metadata)
   
@@ -84,64 +89,70 @@ prep_data <- function(datapath, treat_names, rep_names, rank) {
 }
 
 # visualizes and saves plots and csv
-visualize_save <- function(mod, treat_names, dataset_name, rank) {
-  # only get treatment related betas, adj p-vals, and diffs
-  df <- data.frame(mod$res) %>%
-    select(contains('treatment')) %>%
-    select(contains('beta') | contains('q_val') |
-             contains('diff')) %>%
-    mutate(across(
-      contains('beta'),
-      .fns = function(x)
-        log2(exp(x)),
-      .names = "log2_{col}"
-    )) %>%
-    relocate(contains("log2"))
-  
-  # loop through treatment names and do everything inside
-  controls <- c('Control', 'unexposed')
-  just_treats <- treat_names[!treat_names %in% controls]
-  for (i in just_treats) {
-    # setup identifiable strings for i-th treatment
-    diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
-      sym()
-    q_val_i <- paste('q_val.treatment', i, sep = '') %>%
-      sym()
-    beta_i <- paste('log2_beta.treatment', i, sep = '') %>%
-      sym()
-    plot_title_i <-
-      paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
+visualize_save <-
+  function(mod,
+           treat_names,
+           dataset_name,
+           rank,
+           outdir) {
+    # only get treatment related betas, adj p-vals, and diffs
+    df <- data.frame(mod$res) %>%
+      select(contains('treatment')) %>%
+      select(contains('beta') | contains('q_val') |
+               contains('diff')) %>%
+      mutate(across(
+        contains('beta'),
+        .fns = function(x)
+          log2(exp(x)),
+        .names = "log2_{col}"
+      )) %>%
+      relocate(contains("log2"))
     
-    # determines whether DA are increases or decreases
-    df <- mutate(df,!!diff_abun_i := ifelse(
-      df[, grep(q_val_i,
-                colnames(df))] < 0.05,
-      ifelse(df[, grep(beta_i,
-                       colnames(df))] >= 0,
-             'Increase',
-             'Decrease'),
-      'No Change'
-    ))
+    # loop through treatment names and do everything inside
+    controls <- c('control', 'unexposed')
+    just_treats <- treat_names[!treat_names %in% controls]
+
+    for (i in just_treats) {
+      # setup identifiable strings for i-th treatment
+      diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
+        sym()
+      q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+        sym()
+      beta_i <- paste('log2_beta.treatment', i, sep = '') %>%
+        sym()
+      plot_title_i <-
+        paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
+      
+      # determines whether DA are increases or decreases
+      df <- mutate(df,!!diff_abun_i := ifelse(
+        df[, grep(q_val_i,
+                  colnames(df))] < 0.05,
+        ifelse(df[, grep(beta_i,
+                         colnames(df))] >= 0,
+               'Increase',
+               'Decrease'),
+        'No Change'
+      ))
+      
+      # adjust factor levels for plotting
+      df[, grep(diff_abun_i, colnames(df))] <-
+        factor(df[, grep(diff_abun_i, colnames(df))],
+               levels = c('Increase', 'No Change', 'Decrease'))
+      
+      # plot and save
+      da_plot <-
+        volc_plot(df, beta_i, q_val_i, diff_abun_i, plot_title_i)
+
+      ggsave(da_plot,
+             filename = glue("{outdir}/{plot_title_i}.png"))
+    }
+    write.csv(
+      df,
+      file = glue("{outdir}/{dataset_name}_{rank}_ancombc.csv"),
+      row.names = T
+    )
     
-    # adjust factor levels for plotting
-    df[, grep(diff_abun_i, colnames(df))] <-
-      factor(df[, grep(diff_abun_i, colnames(df))],
-             levels = c('Increase', 'No Change', 'Decrease'))
-    
-    # plot and save
-    da_plot <-
-      volc_plot(df, beta_i, q_val_i, diff_abun_i, plot_title_i)
-    
-    ggsave(da_plot,
-           filename = paste(plot_title_i, '.png', sep = ''))
   }
-  write.csv(
-    df,
-    file = paste(dataset_name, rank, 'ancombc.csv', sep = '_'),
-    row.names = T
-  )
-  
-}
 
 # volcano plot helper
 volc_plot <-
@@ -197,27 +208,18 @@ volc_plot <-
     return(da_plot)
   }
 
-# main function
-main <- function() {
-  # genus level
-  genus_obj <- prep_data(datapath, treat_names, rep_names, "G")
-  
-  genus_mod <- ancombc(genus_obj,
-                       formula = 'treatment+replicate',
-                       p_adj_method = "BH")
-  
-  visualize_save(genus_mod, treat_names, dataset_name, 'genus')
-  
-  # species level
-  species_obj <- prep_data(datapath, treat_names, rep_names, "S")
-  
-  species_mod <- ancombc(species_obj,
-                         formula = 'treatment+replicate',
-                         p_adj_method = "BH")
-  
-  visualize_save(species_mod, treat_names, dataset_name, 'species')
+
+export("run_ancombc")
+run_ancombc <- function(count_table,
+                        dataset_name,
+                        treat_names,
+                        rep_names,
+                        rank_symbol,
+                        outdir) {
+  phylo_obj <-
+    prep_data(count_table, treat_names, rep_names, rank_symbol)
+  ancom_result <- ancombc(phylo_obj,
+                          formula = 'treatment+replicate',
+                          p_adj_method = "BH")
+  visualize_save(ancom_result, treat_names, dataset_name, rank_symbol, outdir)
 }
-
-
-# Run ---------------------------------------------------------------------
-main()
