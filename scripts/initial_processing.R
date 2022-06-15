@@ -23,17 +23,8 @@ export("format_count_table")
 format_count_table <- function(tb){
   # Performs some preliminary formatting on count table
   
-  # Remove the "Max" and "taxID" columns
-  tb <- tb[, !(colnames(tb) %in% c("Max", "Max.1", "taxID"))]
-  
-  # Taxa name formatting
-  tb$name <- gsub(".*<wbr>(.*)", "\\1", tb$name)
-  
-  # Lineage formatting
-  tb$lineage <- gsub("&nbsp;", " ", tb$lineage)
   tb <-  tb %>%
-    mutate(lineage = str_replace(str_c(lineage, name, sep = ">"),
-                                 "cellular organisms(>)*", ""))
+    mutate(taxLineage = str_replace(taxLineage, "cellular organisms(>)*", ""))
   
   # Remove clade read columns 
   tb %>% select(-contains("cladeReads"))
@@ -43,7 +34,7 @@ format_count_table <- function(tb){
 export('filter_table')
 filter_table <- function(tb){
   # Get only bacterial taxa
-  tb <- filter(tb, str_detect(lineage, 'Bacteria'))
+  tb <- filter(tb, str_detect(taxLineage, 'Bacteria'))
 }
 
 
@@ -75,11 +66,11 @@ aggregate_unclassified <- function(tb){
     
     # Update lineages of previous 'unclassified Genus' subtaxa
     tb <-  tb %>%
-      mutate(lineage = case_when(
-        str_detect(lineage, unclass_nm) ~ gsub(str_c(unclass_nm, '>'),
-                                               '', lineage),
+      mutate(taxLineage = case_when(
+        str_detect(taxLineage, unclass_nm) ~ gsub(str_c(unclass_nm, '>'),
+                                               '', taxLineage),
         
-        TRUE ~ lineage))
+        TRUE ~ taxLineage))
     
     # Drop 'unclassified Genus' row
     tb <- filter(tb, !name==unclass_nm)
@@ -95,7 +86,7 @@ group_lactobacillus <- function(tb){
   firm5_name <- 'Lactobacillus Firm-5'
   other_name <- 'Other Lactobacillus'
   lacto_str <- '>Lactobacillus>'
-  lacto_lineage <- tb[tb$name=='Lactobacillus',]$lineage
+  lacto_lineage <- tb[tb$name=='Lactobacillus',]$taxLineage
   
   # Return table if this function has already been ran
   if(firm4_name %in% tb$name & firm5_name %in% tb$name & other_name %in% tb$name) {
@@ -106,29 +97,29 @@ group_lactobacillus <- function(tb){
   if(!firm4_name %in% tb$name) {
     tb <- tb %>% add_row(name=firm4_name,
                          taxRank='-',
-                         lineage=paste(lacto_lineage, firm4_name, sep='>'))
+                         taxLineage=paste(lacto_lineage, firm4_name, sep='>'))
   }
   if(!firm5_name %in% tb$name) {
     tb <- tb %>% add_row(name=firm5_name,
                          taxRank='-',
-                         lineage=paste(lacto_lineage, firm5_name, sep='>'))
+                         taxLineage=paste(lacto_lineage, firm5_name, sep='>'))
   }
   if(!other_name %in% tb$name) {
     tb <- tb %>% add_row(name=other_name,
                          taxRank='-',
-                         lineage=paste(lacto_lineage, other_name, sep='>'))
+                         taxLineage=paste(lacto_lineage, other_name, sep='>'))
   }
   
   # Update lineage strings of members
-  tb <-  tb %>% mutate(lineage = case_when(
+  tb <-  tb %>% mutate(taxLineage = case_when(
     name %in% firm4_list ~ 
-      gsub(lacto_str, str_c(lacto_str, firm4_name, ">"), lineage),
+      gsub(lacto_str, str_c(lacto_str, firm4_name, ">"), taxLineage),
     name %in% firm5_list ~ 
-      gsub(lacto_str, str_c(lacto_str, firm5_name, ">"), lineage),
+      gsub(lacto_str, str_c(lacto_str, firm5_name, ">"), taxLineage),
     # Other Lactobacillus
-    str_detect(lineage, lacto_str) & taxRank=='S' ~ 
-      gsub(lacto_str, str_c(lacto_str, other_name, ">"), lineage),
-    TRUE ~ lineage))
+    str_detect(taxLineage, lacto_str) & taxRank=='S' ~ 
+      gsub(lacto_str, str_c(lacto_str, other_name, ">"), taxLineage),
+    TRUE ~ taxLineage))
   
   tb <- reassign_wkb(tb)
 }
@@ -139,15 +130,15 @@ reassign_wkb <- function(tb){
   #       'L. wkB10' within L. kullabergensis
   wkb8_str <- 'Lactobacillus sp. wkB8'
   wkb10_str <- 'Lactobacillus sp. wkB10'
-  helsing_lineage <- tb[tb$name=='Lactobacillus helsingborgensis',]$lineage
-  kulla_lineage <- tb[tb$name=='Lactobacillus kullabergensis',]$lineage
+  helsing_lineage <- tb[tb$name=='Lactobacillus helsingborgensis',]$taxLineage
+  kulla_lineage <- tb[tb$name=='Lactobacillus kullabergensis',]$taxLineage
   
   # Update taxRanks
   tb[tb$name==wkb8_str,]$taxRank <- '-'
   tb[tb$name==wkb10_str,]$taxRank <- '-'
   
   # Correct the lineage strings
-  tb[tb$name==wkb8_str,]$lineage <- paste(helsing_lineage, wkb8_str, sep='>')
-  tb[tb$name==wkb10_str,]$lineage <- paste(kulla_lineage, wkb10_str, sep='>')
+  tb[tb$name==wkb8_str,]$taxLineage <- paste(helsing_lineage, wkb8_str, sep='>')
+  tb[tb$name==wkb10_str,]$taxLineage <- paste(kulla_lineage, wkb10_str, sep='>')
   tb
 }

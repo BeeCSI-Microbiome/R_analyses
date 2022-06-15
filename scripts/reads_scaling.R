@@ -63,7 +63,7 @@ get_clade_data <- function(tb){
 css_scale <- function(tb, css_percentile, dataset_name){
   
   # get table with only counts
-  counts_only <- as.data.frame(select(tb, ends_with('taxonReads')))
+  counts_only <- as.data.frame(select(tb, contains('taxonReads')))
   
   # Get table of raw counts with only the taxa that are not ALL NA
   # (ie filter the taxa with clade counts but no taxon counts)
@@ -71,7 +71,7 @@ css_scale <- function(tb, css_percentile, dataset_name){
   taxon_raw <- tb[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
   
   # set row names
-  row.names(counts_only) <- tb$lineage
+  row.names(counts_only) <- tb$taxLineage
   # remove rows with all NA
   counts_only <- counts_only[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
   # Set remaining NA values to 0
@@ -84,12 +84,12 @@ css_scale <- function(tb, css_percentile, dataset_name){
   
   # Get scaled counts into table
   scaled_counts <- data.frame(MRcounts(css_MRexp, norm = TRUE))
-  scaled_counts <- tibble::rownames_to_column(scaled_counts, var = 'lineage')
+  scaled_counts <- tibble::rownames_to_column(scaled_counts, var = 'taxLineage')
   
   # Merge scaled_counts back with tb, overwriting count values
-  tb <- merge(tb, scaled_counts, by = 'lineage', all = T)
+  tb <- merge(tb, scaled_counts, by = 'taxLineage', all = T)
   # Remove the unnormalized columns
-  tb <- select(tb, !ends_with('taxonReads.x'))
+  tb <- select(tb, !matches('taxonReads.*x$'))
   names(tb) <- gsub(names(tb), pattern='(.*).y', replacement='\\1')
   
   # Another function, writes a visualization  'results/scaling_visualization.png'
@@ -102,8 +102,8 @@ css_scale <- function(tb, css_percentile, dataset_name){
 
 visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile, dataset_name){
   # Prepare normalized data -
-  taxon_norm <- select(merge(taxon_raw, scaled_counts, by = 'lineage', all = T),
-                       !ends_with('taxonReads.x'))
+  taxon_norm <- select(merge(taxon_raw, scaled_counts, by = 'taxLineage', all = T),
+                       !matches('taxonReads.*x$'))
   
   # Pivot samples into 1 column
   taxon_norm <- taxon_norm %>% 
@@ -177,11 +177,14 @@ visualize_scaling <- function(taxon_raw, scaled_counts, css_percentile, dataset_
     ggplot(aes(x = sample, y = proportion, fill = scaled)) +
     geom_bar(stat = "identity", position = position_dodge()) +
     labs(title = "Total read proportion by sample, before and after cumulative sum scaling",
-         subtitle = sprintf("All taxon reads, A. mellifera and unclassified reads filtered, CSS percentile = %s", as.character(css_percentile))) +
-    geom_text(aes(label = round(proportion*100, 1)), vjust = 1.6, color = "white",
+         subtitle = sprintf("Bacterial taxon reads, A. mellifera and unclassified reads filtered, CSS percentile = %s", as.character(css_percentile))) +
+    geom_text(aes(label = round(proportion*100, 1)), vjust = 1.6, color = "black",
               position = position_dodge(0.9), size = 3.5)+
     scale_fill_brewer(palette = "Paired")+
-    theme_minimal()
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90,
+                                     vjust = 1,
+                                     hjust = 1))
   
   scaling_vis
   
@@ -194,7 +197,7 @@ calc_clade_counts <- function(tb){
   
   # Count lineage_depths. Clade counts will be counted from leaves up
   tb <- tb %>%
-    mutate(lineage_depth = str_count(lineage, '>'))
+    mutate(lineage_depth = str_count(taxLineage, '>'))
   
   # Set remaining NA values to 0
   tb[is.na(tb)] <- 0
@@ -225,7 +228,7 @@ calc_clade_counts <- function(tb){
       filter(tb,
              sample == row$sample,
              lineage_depth == row$lineage_depth + 1 | lineage_depth == row$lineage_depth,
-             str_detect(lineage, row$lineage))$scaled_reads)
+             str_detect(taxLineage, row$taxLineage))$scaled_reads)
     tb[i, ] <- row
   }
   
@@ -238,5 +241,6 @@ calc_clade_counts <- function(tb){
   
   # Remove the "lineage_depth" column
   tb <- tb[, !(colnames(tb) %in% c("lineage_depth"))]
-  tb <- tb %>% relocate(lineage, .after = everything())
+  tb <- tb %>% relocate(taxLineage, .after = everything())
 }
+

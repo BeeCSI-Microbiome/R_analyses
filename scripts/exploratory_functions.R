@@ -8,6 +8,7 @@ import("ggplot2")
 import("vegan")
 import("stats", "aggregate")
 import("glue")
+import("stringr")
 
 # Scope Variables --------------------------------------------------------
 # Taxa of interest - common
@@ -28,7 +29,7 @@ interest_list <- c("Lactobacillus Firm-4",
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
 tidy_data <- function(d) {
-  clean_data <- select(d, -taxRank, -lineage) %>%
+  clean_data <- select(d, -taxRank, -taxLineage, -taxID, -depth) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")
   
@@ -66,29 +67,43 @@ calc_prop <- function(d) {
 }
 
 # add in treatment and replicate cols
-# assumes same number of replicates for each treatment and vice versa. 
-# assumes that samples are grouped by replicates first, then treatments.
-# Example below:
-# Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC, 
-# Rep 2 TreatmentA, Rep 2 TreatmentB, Rep 2 TreatmentC, ...
-# Can double check that these are correct by comparing with samples col
-treat_reps <- function(d, treat_names, rep_names) {
-  num_treats <- length(treat_names)
-  num_reps <- length(rep_names)
-  
-  treatments <- rep(treat_names, num_reps)
-  replicates <- c()
-  for (r in 1:num_reps) {
-    replicates = c(replicates, rep(rep_names[r], num_treats))
+# Samples gathered from column names are treated with regular expressions to 
+# extract replicate number and treatments.
+treat_reps <- function(d, treatment_key) {
+  d <- d %>% mutate(replicate = extract_replicate_string(sample),
+                    treatment = extract_treatment_string(sample, treatment_key))
+  return(d)
+}
+
+extract_replicate_string <- function(sample_string) {
+  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>% 
+    str_remove("^0+")
+    paste0("Rep ", digits)
+}
+
+
+extract_treatment_string <- function(sample_string, treatment_key) {
+  if (all(str_detect(sample_string, "_d[[:alnum:]]+"))) {
+    # Does sample string match activity 1 pattern?
+    treatment_codes <-
+      str_extract(sample_string, "(?<=_)d[[:alnum:]]+")
+  } else if (all(str_detect(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)"))) {
+    # Or activity 2 pattern?
+    treatment_codes <-
+      str_extract(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)")
+  } else {
+    stop("The sample column names do not match the implemented regex patterns")
   }
   
-  d$treatment <- treatments
-  d$replicate <- replicates
-  
-  # adjust factor levels for future plotting
-  d$treatment <- factor(d$treatment,
-                        levels = treat_names)
-  return(d)
+  if (all(treatment_codes %in% names(treatment_key))) {
+    unlist(treatment_key[treatment_codes], use.names = FALSE)
+  } else {
+    missing_codes <-
+      unique(treatment_codes)[!unique(treatment_codes) %in% names(treatment_key)]
+    stop(paste(
+          "The following treatment code(s) detected from samples names were not found in treatment key you provided:",
+          paste(missing_codes, collapse = ", ")))
+  }
 }
 
 # convert tidy data into long for abundance plot setup
@@ -141,7 +156,7 @@ plot_interest_abundance <- function(d) {
 
 # Returns relative abundance for taxa of interest
 export("make_interest_abundance")
-make_interest_abundance <- function(data, treat_names, rep_names, dataset_name,
+make_interest_abundance <- function(data, treatment_key, dataset_name,
                                     additional_taxa, outdir) {
   if (!is.na(additional_taxa)) {
     interest_list <- append(interest_list, additional_taxa)
@@ -151,7 +166,7 @@ make_interest_abundance <- function(data, treat_names, rep_names, dataset_name,
     add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
-    treat_reps(treat_names, rep_names)
+    treat_reps(treatment_key)
   
   plot <- tidy_to_long(plot_data) %>%
     order_taxa() %>%
@@ -168,7 +183,7 @@ make_interest_abundance <- function(data, treat_names, rep_names, dataset_name,
 # separate bar plots for each treatment vs control
 # CTX experiment specific, not necessary for any other experiment
 export("make_separate_ctx_bars")
-make_separate_ctx_bars <- function(data, treat_names, rep_names, dataset_name,
+make_separate_ctx_bars <- function(data, treatment_key, dataset_name,
                                    additional_taxa, outdir) {
   
   interest_list <- append(interest_list, additional_taxa)
@@ -180,7 +195,7 @@ make_separate_ctx_bars <- function(data, treat_names, rep_names, dataset_name,
     add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
-    treat_reps(treat_names, rep_names) 
+    treat_reps(treatment_key) 
   
   clo_plot <- filter(process, treatment %in% clo_treat) %>%
     tidy_to_long() %>%
@@ -219,11 +234,11 @@ calc_diversity_df <- function(d){
 }
 
 # preps alpha div data
-prep_alpha_data <- function(d, treat_names, rep_names) {
+prep_alpha_data <- function(d, treatment_key) {
   plot_data <- filter(d, taxRank == "S") %>%
     tidy_data() %>%
     calc_diversity_df() %>%
-    treat_reps(treat_names, rep_names)
+    treat_reps(treatment_key)
 }
 
 # runs and saves kruskal wallis on shannon index for both 
@@ -250,8 +265,8 @@ plot_alpha <- function(d, alpha, dataset_name) {
 
 # Makes all alpha div bar plots, calculates simple stats and saves them in results
 export("make_all_alpha_plots")
-make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name, outdir) {
-  plot_data <- prep_alpha_data(data, treat_names, rep_names)
+make_all_alpha_plots <- function(data, treatment_key, dataset_name, outdir) {
+  plot_data <- prep_alpha_data(data, treatment_key)
   
   utils::write.csv(plot_data,
                    file = glue("{outdir}/alpha_div_data.csv"),
@@ -278,11 +293,11 @@ make_all_alpha_plots <- function(data, treat_names, rep_names, dataset_name, out
 calc_nmds <- function(data) {
   set.seed(1)
   sample_col <- select(data, "sample")
-  
   nmds_data <- select(data, -"sample") %>%
     as.matrix() %>%
     metaMDS(distance = "bray") %>%
-    scores() %>%
+    scores()
+  nmds_data <- nmds_data$sites %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
     relocate(sample)
@@ -295,7 +310,6 @@ calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
   heading <- paste(taxa_level, "ANOSIM results:\n")
   ano_data <- select(d, -"sample") %>%
     as.matrix()
-  
   rep_ano <- anosim(ano_data,
                     group_data$replicate,
                     distance = "bray",
@@ -317,13 +331,13 @@ calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
 }
 
 # preps nmds data and runs ANOSIM on data
-prep_and_ano <- function(d, treat_names, rep_names, taxa_level, dataset_name, outdir) {
+prep_and_ano <- function(d, treatment_key, taxa_level, dataset_name, outdir) {
   prop_data <- tidy_data(d) %>%
     calc_prop()
   
   group_data <- prop_data %>%
     calc_nmds() %>%
-    treat_reps(treat_names, rep_names)
+    treat_reps(treatment_key)
   
   calc_ano(prop_data, group_data, taxa_level, dataset_name, outdir)
   
@@ -419,12 +433,12 @@ act_2_nmds <- function(genus_data, speci_data, dataset_name, outdir) {
 # make and save nmds plots for genus and species levels using read data
 # uses raw reads to calculate proportions
 export("make_nmds_plots")
-make_nmds_plots <- function(data, treat_names, rep_names, dataset_name, outdir) {
+make_nmds_plots <- function(data, treatment_key, dataset_name, outdir) {
   file.create(glue("{outdir}/anosim.txt"))
   genus_data <- filter(data, taxRank == "G") %>%
-    prep_and_ano(treat_names, rep_names, "Genus", dataset_name, outdir)
+    prep_and_ano(treatment_key, "Genus", dataset_name, outdir)
   speci_data <- filter(data, taxRank == "S") %>%
-    prep_and_ano(treat_names, rep_names, "Species", dataset_name, outdir)
+    prep_and_ano(treatment_key, "Species", dataset_name, outdir)
   
   utils::write.csv(genus_data,
                    file = glue("{outdir}/nmds_plot_data_genus.csv"),
@@ -434,7 +448,7 @@ make_nmds_plots <- function(data, treat_names, rep_names, dataset_name, outdir) 
                    row.names = F)
   
   # split act 1 and 2 nmds here, based on number of treatments
-  if (length(treat_names) > 2) {
+  if (length(unique(genus_data$treatment)) > 2) {
     # can make convex hulls for both replicate and treatment
     act_1_nmds(genus_data, speci_data, dataset_name, outdir)
   } else {

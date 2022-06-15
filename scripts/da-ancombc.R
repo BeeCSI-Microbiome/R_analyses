@@ -21,18 +21,14 @@ import("glue")
 import("phyloseq")
 
 # User Defined Variables --------------------------------------------------
-datapath <- 'results/clo_2020/raw_clade_counts.csv'
-treat_names <- c("Control", "sublethal", "acute")
-rep_names <- c("Rep 1", "Rep 2", "Rep 3", "Rep 5", "Rep 6")
 base_title <- 'Cage Control vs'
-dataset_name <- 'clo_2020'
 
 
 # Functions from exploratory_functions.R ----------------------------------
 
 # cleans data into tidy format
 tidy_data <- function(d) {
-  clean_data <- select(d,-taxRank,-lineage) %>%
+  clean_data <- select(d,-taxRank,-taxLineage, -taxID, -depth) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")
   
@@ -40,58 +36,72 @@ tidy_data <- function(d) {
 }
 
 # add in treatment and replicate cols
-# assumes same number of replicates for each treatment and vice versa.
-# assumes that samples are grouped by replicates first, then treatments.
-# Example below:
-# Rep 1 TreatmentA, Rep 1 TreatmentB, Rep 1 TreatmentC,
-# Rep 2 TreatmentA, Rep 2 TreatmentB, Rep 2 TreatmentC, ...
-# Can double check that these are correct by comparing with samples col
-treat_reps <- function(d, treat_names, rep_names) {
-  num_treats <- length(treat_names)
-  num_reps <- length(rep_names)
-  
-  treatments <- rep(treat_names, num_reps)
-  replicates <- c()
-  for (r in 1:num_reps) {
-    replicates = c(replicates, rep(rep_names[r], num_treats))
-  }
-  d$treatment <- treatments
-  d$replicate <- replicates
-  # adjust factor levels for future plotting
-  d$treatment <- factor(d$treatment,
-                        levels = treat_names)
-
+# Samples gathered from column names are treated with regular expressions to 
+# extract replicate number and treatments.
+treat_reps <- function(d, treatment_key) {
+  d <- d %>% mutate(replicate = extract_replicate_string(sample),
+                    treatment = extract_treatment_string(sample, treatment_key))
   return(d)
+}
+
+extract_replicate_string <- function(sample_string) {
+  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>% 
+    str_remove("^0+")
+  paste0("Rep ", digits)
+}
+
+
+extract_treatment_string <- function(sample_string, treatment_key) {
+  if (all(str_detect(sample_string, "_d[[:alnum:]]+"))) {
+    # Does sample string match activity 1 pattern?
+    treatment_codes <-
+      str_extract(sample_string, "(?<=_)d[[:alnum:]]+")
+  } else if (all(str_detect(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)"))) {
+    # Or activity 2 pattern?
+    treatment_codes <-
+      str_extract(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)")
+  } else {
+    stop("The sample column names do not match the implemented regex patterns")
+  }
+  
+  if (all(treatment_codes %in% names(treatment_key))) {
+    unlist(treatment_key[treatment_codes], use.names = FALSE)
+  } else {
+    missing_codes <-
+      unique(treatment_codes)[!unique(treatment_codes) %in% names(treatment_key)]
+    stop(paste(
+      "The following treatment code(s) detected from samples names were not found in treatment key you provided:",
+      paste(missing_codes, collapse = ", ")))
+  }
 }
 
 
 # Functions for ANCOM-BC --------------------------------------------------
 # setup data and object for ancombc
-prep_data <- function(count_table, treat_names, rep_names, rank) {
+prep_data <- function(count_table, treatment_key, rank) {
   data <- count_table %>%
     filter(taxRank == rank)
   
-  abun_data <- select(data,-taxRank,-lineage) %>%
+  abun_data <- select(data,-taxRank,-taxLineage, -taxID, -depth) %>%
     column_to_rownames('name') %>%
     as.matrix()
   
   metadata <- tidy_data(data) %>%
     select(sample) %>%
-    treat_reps(treat_names, rep_names) %>%
+    treat_reps(treatment_key) %>%
     column_to_rownames('sample')
 
   OTU <- otu_table(abun_data, taxa_are_rows = T)
   samples <- sample_data(metadata)
   
   phylo_obj <- phyloseq(OTU, samples)
-  
   return(phylo_obj)
 }
 
 # visualizes and saves plots and csv
 visualize_save <-
   function(mod,
-           treat_names,
+           treatment_key,
            dataset_name,
            rank,
            outdir) {
@@ -110,7 +120,8 @@ visualize_save <-
     
     # loop through treatment names and do everything inside
     controls <- c('control', 'unexposed')
-    just_treats <- treat_names[!treat_names %in% controls]
+    all_treatments <- unlist(treatment_key, use.names = FALSE)
+    just_treats <- all_treatments[!all_treatments %in% controls]
 
     for (i in just_treats) {
       # setup identifiable strings for i-th treatment
@@ -211,15 +222,14 @@ volc_plot <-
 
 export("run_ancombc")
 run_ancombc <- function(count_table,
+                        treatment_key,
                         dataset_name,
-                        treat_names,
-                        rep_names,
                         rank_symbol,
                         outdir) {
   phylo_obj <-
-    prep_data(count_table, treat_names, rep_names, rank_symbol)
+    prep_data(count_table, treatment_key, rank_symbol)
   ancom_result <- ancombc(phylo_obj,
                           formula = 'treatment+replicate',
                           p_adj_method = "BH")
-  visualize_save(ancom_result, treat_names, dataset_name, rank_symbol, outdir)
+  visualize_save(ancom_result, treatment_key, dataset_name, rank_symbol, outdir)
 }

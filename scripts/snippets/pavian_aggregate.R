@@ -1,13 +1,14 @@
 # This script reads in kraken reports and agglomerates them into analytic 
 # matrices for both clade and taxon reads via Pavian.
+#
+# NO TAXA ARE FILTERED OUT AT THIS TIME
 # Load packages -----------------------------------------------------------
 
 packages <- c("pavian",
               "dplyr",
               "purrr",
               "stringr",
-              "tidyr",
-              "glue")
+              "tidyr")
 lapply(packages, library, character.only = TRUE)
 
 
@@ -42,13 +43,13 @@ widen_results_function <- function(krakenReportPaths, outpath) {
     select(-percentage) %>% 
     pivot_wider(names_from = Sample, 
                 values_from = c(cladeReads, taxonReads)) %>% 
-    relocate(name)
-  
+    relocate(name) %>% 
+    relocate(taxLineage, .after = last_col())
   write.csv(merged_wide, outpath, row.names = FALSE)
 }
 
-krakenReportPaths <- Sys.glob("../data/ctx_2020/kraken_reports/*d0*_report.txt") %>% 
-  c(Sys.glob("../data/ctx_2020/kraken_reports/*dC*_report.txt"))
+krakenReportPaths <- Sys.glob("../data/ctx_2020/kraken_reports/*_report.txt")
+  # c(Sys.glob("../data/ctx_2020/kraken_reports/*dC*_report.txt"))
 
 outpath <- "../data/ctx_2020/CTX_dC_all_taxa.csv" 
 widen_results_function(krakenReportPaths, outpath)

@@ -1,4 +1,4 @@
-# This code snippet may be used with the 'scaled clade' table produced in main.R
+# This code snippet may be used with the 'raw clade' table produced in main.R
 # to produce a list of taxa above and below a certain abundance threshold.
 
 # The min_abundance is the percent at which a taxon's relative abundance 
@@ -11,7 +11,7 @@ min_abundance <- 1
 min_samples_above_cutoff <- 2
 
 
-pc_sc <- select(sc, matches('.*(Reads|name|Rank).*'))
+pc_sc <- select(tables[["raw_clade"]], matches('.*(Reads|name|Rank).*'))
 bac_sc <- pc_sc %>% filter(name == 'Bacteria')
 
 # Get proportions using Bacteria count as total
@@ -28,9 +28,9 @@ taxa_above_cutoff <- pc_sc %>%
   filter(num_samples_above_thresh >= min_samples_above_cutoff)
 
 # Get table of taxa below cutoff
-taxa_below_cutoff <- pc_sc %>% 
-  mutate(num_samples_above_thresh = rowSums(pc_sc[c(-1,-2)] >= min_abundance)) %>% 
-  filter(num_samples_above_thresh < min_samples_above_cutoff)
+# taxa_below_cutoff <- pc_sc %>% 
+#   mutate(num_samples_above_thresh = rowSums(pc_sc[c(-1,-2)] >= min_abundance)) %>% 
+#   filter(num_samples_above_thresh < min_samples_above_cutoff)
 
-write_csv(taxa_above_cutoff[c(1,2)], file=str_glue("taxa_above_cutoff_{min_abundance}p.csv"))
-write_csv(taxa_below_cutoff[c(1,2)], file=str_glue("taxa_below_cutoff_{min_abundance}p.csv"))
+write_csv(taxa_above_cutoff[c(1,2)], file=str_glue("{main_outdir}/taxa_above_cutoff_{min_abundance}p.csv"))
+# write_csv(taxa_below_cutoff[c(1,2)], file=str_glue("{main_outdir}/taxa_below_cutoff_{min_abundance}p.csv"))

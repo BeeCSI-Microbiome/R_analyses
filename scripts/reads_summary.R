@@ -29,7 +29,7 @@ create_summary_table <- function(read_table, dataset_name){
   ta <- subset(read_table, name %in% taxa_list) %>% 
     select_if(str_detect(names(.), "name|cladeReads")) %>% 
     tidyr::pivot_longer(
-      cols = ends_with("cladeReads"),
+      cols = contains("cladeReads"),
       names_to = "sample",
       values_to = "reads"
     )
