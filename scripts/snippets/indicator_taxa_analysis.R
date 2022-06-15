@@ -6,16 +6,21 @@
 library(indicspecies)
 
 # Create output dir if it doesn't exist yet
-ind_sp_dir <- glue("results/{dataset_name}/indicator_species_analysis")
+ind_sp_dir <-
+  glue("results/{dataset_name}/indicator_species_analysis")
 ifelse(!dir.exists(ind_sp_dir),
-       dir.create(ind_sp_dir, mode = "777"), FALSE)
+       dir.create(ind_sp_dir, mode = "777"),
+       FALSE)
 
 # calculates proportions and convert to data frame
 calc_prop <- function(d) {
   sample_col <- select(d, c("sample", "replicate", "treatment"))
   prop_data <- select(d, -c("sample", "replicate", "treatment")) %>%
-    apply(MARGIN = 1,
-          FUN = function(x) x / sum(x) * 100) %>%
+    apply(
+      MARGIN = 1,
+      FUN = function(x)
+        x / sum(x) * 100
+    ) %>%
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
@@ -24,62 +29,103 @@ calc_prop <- function(d) {
   return(prop_data)
 }
 
-run_indicator_analysis <- function(table_string, analysis_func, rank_symbol="all") {
-  # Pivot tables into wide format (1 column per taxa, 1 row per sample) and
-  # create metadata category columns
-  tt <- if(rank_symbol == "all") { tables[[table_string]] }
-  else { filter(tables[[table_string]], taxRank == rank_symbol) }
-  tt <- tt %>%
-    pivot_longer(
-      cols = contains("Reads"),
-      names_to = c("sample", "replicate", "treatment"),
-      names_pattern = "(CTX(\\d*)_d(.)).*",
-      values_to = "read_count"
-    ) %>%
-    mutate(
-      treatment = case_when(
-        treatment == "0" ~ "Control",
-        treatment == "C" ~ "Clothianidin",
-        treatment == "T" ~ "Thiamethoxam"
-      ),
-      replicate = paste0("Rep ", replicate),
-      name = case_when(
-        name == "Actinobacteria" & taxRank == "C" ~ "Actinobacteria_class",
-        TRUE ~ name
-      )
-    )
-  # tt <- if(rank_symbol == "all") { tt }
-  # else { filter(tt, taxRank == rank_symbol) }
-  # browser()
-  tt <- tt %>% 
-    select(-c(taxRank, lineage))  %>%
-    pivot_wider(names_from = "name", values_from = "read_count")
+format_table <- function(tb, rank_symbol = "all") {
   
-
-  tt <- calc_prop(tt)
-  
-  # Extract count table and metadata vectors
-  tt_abund <- tt[,4:ncol(tt)]
-  tt_treat <- tt$treatment
-  tt_rep <- tt$replicate
-  
-  # Analysis function string for output naming
-  func_out_str <- str_replace(analysis_func, "\\.", "")
-  
-  # Analyze treatment and replicates. Use sink() for writing summaries to files
-  inv_treat = multipatt(tt_abund, tt_treat, func = analysis_func, control = how(nperm=9999))
-  inv_rep = multipatt(tt_abund, tt_rep, func = analysis_func, control = how(nperm=9999))
-  sink(glue("{ind_sp_dir}/{func_out_str}_{table_string}_treatment_indicators_{rank_symbol}.txt"))
-  summary(inv_treat)
-  sink()
-  sink(glue("{ind_sp_dir}/{func_out_str}_{table_string}_replicate_indicators_{rank_symbol}.txt"))
-  summary(inv_rep)
-  sink()
 }
 
+run_indicator_analysis <-
+  function(table_string, rank_symbol = "all") {
+    # Pivot tables into wide format (1 column per taxa, 1 row per sample) and
+    # create metadata category columns
+    tt <- if (rank_symbol == "all") {
+      tables[[table_string]]
+    } else {
+      filter(tables[[table_string]], taxRank == rank_symbol)
+    }
+    tt <- tt %>%
+      pivot_longer(
+        cols = contains("Reads"),
+        names_to = c("sample", "replicate", "treatment"),
+        names_pattern = "(CTX(\\d*)_d(.)).*",
+        values_to = "read_count"
+      ) %>%
+      mutate(
+        treatment = case_when(
+          treatment == "0" ~ "Control",
+          treatment == "C" ~ "Clothianidin",
+          treatment == "T" ~ "Thiamethoxam"
+        ),
+        replicate = paste0("Rep ", replicate),
+        name = case_when(
+          name == "Actinobacteria" & taxRank == "C" ~ "Actinobacteria_class",
+          TRUE ~ name
+        )
+      )
+    # tt <- if(rank_symbol == "all") { tt }
+    # else { filter(tt, taxRank == rank_symbol) }
+    # browser()
+    tt <- tt %>%
+      select(-c(taxRank, lineage))  %>%
+      pivot_wider(names_from = "name", values_from = "read_count")
+    
+    
+    tt <- calc_prop(tt)
+    
+    # Extract count table and metadata vectors
+    tt_abund <- tt[, 4:ncol(tt)]
+    tt_treat <- tt$treatment
+    tt_rep <- tt$replicate
+    
+    # Analysis function string for output naming
+    func_out_str <- "rg"
+    
+    # Analyze treatment and replicates. Use sink() for writing summaries to files
+    inv_treat = multipatt(tt_abund,
+                          tt_treat,
+                          func = "r.g",
+                          control = how(nperm = 9999))
+    
+    #extract table of stats
+    inv_treat.sign <-
+      as.data.table(inv_treat$sign, keep.rownames = TRUE)
+    
+    #add adjusted p-value
+    inv_treat.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
+    #now can select only the indicators with adjusted significant p-values
+    inv_treat.sign[p.value.bh <= 0.05, ]
+    
+    inv_rep = multipatt(tt_abund,
+                        tt_rep,
+                        func = "r.g",
+                        control = how(nperm = 9999))
+    #extract table of stats
+    inv_rep.sign <-
+      as.data.table(inv_rep$sign, keep.rownames = TRUE)
+    #add adjusted p-value
+    inv_rep.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
+    #now can select only the indicators with adjusted significant p-values
+    inv_rep.sign[p.value.bh <= 0.05, ]
+    
+    sink(
+      glue(
+        "{ind_sp_dir}/{func_out_str}_{table_string}_treatment_indicators_{rank_symbol}.txt"
+      )
+    )
+    summary(inv_treat)
+    sink()
+    sink(
+      glue(
+        "{ind_sp_dir}/{func_out_str}_{table_string}_replicate_indicators_{rank_symbol}.txt"
+      )
+    )
+    summary(inv_rep)
+    sink()
+  }
 
-run_indicator_analysis("raw_taxon", "r.g")
-run_indicator_analysis("raw_clade", "r.g")
+
+
+run_indicator_analysis("raw_taxon", "S")
+run_indicator_analysis("raw_clade", "G")
 
 run_indicator_analysis("raw_taxon", "r.g", "S")
 # run_indicator_analysis("scaled_taxon", "r.g", "S")
