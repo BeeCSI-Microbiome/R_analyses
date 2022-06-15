@@ -32,7 +32,7 @@ da_ancombc <- use("scripts/da-ancombc.R")
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
-dataset_name <- "ctx_2020"
+dataset_name <- "oxy_2021"
 
 # Create strings for output directories
 main_outdir <- glue("results/{dataset_name}")
@@ -69,28 +69,29 @@ ifelse(!dir.exists(da_ancombc_dir), dir.create((da_ancombc_dir), mode = "777"), 
 
 ## Input file paths ####
 # Counts (clade and taxon counts, uncollapsed) and metadata tables
-counts_path <- "../data/cas_2020/cas_all_taxa.tsv"
-metadata_filepath <- "../data/cas_2020/cas_2020_metadata.csv"
+counts_path <- "../data/oxy_2021/oxy_2021_all_taxa.csv"
+metadata_filepath <- "../data/oxy_2021/oxy_2021_metadata.csv"
 
 # Path to directory with kraken reports
-kraken_report_dir <- "../data/ctx_2020/kraken_reports"
-# Kraken report paths <DA>
+kraken_report_dir <- "../data/oxy_2021/kraken_reports"
+# Kraken report paths for fitzig DA
 krakenReportPaths <-
   Sys.glob(glue("{kraken_report_dir}/*_report.txt"))
+  # c(Sys.glob(glue("{kraken_report_dir}/*dT*_report.txt")))
+
 krakenReportNames <- list.files(path = kraken_report_dir,
                                 pattern = "*_report.txt")
 
 ## User-defined values ####
 # Dataset-specific taxa of interest (provide a list of taxa strings)
 # e.g. c("Lactobacillus", "Gilliamella apis")
-additional_taxa <- NA
+additional_taxa <- c("Pantoea agglomerans")
 
-# Treatment and replicate names
-treat_names <- c("control", "clothianidin", "thiamethoxam")
-rep_names <- c("Rep 2", "Rep 3", "Rep 4", "Rep 5", "Rep 6")
 
-# Percentile value used by CSS (default = 0.5)
-css_percentile <- 0.5
+# The following key should match the substring in the sample name that specifies 
+# a treatment with the name of that treatment, including control
+treatment_key <- list(d0="control",d1="oxytetracycline")
+
 
 # # Statistical analyses list for DA
 # statistical_analyses <- list(
@@ -115,8 +116,7 @@ statistical_analyses = list(
     subsets = list(),
     model_matrix = "~ 0 + Treatment",
     contrasts = list(
-      "Treatmentcontrol - Treatmentclothianidin",
-      "Treatmentcontrol - Treatmentthiamethoxam"
+      "Treatmentcontrol - Treatmentoxytetracycline"
     ),
     random_effect = "Replicate"
   )
@@ -126,7 +126,7 @@ statistical_analyses = list(
 
 # Read input files --------------------------------------------------------
 # Count table
-ct <- read_tsv(counts_path)
+ct <- read_csv(counts_path)
 # _________________________________________________________________________
 
 
@@ -145,8 +145,7 @@ da_fitzig$kraken_differential_abundance(
   kraken_matrix_dir,
   metadata_filepath,
   da_fitzig_dir,
-  statistical_analyses,
-  css_percentile
+  statistical_analyses
 )
 
 
@@ -165,26 +164,25 @@ write.csv(tables[["raw_clade"]],
 write.csv(tables[["raw_taxon"]],
           glue("{main_outdir}/raw_taxon_counts.csv"),
           row.names = FALSE)
+
+# source("scripts/snippets/taxa_cutoff_explore.R")
 # __________________________________________________________________________
 
 # ANCOMBC Differential Abundance ------------------------------------------
 da_ancombc$run_ancombc(tables[["raw_clade"]],
+                       treatment_key,
                        dataset_name,
-                       treat_names,
-                       rep_names,
                        "S",
                        da_ancombc_dir)
 da_ancombc$run_ancombc(tables[["raw_clade"]],
+                       treatment_key,
                        dataset_name,
-                       treat_names,
-                       rep_names,
                        "G",
                        da_ancombc_dir)
 
 # Relative Abundance ------------------------------------------------------
 exploratory$make_interest_abundance(tables[["raw_clade"]],
-                                    treat_names,
-                                    rep_names,
+                                    treatment_key,
                                     dataset_name,
                                     additional_taxa,
                                     rel_abund_dir)
@@ -192,16 +190,14 @@ exploratory$make_interest_abundance(tables[["raw_clade"]],
 
 # Alpha Diversity ---------------------------------------------------------
 exploratory$make_all_alpha_plots(tables[["raw_clade"]],
-                                 treat_names,
-                                 rep_names,
+                                 treatment_key,
                                  dataset_name,
                                  alpha_div_dir)
 
 
 # Beta Diversity ----------------------------------------------------------
 exploratory$make_nmds_plots(tables[["raw_clade"]],
-                            treat_names,
-                            rep_names,
+                            treatment_key,
                             dataset_name,
                             nmds_dir)
 # _________________________________________________________________________
