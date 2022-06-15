@@ -108,10 +108,10 @@ visualize_save <-
     # only get treatment related betas, adj p-vals, and diffs
     df <- data.frame(mod$res) %>%
       select(contains('treatment')) %>%
-      select(contains('beta') | contains('q_val') |
+      select(contains('lfc') | contains('q_val') |
                contains('diff')) %>%
       mutate(across(
-        contains('beta'),
+        contains('lfc'),
         .fns = function(x)
           log2(exp(x)),
         .names = "log2_{col}"
@@ -129,7 +129,7 @@ visualize_save <-
         sym()
       q_val_i <- paste('q_val.treatment', i, sep = '') %>%
         sym()
-      beta_i <- paste('log2_beta.treatment', i, sep = '') %>%
+      lfc_i <- paste('log2_lfc.treatment', i, sep = '') %>%
         sym()
       plot_title_i <-
         paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
@@ -138,7 +138,7 @@ visualize_save <-
       df <- mutate(df,!!diff_abun_i := ifelse(
         df[, grep(q_val_i,
                   colnames(df))] < 0.05,
-        ifelse(df[, grep(beta_i,
+        ifelse(df[, grep(lfc_i,
                          colnames(df))] >= 0,
                'Increase',
                'Decrease'),
@@ -152,8 +152,7 @@ visualize_save <-
       
       # plot and save
       da_plot <-
-        volc_plot(df, beta_i, q_val_i, diff_abun_i, plot_title_i)
-
+        volc_plot(df, lfc_i, q_val_i, diff_abun_i, plot_title_i)
       ggsave(da_plot,
              filename = glue("{outdir}/{plot_title_i}.png"))
     }
@@ -168,13 +167,13 @@ visualize_save <-
 # volcano plot helper
 volc_plot <-
   function(df,
-           beta_i,
+           lfc_i,
            q_val_i,
            diff_abun_i,
            plot_title_i) {
     # determine x range
     x_default = 1.35
-    x_data = max(abs(df[, grep(beta_i, colnames(df))]))
+    x_data = max(abs(df[, grep(lfc_i, colnames(df))]))
     x_use = max(x_default, x_data) + 0.15
     
     # determine y range
@@ -185,7 +184,7 @@ volc_plot <-
     # plot
     da_plot <- ggplot(df,
                       aes(
-                        x = !!beta_i,
+                        x = !!lfc_i,
                         y = -log10(!!q_val_i),
                         colour = !!diff_abun_i
                       )) +
