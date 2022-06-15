@@ -92,6 +92,8 @@ additional_taxa <- c("Pantoea agglomerans")
 # a treatment with the name of that treatment, including control
 treatment_key <- list(d0="control",d1="oxytetracycline")
 
+# Percentile value used by CSS (default = 0.5)
+css_percentile <- 0.5
 
 # # Statistical analyses list for DA
 # statistical_analyses <- list(
