@@ -4,11 +4,6 @@
 # compared to another
 
 library(indicspecies)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(glue)
-
 
 # Create output dir if it doesn't exist yet
 ind_sp_dir <- glue("results/{dataset_name}/indicator_species_analysis")
@@ -18,14 +13,13 @@ ifelse(!dir.exists(ind_sp_dir),
 # calculates proportions and convert to data frame
 calc_prop <- function(d) {
   sample_col <- select(d, c("sample", "replicate", "treatment"))
-  prop_data <- as.matrix(select(d, -c("sample", "replicate", "treatment"))) %>%
-    apply(MARGIN = 1, FUN = function(x) x / sum(x) * 100) %>%
+  prop_data <- select(d, -c("sample", "replicate", "treatment")) %>%
+    apply(MARGIN = 1,
+          FUN = function(x) x / sum(x) * 100) %>%
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
     relocate(sample, replicate, treatment)
-  
-  # calculate how proportion of sample attributed to each taxa
   
   return(prop_data)
 }
@@ -41,29 +35,29 @@ run_indicator_analysis <- function(table_string, analysis_func, rank_symbol="all
   tt <- tt %>%
     pivot_longer(
       cols = contains("Reads"), # pivot columns containing "Reads"
-      names_to = c("sample", "replicate", "treatment"), # make 3 new columns named these. These will contain parts of the names of tt cols
-      names_pattern = "(OXY0(.)_d(.)).*", # split up tt column names to bin parts in names_to
+      names_to = c("sample", "replicate", "treatment"), # make 3 new columns named these. These will contain names of tt cols
+      names_pattern = "(CTX(\\d*)_d(.)).*", # split up tt columns names to bin parts in names_to
       values_to = "read_count"
     ) %>%
     mutate(
       treatment = case_when(
         treatment == "0" ~ "Control",
-        treatment == "1" ~ "Oxytetracycline"
+        treatment == "C" ~ "Clothianidin",
+        treatment == "T" ~ "Thiamethoxam"
       ),
-      replicate = paste0("Rep ", replicate)#,
-      #name = case_when(
-        #name == "Actinobacteria" & taxRank == "C" ~ "Actinobacteria_class",
-        #TRUE ~ name
-      #) this part looks to be specific to the CTX datasets
+      replicate = paste0("Rep ", replicate),
+      name = case_when(
+        name == "Actinobacteria" & taxRank == "C" ~ "Actinobacteria_class",
+        TRUE ~ name
+      )
     )
   # tt <- if(rank_symbol == "all") { tt }
   # else { filter(tt, taxRank == rank_symbol) }
   # browser()
   tt <- tt %>% 
-    select(-c(taxRank, taxLineage, taxID, depth))  %>%
+    select(-c(taxRank, lineage))  %>%
     pivot_wider(names_from = "name", values_from = "read_count")
   
-  # Up to here
   
   tt <- calc_prop(tt)
   
