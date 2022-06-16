@@ -22,7 +22,6 @@ firm5_list <- paste('Lactobacillus', sep=' ', c('kimbladii',
 export("format_count_table")
 format_count_table <- function(tb){
   # Performs some preliminary formatting on count table
-  
   tb <-  tb %>%
     mutate(taxLineage = str_replace(taxLineage, "cellular organisms(>)*", ""))
   
@@ -42,6 +41,84 @@ export('group_taxa_of_interest')
 group_taxa_of_interest <- function(tb){
   tb <- aggregate_unclassified(tb)
   tb <- group_lactobacillus(tb)
+}
+
+export('calculate_clade_counts')
+calculate_clade_counts <- function(tb){
+  # Given the formatted and filtered table, return a list of two items:
+  # (Raw taxon table, raw clade table)
+  
+  tb_raw_taxon <- drop_all_NA_rows(tb)
+  names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
+  browser()
+  
+  # We calculate counts rather than use clade counts from Pavian in order to 
+  # account for taxa that we filtered out
+  tb_raw_clade <- calc_clade_counts(tb)
+  
+  list(raw_taxon=tb_raw_taxon,
+       raw_clade=tb_raw_clade)
+}
+
+
+drop_all_NA_rows <- function(tb){
+  # drops all rows from the table in which counts are NA for all samples
+  counts_only <- as.data.frame(select(tb, contains('taxonReads')))
+  tb <- tb[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
+  tb[is.na(tb)] <- 0
+  tb
+}
+
+# Reaggregates clade counts
+calc_clade_counts <- function(tb){
+  
+  # Count lineage_depths. Clade counts will be counted from leaves up
+  tb <- tb %>%
+    mutate(lineage_depth = str_count(taxLineage, '>'))
+  
+  # Set remaining NA values to 0
+  tb[is.na(tb)] <- 0
+  
+  # Pivot samples into 1 column
+  tb <- tb %>% 
+    tidyr::pivot_longer(
+      cols = contains('taxonReads'),
+      names_to = "sample",
+      values_to = "read_count"
+    )
+  
+  # Clean sample names
+  tb$sample <- str_replace(tb$sample, 'taxonReads_', '')
+  
+  # Sort rows by lineage depth
+  tb <- arrange(tb, desc(lineage_depth))
+  
+  # Sum reads from rows with the following conditions:
+  #   - samples match
+  #   - lineage depth is equal (to get taxon count of that taxa), or 1 greater, 
+  #     to sum up subtaxa
+  #   - lineage is contained within the subtaxa lineage   
+  # TODO: This implementation is likely exponential in time. There is probably a better way
+  for(i in 1:nrow(tb)){
+    row <- tb[i, ]
+    row$read_count <- sum(
+      filter(tb,
+             lineage_depth == row$lineage_depth + 1 | lineage_depth == row$lineage_depth,
+             sample == row$sample,
+             str_detect(taxLineage, row$taxLineage))$read_count)
+    tb[i, ] <- row
+  }
+  
+  # Pivot samples back into their own columns
+  tb <- tb %>% 
+    tidyr::pivot_wider(
+      names_from = "sample",
+      values_from = c("read_count")
+    )
+  
+  # Remove the "lineage_depth" column
+  tb <- tb[, !(colnames(tb) %in% c("lineage_depth"))]
+  tb <- tb %>% relocate(taxLineage, .after = everything())
 }
 
 

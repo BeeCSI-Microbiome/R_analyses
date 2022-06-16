@@ -22,7 +22,6 @@ lapply(packages, library, character.only = TRUE)
 # Load aux scripts as modules ---------------------------------------------
 rsummary <- use("scripts/reads_summary.R")
 ip <- use("scripts/initial_processing.R")
-scaling <- use("scripts/reads_scaling.R")
 exploratory <- use("scripts/exploratory_functions.R")
 widen_results <- use("scripts/widenResults.R")
 da_fitzig <- use("scripts/da_fitzig.R")
@@ -151,15 +150,14 @@ da_fitzig$kraken_differential_abundance(
 )
 
 
-# Formatting, filtering, and scaling --------------------------------------
+# Formatting, filtering, and calculating clade counts ---------------------
 # Format and perform filtering on the table
 ct <- ip$format_count_table(ct) %>%
   ip$filter_table() %>%
   ip$group_taxa_of_interest()
 
-# Return list of MRexperiment object, and raw and scaled taxon and clade tables
-tables <-
-  scaling$scaling_procedure(ct, css_percentile, dataset_name)
+tables <- ip$calculate_clade_counts(ct)
+
 write.csv(tables[["raw_clade"]],
           glue("{main_outdir}/raw_clade_counts.csv"),
           row.names = FALSE)
