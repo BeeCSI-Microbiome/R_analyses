@@ -28,38 +28,31 @@ da_fitzig <- use("scripts/da_fitzig.R")
 da_ancombc <- use("scripts/da-ancombc.R")
 # _________________________________________________________________________
 
-create_output_directories <- function(dataset_name) {
-  # Create strings for output directories
-  main_outdir <- glue("results/{dataset_name}")
-  nmds_dir <- glue("{main_outdir}/nmds_anosim")
-  alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
-  rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
-  # <DA> Subdirectory for kraken report matrices
-  kraken_matrix_dir <-
-    glue("{main_outdir}/aggregated_kraken_reports")
-  # <DA> Subdirectory for DA results
-  da_dir <- glue("{main_outdir}/differential_abundance")
-  da_fitzig_dir <- glue("{da_dir}/fitzig")
-  da_ancombc_dir <- glue("{da_dir}/ancombc")
-  
-  create_dir_if_nonexistant <- function(path) {
-    ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
-  }
-  
-  ## Create output directories ####
-  create_dir_if_nonexistant(main_outdir)
-  create_dir_if_nonexistant(nmds_dir)
-  create_dir_if_nonexistant(alpha_div_dir)
-  create_dir_if_nonexistant(rel_abund_dir)
-  create_dir_if_nonexistant(kraken_matrix_dir)
-  create_dir_if_nonexistant(da_dir)
-  create_dir_if_nonexistant(da_fitzig_dir)
-  create_dir_if_nonexistant(da_ancombc_dir)
-}
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
 dataset_name <- "oxy_2021"
+
+# Create strings for output directories
+main_outdir <- glue("results/{dataset_name}")
+nmds_dir <- glue("{main_outdir}/nmds_anosim")
+alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
+rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
+# <DA> Subdirectory for kraken report matrices
+kraken_matrix_dir <-
+  glue("{main_outdir}/aggregated_kraken_reports")
+# <DA> Subdirectory for DA results
+da_dir <- glue("{main_outdir}/differential_abundance")
+da_fitzig_dir <- glue("{da_dir}/fitzig")
+da_ancombc_dir <- glue("{da_dir}/ancombc")
+
+create_dir_if_nonexistant <- function(path) {
+  ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
+}
+## Create output directories ####
+lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir,
+         kraken_matrix_dir, da_dir, da_fitzig_dir, da_ancombc_dir),
+       create_dir_if_nonexistant)
 
 ## Input file paths ####
 # Counts (clade and taxon counts, uncollapsed) and metadata tables
@@ -121,7 +114,6 @@ statistical_analyses = list(
 )
 # _________________________________________________________________________
 
-create_output_directories(dataset_name)
 
 # Read input files --------------------------------------------------------
 # Count table
