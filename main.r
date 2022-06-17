@@ -90,6 +90,8 @@ additional_taxa <- c("Pantoea agglomerans")
 # The following key should match the substring in the sample name that specifies 
 # a treatment with the name of that treatment, including control
 treatment_key <- list(d0="control",d1="oxytetracycline")
+# a treatment with the name of that treatment
+# THE CONTROL TREATMENT MUST BE THE FIRST ELEMENT (e.g. control, unexposed)
 
 # Percentile value used by CSS (default = 0.5)
 css_percentile <- 0.5

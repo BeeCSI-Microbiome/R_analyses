@@ -9,16 +9,16 @@
 # Author(s): Jonathan Ho
 # Updated: Apr 14, 2022
 
-import("tidyr")
-import("stringr")
-import("ANCOMBC")
-import("microbiome")
-import("dplyr")
-import("tibble")
-import("ggplot2")
-import("utils")
-import("glue")
-import("phyloseq")
+modules::import("tidyr")
+modules::import("stringr")
+modules::import("ANCOMBC")
+modules::import("microbiome")
+modules::import("dplyr")
+modules::import("tibble")
+modules::import("ggplot2")
+modules::import("utils")
+modules::import("glue")
+modules::import("phyloseq")
 
 # User Defined Variables --------------------------------------------------
 base_title <- 'Cage Control vs'
@@ -95,6 +95,11 @@ prep_data <- function(count_table, treatment_key, rank) {
   samples <- sample_data(metadata)
   
   phylo_obj <- phyloseq(OTU, samples)
+
+  sample_data(phylo_obj)$treatment <-
+    as.factor(sample_data(phylo_obj)$treatment) %>%
+    stats::relevel(treatment_key[[1]])
+  
   return(phylo_obj)
 }
 
@@ -105,7 +110,8 @@ visualize_save <-
            dataset_name,
            rank,
            outdir) {
-    # only get treatment related betas, adj p-vals, and diffs
+    
+    # only get treatment related log-fold-changes (lfc), adj p-vals, and diffs
     df <- data.frame(mod$res) %>%
       select(contains('treatment')) %>%
       select(contains('lfc') | contains('q_val') |
