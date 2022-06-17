@@ -50,7 +50,6 @@ calculate_clade_counts <- function(tb){
   
   tb_raw_taxon <- drop_all_NA_rows(tb)
   names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
-  browser()
   
   # We calculate counts rather than use clade counts from Pavian in order to 
   # account for taxa that we filtered out
