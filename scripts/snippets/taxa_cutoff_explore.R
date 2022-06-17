@@ -11,7 +11,7 @@ min_abundance <- 1
 min_samples_above_cutoff <- 2
 
 
-pc_sc <- select(tables[["raw_clade"]], matches('.*(Reads|name|Rank).*'))
+pc_sc <- select(tables[["raw_clade"]], !matches('(taxID|taxLineage|depth)'))
 bac_sc <- pc_sc %>% filter(name == 'Bacteria')
 
 # Get proportions using Bacteria count as total
