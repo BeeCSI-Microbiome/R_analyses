@@ -104,10 +104,13 @@ run_indicator_analysis <- function(dataset_name, activity, table_string, analysi
   tt <- tt %>%
     pivot_longer(
       cols = contains(c(d_nm, d_ctl)), 
-      names_to = meta_cols,
+      names_to = c("sample", "replicate", "treatment", "time"),
       names_pattern = regx, 
       values_to = "read_count"
     )
+  if(!("time" %in% meta_cols)){
+    tt <- tt %>% select(-c(time))
+  }
   
   # make metadata columns more readable
   tt$treatment[-which(tt$treatment=="0")] <-  paste0("Treatment ", tt$treatment[-which(tt$treatment=="0")])
@@ -174,7 +177,7 @@ run_indicator_analysis <- function(dataset_name, activity, table_string, analysi
 
 
 # dataset to run analysis on
-dataset_name <- "pdv_2021"
+dataset_name <- "oxy_2021"
 activity <- 1
 
 # run for all taxa
