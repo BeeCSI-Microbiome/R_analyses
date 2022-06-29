@@ -22,15 +22,19 @@ library(glue)
 
 
 #####################################################
-## takes in activity type
+## takes in sample id and figures out activity 
+##    number from it
 ## returns the regular expression to use in pivoting
 #####################################################
-reg_ex <- function(activity){
-  if(activity == 1){
+reg_ex <- function(sampleID){
+  if (all(str_detect(sampleID, "_d[[:alnum:]]+"))) {
+    # Does sample string match activity 1 pattern?
     reg <- paste0("((?:(?:\\w_){0,1}\\w{3})(\\d\\d)_d(\\d)(?:_t(\\d)){0,1}).*")
-  } 
-  if(activity == 2){
+  } else if (all(str_detect(sampleID, "\\D\\D\\D[[:alnum:]]{2}[e|u]"))) {
+    # Or activity 2 pattern?
     reg <- paste0("(\\D\\D\\D(..)([e|u])(?:_t(\\d)){0,1}).*")
+  } else {
+    stop("The sample column names do not match the implemented regex patterns")
   }
   return(reg)
 }
@@ -71,15 +75,14 @@ calc_prop <- function(tt, meta_cols) {
 
 #####################################################
 ## takes in data set name (same as in main.R), the 
-##    activity type of the data set, and the string 
-##    for the desired table (e.g. "raw_taxon"), the 
-##    analysis function you'd like to use, and the
-##    rank_symbol you'd like
+##    string for the desired table (e.g. "raw_taxon"),
+##    the analysis function you'd like to use, and 
+##    the rank_symbol you'd like
 ## Does the indicator taxa analysis and writes those 
 ##    results along with adjusted p-values to 2 files
 ##    (one for treatment and one for replicate)
 #####################################################
-run_indicator_analysis <- function(dataset_name, activity, table_string, analysis_func, rank_symbol="all") {
+run_indicator_analysis <- function(dataset_name, table_string, analysis_func, rank_symbol="all") {
   # Create output dir if it doesn't exist yet
   ind_sp_dir <- glue("results/{dataset_name}/indicator_species_analysis")
   ifelse(!dir.exists(ind_sp_dir),
@@ -98,8 +101,8 @@ run_indicator_analysis <- function(dataset_name, activity, table_string, analysi
   # create metadata category columns
   d_nm <- substr(dataset_name, 1, nchar(dataset_name)-5)
   d_ctl <- paste0(substring(d_nm, 1, 2), "ctl")
-  regx <- reg_ex(activity)
   sample_id <- colnames((tt %>% select(-c("name", "taxRank", "taxID", "depth", "taxLineage")))[1])
+  regx <- reg_ex(sample_id)
   meta_cols <- col_names(regx, sample_id)
   tt <- tt %>%
     pivot_longer(
@@ -177,16 +180,15 @@ run_indicator_analysis <- function(dataset_name, activity, table_string, analysi
 
 
 # dataset to run analysis on
-dataset_name <- "oxy_2021"
-activity <- 1
+dataset_name <- "hbb_2021"
 
 # run for all taxa
-run_indicator_analysis(dataset_name, activity, "raw_taxon", "r.g")
-run_indicator_analysis(dataset_name, activity, "raw_clade", "r.g")
+run_indicator_analysis(dataset_name, "raw_taxon", "r.g")
+run_indicator_analysis(dataset_name, "raw_clade", "r.g")
 # run for species taxa
-run_indicator_analysis(dataset_name, activity, "raw_taxon", "r.g", "S")
-run_indicator_analysis(dataset_name, activity, "raw_clade", "r.g", "S")
+run_indicator_analysis(dataset_name, "raw_taxon", "r.g", "S")
+run_indicator_analysis(dataset_name, "raw_clade", "r.g", "S")
 # run for genus taxa
-run_indicator_analysis(dataset_name, activity, "raw_taxon", "r.g", "G")
-run_indicator_analysis(dataset_name, activity, "raw_clade", "r.g", "G")
+run_indicator_analysis(dataset_name, "raw_taxon", "r.g", "G")
+run_indicator_analysis(dataset_name, "raw_clade", "r.g", "G")
 
