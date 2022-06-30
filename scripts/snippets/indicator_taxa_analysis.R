@@ -137,8 +137,6 @@ run_indicator_analysis <- function(dataset_name, table_string, analysis_func, ra
   tt_treat <- tt$treatment
   tt_rep <- tt$replicate
   
-  # Analysis function string for output naming
-  func_out_str <- str_replace(analysis_func, "\\.", "")
   
   # Analyze treatment and replicates
   inv_treat = multipatt(tt_abund, tt_treat, func = analysis_func, control = how(nperm=9999))
@@ -148,16 +146,26 @@ run_indicator_analysis <- function(dataset_name, table_string, analysis_func, ra
   #extract table of stats
   inv_treat.sign <- as.data.table(inv_treat$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_treat.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
-  #now can select only the indicators with adjusted significant p-values
-  inv_treat.sign[p.value.bh <= 0.05, ]
+  inv_treat.sign[, p.value.adj.bh := p.adjust(p.value, method = "BH")]
+  inv_treat.sign <- inv_treat.sign %>% 
+    relocate(c(index,stat), .after = everything()) %>% 
+    arrange(p.value.adj.bh, p.value)
+
   #for replicates now
   inv_rep.sign <- as.data.table(inv_rep$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_rep.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
-  #now can select only the indicators with adjusted significant p-values
-  inv_rep.sign[p.value.bh <= 0.05, ]
+  inv_rep.sign[, p.value.adj.bh := p.adjust(p.value, method = "BH")]
+  inv_rep.sign <- inv_rep.sign %>% 
+    relocate(c(index,stat), .after = everything()) %>% 
+    arrange(p.value.adj.bh, p.value)
+
   
+  # Replace the p.value with adjusted p.value so that it appears in summary
+  inv_treat$sign$p.value <- p.adjust(inv_treat$sign$p.value, method = "BH")
+  inv_rep$sign$p.value <- p.adjust(inv_rep$sign$p.value, method = "BH")
+  
+  # Analysis function string for output naming
+  func_out_str <- str_replace(analysis_func, "\\.", "")
   # write to file using sink()
   sink(glue("{ind_sp_dir}/{func_out_str}_{table_string}_treatment_indicators_{rank_symbol}.txt"))
   summary(inv_treat)
