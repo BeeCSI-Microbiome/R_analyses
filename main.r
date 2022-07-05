@@ -26,6 +26,7 @@ exploratory <- use("scripts/exploratory_functions.R")
 widen_results <- use("scripts/widenResults.R")
 da_fitzig <- use("scripts/da_fitzig.R")
 da_ancombc <- use("scripts/da-ancombc.R")
+indicsp <- use("scripts/indicator_taxa_analysis.R")
 # _________________________________________________________________________
 
 
@@ -45,14 +46,18 @@ kraken_matrix_dir <-
 da_dir <- glue("{main_outdir}/differential_abundance")
 da_fitzig_dir <- glue("{da_dir}/fitzig")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
+ind_sp_dir <- glue("{main_outdir}/indicator_species_analysis")
+ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
+ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
 
 create_dir_if_nonexistant <- function(path) {
   ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
 }
 ## Create output directories ####
 lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir,
-         kraken_matrix_dir, da_dir, da_fitzig_dir, da_ancombc_dir),
-       create_dir_if_nonexistant)
+         kraken_matrix_dir, da_dir, da_fitzig_dir, da_ancombc_dir,
+         ind_sp_dir, ind_sp_dir_clade, ind_sp_dir_taxon),
+         create_dir_if_nonexistant)
 
 ## Input file paths ####
 # Counts (clade and taxon counts, uncollapsed) and metadata tables
@@ -169,6 +174,14 @@ da_ancombc$run_ancombc(tables[["raw_clade"]],
                        dataset_name,
                        "G",
                        da_ancombc_dir)
+
+# Indicator Taxa Analysis--------------------------------------------------
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon)
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade)
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, "S")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, "S")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, "G")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, "G")
 
 # Relative Abundance ------------------------------------------------------
 exploratory$make_interest_abundance(tables[["raw_clade"]],
