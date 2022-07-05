@@ -176,12 +176,12 @@ da_ancombc$run_ancombc(tables[["raw_clade"]],
                        da_ancombc_dir)
 
 # Indicator Taxa Analysis--------------------------------------------------
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon)
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade)
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, "S")
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, "S")
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, "G")
-indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, "G")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, treatment_key)
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, treatment_key)
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, treatment_key, "S")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, treatment_key, "S")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_taxon"]], ind_sp_dir_taxon, treatment_key, "G")
+indicsp$run_indicator_analysis(dataset_name, tables[["raw_clade"]], ind_sp_dir_clade, treatment_key, "G")
 
 # Relative Abundance ------------------------------------------------------
 exploratory$make_interest_abundance(tables[["raw_clade"]],
