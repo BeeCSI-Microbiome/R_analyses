@@ -21,7 +21,7 @@ import('stats')
 
 # --------------------------------- Functions ----------------------------------
 export("run_indicator_analysis")
-run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, rank_symbol="all") {
+run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_key, rank_symbol="all") {
   ## takes in data set name (same as in main.R), the 
   ##    string for the desired table (e.g. "raw_taxon"),
   ##    the analysis function you'd like to use, and 
@@ -39,8 +39,6 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, rank_symbol=
   
   # Pivot tables into wide format (1 column per taxa, 1 row per sample) and
   # create metadata category columns
-  d_nm <- substr(dataset_name, 1, nchar(dataset_name)-5)
-  d_ctl <- paste0(substring(d_nm, 1, 2), "ctl")
   sample_id <- colnames((tt %>% select(-c("name", "taxRank", "taxID", "depth", "taxLineage")))[1])
   regx <- reg_ex(sample_id)
   meta_cols <- col_names(regx, sample_id)
@@ -56,12 +54,13 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, rank_symbol=
   }
   
   # make metadata columns more readable
-  tt$treatment[-which(tt$treatment=="0")] <-  paste0("Treatment ", tt$treatment[-which(tt$treatment=="0")])
+  tt$treatment <- sapply(c(1:length(tt$treatment)), function(x){
+    treatment_key[[which(names(treatment_key)==tt$treatment[x])]]
+  })
   tt$treatment[which(tt$treatment=="e")] <- "Treatment"
-  tt$treatment[which(tt$treatment=="0" | tt$treatment=="u")] <- "Control"
+  tt$treatment[which(tt$treatment=="u")] <- "Control"
   tt$replicate <- paste0("Rep ", tt$replicate)
-  
-  # Add taxa IDs to the names in order to deal with duplicate names 
+
   name_and_id <- paste0(tt$name, " (", tt$taxID, ")")
   tt <- cbind(name_and_id, tt)
   
@@ -122,7 +121,7 @@ reg_ex <- function(sampleID){
   
   if (all(str_detect(sampleID, "_d[[:alnum:]]+"))) {
     # Does sample string match activity 1 pattern?
-    reg <- paste0("((?:(?:\\w_){0,1}\\w{3})(\\d\\d)_d(\\d)(?:_t(\\d)){0,1}).*")
+    reg <- paste0("((?:(?:\\w_){0,1}\\w{3})(\\d\\d)_(d\\d)(?:_t(\\d)){0,1}).*")
   } else if (all(str_detect(sampleID, "\\D\\D\\D[[:alnum:]]{2}[e|u]"))) {
     # Or activity 2 pattern?
     reg <- paste0("(\\D\\D\\D(..)([e|u])(?:_t(\\d)){0,1}).*")
