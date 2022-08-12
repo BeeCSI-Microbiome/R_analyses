@@ -223,40 +223,111 @@ reassign_wkb <- function(tb){
   tb
 }
 
-calc_clade_counts <- function(tb) { # new version. Kurt Clarke 2022-07-26
+# calc_clade_counts <- function(tb) { # new version. Kurt Clarke 2022-07-26
   
-  # Count lineage_depths. Clade counts will be counted from leaves up
-    #Pseudo-Code
+#   # Count lineage_depths. Clade counts will be counted from leaves up
+#     #Pseudo-Code
+#   # 1. Clean data (just reads and tree key)
+#   # 2. Get string vector for column names
+#   # 3. Convert data to tree.
+#   # 4. make dataframe w/ name 
+#   # e.g. temp <- as.data.frame(tb_tree$Get(attribute = "name"))
+#   # 5. iterate through aggregate function (#see testing #1-4) # should self clear so probably don't have to reset aggreagate data structure
+#   # 6. combine Aggregate data frames w/ the variable name. 
+#   # 7. Return dataframe. 
+  
+#   # 1. Cleaning
+#   counts_only <- as.data.frame(select(tb, contains(c('taxonReads', 'taxLineage'))))
+#   tb_raw_taxon <- counts_only[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
+#   tb_raw_taxon[is.na(tb_raw_taxon)] <- 0
+  
+#   names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
+  
+#   tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$taxLineage, '>', # must be path string
+#                                              '/')
+  
+#   # 2. Column names vector 
+#   columnNames <- colnames(tb_raw_taxon)
+#   truncated_colNames <- columnNames[columnNames %in% c("taxRank","taxID", "depth","taxLineage", "pathString") == FALSE]
+  
+#   # 3. convert data to tree
+#   tb_tree <- as.Node(tb_raw_taxon)
+  
+#   # 4. name data frame <not optimal but hopefully not too costly>
+#   temp1 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name") # join on name
+  
+#   # 5. / 6. work simultaneously
+#   for(colName in truncated_colNames) {
+#     tb_tree$Do(function(node) {
+#       node$Aggregation <- sum(if (is.na(GetAttribute(node, attribute = colName))) 0
+#                               else GetAttribute(node, attribute = colName), 
+#                               if (node$isLeaf) 0 else data.tree::Aggregate(node, attribute = "Aggregation", aggFun = sum)
+#       )}, traversal = "post-order")
+    
+#     temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "Aggregation") # join on name
+#     colnames(temp2) <- c("levelName", "name", colName)
+    
+#     temp1 <- merge(temp1, temp2)
+#   }
+  
+#   return(temp1)
+# }
+
+calc_clade_counts <- function(tb) { # new version. Kurt Clarke 2022-08-12
+  
+  # Notes can be cleaned up but may reduce clarity. 
+
+  #Pseudo-Code (Rough)
   # 1. Clean data (just reads and tree key)
   # 2. Get string vector for column names
   # 3. Convert data to tree.
   # 4. make dataframe w/ name 
-  #   e.g. temp <- as.data.frame(tb_tree$Get(attribute = "name"))
+  # e.g. temp <- as.data.frame(tb_tree$Get(attribute = "name"))
   # 5. iterate through aggregate function (#see testing #1-4) # should self clear so probably don't have to reset aggreagate data structure
   # 6. combine Aggregate data frames w/ the variable name. 
   # 7. Return dataframe. 
   
   # 1. Cleaning
-  counts_only <- as.data.frame(select(tb, contains(c('taxonReads', 'taxLineage'))))
+  counts_only <- as.data.frame(select(tb, contains(c('taxonReads', 'taxLineage', 'depth', "taxRank","taxID"))))
   tb_raw_taxon <- counts_only[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
   tb_raw_taxon[is.na(tb_raw_taxon)] <- 0
   
   names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
   
-  tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$taxLineage, '>', # must be path string
-                                             '/')
+  tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$taxLineage, '/', # must be path string
+                                             '-')
   
-  # 2. Column names vector 
+  tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$pathString, '>', # must be path string
+                                             '/')
+  # 2 Column names vector 
   columnNames <- colnames(tb_raw_taxon)
   truncated_colNames <- columnNames[columnNames %in% c("taxRank","taxID", "depth","taxLineage", "pathString") == FALSE]
   
-  # 3. convert data to tree
+  # 3 convert data to tree
   tb_tree <- as.Node(tb_raw_taxon)
   
-  # 4. name data frame <not optimal but hopefully not too costly>
+  # 4 name data frame <not optimal but hopefully not too costly>
   temp1 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name") # join on name
   
-  # 5. / 6. work simultaneously
+  temp3 <- temp1 # this is redundant but helps with troubleshooting for now 
+  
+  # join taxRank
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxRank") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  #join taxID
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxID") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  # join depth
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "depth") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  # currently broken check merge 
+  # 5 / 6 work simultaneously
   for(colName in truncated_colNames) {
     tb_tree$Do(function(node) {
       node$Aggregation <- sum(if (is.na(GetAttribute(node, attribute = colName))) 0
@@ -267,8 +338,18 @@ calc_clade_counts <- function(tb) { # new version. Kurt Clarke 2022-07-26
     temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "Aggregation") # join on name
     colnames(temp2) <- c("levelName", "name", colName)
     
-    temp1 <- merge(temp1, temp2)
+    temp3 <- merge(temp3, temp2)
   }
+
+  # Joining taxlineage for fully correct re-factoring
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxLineage") # join on name
   
-  return(temp1)
+  temp3 <- merge(temp3, temp2)
+  
+  # final formatting.
+  temp3 <- subset(temp3, select = -levelName)
+  
+  temp3 <- subset(temp3, name != "root2")
+  
+  return(temp3)
 }
