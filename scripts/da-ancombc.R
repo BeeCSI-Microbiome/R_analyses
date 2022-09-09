@@ -20,6 +20,15 @@ modules::import("utils")
 modules::import("glue")
 modules::import("phyloseq")
 
+
+taxa_lvl_key <- c(D="Domain",
+                  P="Phylum",
+                  C="Class",
+                  O="Order",
+                  F="Family",
+                  G="Genus",
+                  S="Species")
+
 # User Defined Variables --------------------------------------------------
 base_title <- 'Cage Control vs'
 
@@ -114,7 +123,7 @@ visualize_save <-
     # only get treatment related log-fold-changes (lfc), adj p-vals, and diffs
     df <- data.frame(mod$res) %>%
       select(contains('treatment')) %>%
-      select(contains('lfc') | contains('q_val') |
+      select(contains('lfc') | contains('p_val') | contains('q_val') |
                contains('diff')) %>%
       mutate(across(
         contains('lfc'),
@@ -236,5 +245,5 @@ run_ancombc <- function(count_table,
   ancom_result <- ancombc(phylo_obj,
                           formula = 'treatment+replicate',
                           p_adj_method = "BH")
-  visualize_save(ancom_result, treatment_key, dataset_name, rank_symbol, outdir)
+  visualize_save(ancom_result, treatment_key, dataset_name, taxa_lvl_key[rank_symbol], outdir)
 }
