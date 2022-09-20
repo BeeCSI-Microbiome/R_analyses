@@ -1,11 +1,12 @@
-# Author(s): Lance Lansing
-# Fall 2021
 # Normalization via Cumulative Sum Scaling of read count data
-
 
 # ---------------------------------- Imports -----------------------------------
 import('stringr')
 import('dplyr')
+import('R6')
+import('data.tree')
+import('treemap')
+import('DiagrammeR')
 # ______________________________________________________________________________
 
 # ------------------------------ Scope variables -------------------------------
@@ -43,6 +44,7 @@ group_taxa_of_interest <- function(tb){
   tb <- group_lactobacillus(tb)
 }
 
+
 export('calculate_clade_counts')
 calculate_clade_counts <- function(tb){
   # Given the formatted and filtered table, return a list of two items:
@@ -66,58 +68,6 @@ drop_all_NA_rows <- function(tb){
   tb <- tb[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
   tb[is.na(tb)] <- 0
   tb
-}
-
-# Reaggregates clade counts
-calc_clade_counts <- function(tb){
-  
-  # Count lineage_depths. Clade counts will be counted from leaves up
-  tb <- tb %>%
-    mutate(lineage_depth = str_count(taxLineage, '>'))
-  
-  # Set remaining NA values to 0
-  tb[is.na(tb)] <- 0
-  
-  # Pivot samples into 1 column
-  tb <- tb %>% 
-    tidyr::pivot_longer(
-      cols = contains('taxonReads'),
-      names_to = "sample",
-      values_to = "read_count"
-    )
-  
-  # Clean sample names
-  tb$sample <- str_replace(tb$sample, 'taxonReads_', '')
-  
-  # Sort rows by lineage depth
-  tb <- arrange(tb, desc(lineage_depth))
-  
-  # Sum reads from rows with the following conditions:
-  #   - samples match
-  #   - lineage depth is equal (to get taxon count of that taxa), or 1 greater, 
-  #     to sum up subtaxa
-  #   - lineage is contained within the subtaxa lineage   
-  # TODO: This implementation is likely exponential in time. There is probably a better way
-  for(i in 1:nrow(tb)){
-    row <- tb[i, ]
-    row$read_count <- sum(
-      filter(tb,
-             lineage_depth == row$lineage_depth + 1 | lineage_depth == row$lineage_depth,
-             sample == row$sample,
-             str_detect(taxLineage, row$taxLineage))$read_count)
-    tb[i, ] <- row
-  }
-  
-  # Pivot samples back into their own columns
-  tb <- tb %>% 
-    tidyr::pivot_wider(
-      names_from = "sample",
-      values_from = c("read_count")
-    )
-  
-  # Remove the "lineage_depth" column
-  tb <- tb[, !(colnames(tb) %in% c("lineage_depth"))]
-  tb <- tb %>% relocate(taxLineage, .after = everything())
 }
 
 
@@ -217,4 +167,87 @@ reassign_wkb <- function(tb){
   tb[tb$name==wkb8_str,]$taxLineage <- paste(helsing_lineage, wkb8_str, sep='>')
   tb[tb$name==wkb10_str,]$taxLineage <- paste(kulla_lineage, wkb10_str, sep='>')
   tb
+}
+
+
+calc_clade_counts <- function(tb) {
+  
+  # Notes can be cleaned up but may reduce clarity. 
+
+  #Pseudo-Code (Rough)
+  # 1. Clean data (just reads and tree key)
+  # 2. Get string vector for column names
+  # 3. Convert data to tree.
+  # 4. make dataframe w/ name 
+  # e.g. temp <- as.data.frame(tb_tree$Get(attribute = "name"))
+  # 5. iterate through aggregate function (#see testing #1-4) # should self clear so probably don't have to reset aggreagate data structure
+  # 6. combine Aggregate data frames w/ the variable name. 
+  # 7. Return dataframe. 
+  
+  
+  # 1. Cleaning
+  counts_only <- as.data.frame(select(tb, contains(c('taxonReads', 'taxLineage', 'depth', "taxRank","taxID"))))
+  tb_raw_taxon <- counts_only[as.logical((rowSums(is.na(counts_only))-ncol(counts_only))), ]
+  tb_raw_taxon[is.na(tb_raw_taxon)] <- 0
+  
+  names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
+  
+  tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$taxLineage, '/', # must be path string
+                                             '-')
+  
+  tb_raw_taxon$pathString <- str_replace_all(tb_raw_taxon$pathString, '>', # must be path string
+                                             '/')
+  # 2 Column names vector 
+  columnNames <- colnames(tb_raw_taxon)
+  truncated_colNames <- columnNames[columnNames %in% c("taxRank","taxID", "depth","taxLineage", "pathString") == FALSE]
+  
+  # 3 convert data to tree
+  tb_tree <- as.Node(tb_raw_taxon)
+  
+  # 4 name data frame <not optimal but hopefully not too costly>
+  temp1 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name") # join on name
+  
+  temp3 <- temp1 # this is redundant but helps with troubleshooting for now 
+  
+  # join taxRank
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxRank") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  #join taxID
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxID") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  # join depth
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "depth") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  # currently broken check merge 
+  # 5 / 6 work simultaneously
+  for(colName in truncated_colNames) {
+    tb_tree$Do(function(node) {
+      node$Aggregation <- sum(if (is.na(GetAttribute(node, attribute = colName))) 0
+                              else GetAttribute(node, attribute = colName), 
+                              if (node$isLeaf) 0 else data.tree::Aggregate(node, attribute = "Aggregation", aggFun = sum)
+      )}, traversal = "post-order")
+    
+    temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "Aggregation") # join on name
+    colnames(temp2) <- c("levelName", "name", colName)
+    
+    temp3 <- merge(temp3, temp2)
+  }
+
+  # Joining taxlineage for fully correct re-factoring
+  temp2 <- as.data.frame(tb_tree, row.names = NULL, optional = FALSE, "name", "taxLineage") # join on name
+  
+  temp3 <- merge(temp3, temp2)
+  
+  # final formatting.
+  temp3 <- subset(temp3, select = -levelName)
+  
+  temp3 <- subset(temp3, name != "root2")
+  
+  return(temp3)
 }
