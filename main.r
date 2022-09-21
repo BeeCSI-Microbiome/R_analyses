@@ -23,8 +23,6 @@ lapply(packages, library, character.only = TRUE)
 rsummary <- use("scripts/reads_summary.R")
 ip <- use("scripts/initial_processing.R")
 exploratory <- use("scripts/exploratory_functions.R")
-widen_results <- use("scripts/widenResults.R")
-da_fitzig <- use("scripts/da_fitzig.R")
 da_ancombc <- use("scripts/da-ancombc.R")
 indicsp <- use("scripts/indicator_taxa_analysis.R")
 # _________________________________________________________________________
@@ -39,14 +37,11 @@ main_outdir <- glue("results/{dataset_name}")
 nmds_dir <- glue("{main_outdir}/nmds_anosim")
 alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
 rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
-# <DA> Subdirectory for kraken report matrices
-kraken_matrix_dir <-
-  glue("{main_outdir}/aggregated_kraken_reports")
+
 # <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
-da_fitzig_dir <- glue("{da_dir}/fitzig")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
-ind_sp_dir <- glue("{main_outdir}/indicator_species_analysis")
+ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
 ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
 ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
 
@@ -54,25 +49,9 @@ create_dir_if_nonexistant <- function(path) {
   ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
 }
 ## Create output directories ####
-lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir,
-         kraken_matrix_dir, da_dir, da_fitzig_dir, da_ancombc_dir,
-         ind_sp_dir, ind_sp_dir_clade, ind_sp_dir_taxon),
-         create_dir_if_nonexistant)
-
-## Input file paths ####
-# Counts (clade and taxon counts, uncollapsed) and metadata tables
-counts_path <- "../data/oxy_2021/oxy_2021_all_taxa.csv"
-metadata_filepath <- "../data/oxy_2021/oxy_2021_metadata.csv"
-
-# Path to directory with kraken reports
-kraken_report_dir <- "../data/oxy_2021/kraken_reports"
-# Kraken report paths for fitzig DA
-krakenReportPaths <-
-  Sys.glob(glue("{kraken_report_dir}/*_report.txt"))
-  # c(Sys.glob(glue("{kraken_report_dir}/*dT*_report.txt")))
-
-krakenReportNames <- list.files(path = kraken_report_dir,
-                                pattern = "*_report.txt")
+lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir, da_dir,
+         da_ancombc_dir,ind_sp_dir, ind_sp_dir_clade, ind_sp_dir_taxon),
+       create_dir_if_nonexistant)
 
 ## User-defined values ####
 # Dataset-specific taxa of interest (provide a list of taxa strings)
@@ -85,38 +64,6 @@ additional_taxa <- c("Pantoea agglomerans")
 treatment_key <- list(d0="control",d1="oxytetracycline")
 # a treatment with the name of that treatment
 # THE CONTROL TREATMENT MUST BE THE FIRST ELEMENT (e.g. control, unexposed)
-
-# Percentile value used by CSS (default = 0.5)
-css_percentile <- 0.5
-
-# # Statistical analyses list for DA
-# statistical_analyses <- list(
-#   # ACTIVITY 2 - Example: Corn (likely applicable to most activity 2 datasets)
-#   # Description: Compare exposed vs. unexposed, use replicate as random effect
-#   list(
-#     name = "Exposure",
-#     subsets = list(),
-#     model_matrix = "~ 0 + Exposed",
-#     contrasts = list(
-#       "ExposedTRUE - ExposedFALSE"
-#     ),
-#     random_effect = "Replicate"
-#   )
-# )
-
-statistical_analyses = list(
-  # ACTIVITY 1 - Example: CTX
-  # Description: Compare control and 2 treatments, use replicate as random effect
-  list(
-    name = "Treatment",
-    subsets = list(),
-    model_matrix = "~ 0 + Treatment",
-    contrasts = list(
-      "Treatmentcontrol - Treatmentoxytetracycline"
-    ),
-    random_effect = "Replicate"
-  )
-)
 # _________________________________________________________________________
 
 
@@ -133,17 +80,7 @@ reads_summary <- rsummary$create_summary_table(ct, dataset_name)
 # _________________________________________________________________________
 
 
-# Differential Abundance --------------------------------------------------
-widen_results$widen_results_function(krakenReportPaths,
-                                     krakenReportNames,
-                                     kraken_matrix_dir)
-da_fitzig$kraken_differential_abundance(
-  kraken_matrix_dir,
-  metadata_filepath,
-  da_fitzig_dir,
-  statistical_analyses
-)
-
+# # Differential Abundance --------------------------------------------------
 
 # Formatting, filtering, and calculating clade counts ---------------------
 # Format and perform filtering on the table
