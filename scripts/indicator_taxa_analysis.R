@@ -18,6 +18,14 @@ import('permute')
 import('stats')
 # ______________________________________________________________________________
 
+taxa_lvl_key <- c(D="Domain",
+                  P="Phylum",
+                  C="Class",
+                  O="Order",
+                  F="Family",
+                  G="Genus",
+                  S="Species",
+                  all="all")
 
 # --------------------------------- Functions ----------------------------------
 export("run_indicator_analysis")
@@ -75,9 +83,7 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_ke
   tt_abund <- tt[,(length(meta_cols)+1):ncol(tt)] 
   tt_treat <- tt$treatment
   tt_rep <- tt$replicate
-  
-  # Analysis function string for output naming
-  func_out_str <- str_replace("r.g", "\\.", "")
+
   
   # Analyze treatment and replicates
   inv_treat = multipatt(tt_abund, tt_treat, func = "r.g" , control = how(nperm=9999))
@@ -98,13 +104,13 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_ke
   inv_rep.sign[p.value.bh <= 0.05, ]
   
   # write to file using sink()
-  sink(glue("{ind_sp_dir}/{func_out_str}_treatment_indicators_{rank_symbol}.txt"))
+  sink(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_{taxa_lvl_key[rank_symbol]}.txt"))
   summary(inv_treat)
   cat("\n\n\nAdjusted p-values\n")
   cat("-----------------\n")
   print(inv_treat.sign)
   sink()
-  sink(glue("{ind_sp_dir}/{func_out_str}_replicate_indicators_{rank_symbol}.txt"))
+  sink(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_{taxa_lvl_key[rank_symbol]}.txt"))
   summary(inv_rep)
   cat("\n\n\nAdjusted p-values\n")
   cat("-----------------\n")
