@@ -41,7 +41,7 @@ rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
 # <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
-ind_sp_dir <- glue("{main_outdir}/indicator_species_analysis")
+ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
 ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
 ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
 
