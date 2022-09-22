@@ -38,7 +38,7 @@ tidy_data <- function(d) {
 
 # calculates and adds Other Bacteria col
 add_other_bac <- function(d) {
-  column_index <- grepl("Reads", names(d))
+  column_index <- !(names(d) %in% c("taxRank","taxLineage","taxID","depth","name"))
   # Get the sum counts for taxa of interest, except Bacteria (domain), then 
   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
   # representing all taxa of non-interest 
@@ -87,10 +87,10 @@ extract_treatment_string <- function(sample_string, treatment_key) {
     # Does sample string match activity 1 pattern?
     treatment_codes <-
       str_extract(sample_string, "(?<=_)d[[:alnum:]]+")
-  } else if (all(str_detect(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)"))) {
+  } else if (all(str_detect(sample_string, "(?<=[[:upper:]]{3}\\d\\d)(e|u)"))) {
     # Or activity 2 pattern?
     treatment_codes <-
-      str_extract(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)")
+      str_extract(sample_string, "(?<=[[:upper:]]{3}\\d\\d)(e|u)")
   } else {
     stop("The sample column names do not match the implemented regex patterns")
   }
@@ -158,7 +158,7 @@ plot_interest_abundance <- function(d) {
 export("make_interest_abundance")
 make_interest_abundance <- function(data, treatment_key, dataset_name,
                                     additional_taxa, outdir) {
-  if (!is.na(additional_taxa)) {
+  if (any(!is.na(additional_taxa))) {
     interest_list <- append(interest_list, additional_taxa)
   }
   
