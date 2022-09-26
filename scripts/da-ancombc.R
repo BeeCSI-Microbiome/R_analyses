@@ -65,10 +65,10 @@ extract_treatment_string <- function(sample_string, treatment_key) {
     # Does sample string match activity 1 pattern?
     treatment_codes <-
       str_extract(sample_string, "(?<=_)d[[:alnum:]]+")
-  } else if (all(str_detect(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)"))) {
+  } else if (all(str_detect(sample_string, "(?<=[[:upper:]]{3}\\d\\d)(e|u)"))) {
     # Or activity 2 pattern?
     treatment_codes <-
-      str_extract(sample_string, "(?<=[[:upper]]{3}\\d\\d)(e|u)")
+      str_extract(sample_string, "(?<=[[:upper:]]{3}\\d\\d)(e|u)")
   } else {
     stop("The sample column names do not match the implemented regex patterns")
   }
