@@ -42,16 +42,14 @@ rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
 da_dir <- glue("{main_outdir}/differential_abundance")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
 ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
-ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
-ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
 
 create_dir_if_nonexistant <- function(path) {
   ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
 }
 ## Create output directories ####
 lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir, da_dir,
-         da_ancombc_dir,ind_sp_dir, ind_sp_dir_clade, ind_sp_dir_taxon),
-       create_dir_if_nonexistant)
+         da_ancombc_dir,ind_sp_dir), create_dir_if_nonexistant)
+
 
 ## User-defined values ####
 # Dataset-specific taxa of interest (provide a list of taxa strings)
@@ -113,33 +111,19 @@ da_ancombc$run_ancombc(tables[["raw_clade"]],
                        da_ancombc_dir)
 
 # Indicator Taxa Analysis--------------------------------------------------
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
-                               treatment_key)
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
-                               treatment_key)
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
                                treatment_key,
+                               dataset_name,
+                               ind_sp_dir)
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
+                               treatment_key,
+                               dataset_name,
+                               ind_sp_dir,
                                "S")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
                                treatment_key,
-                               "S")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
-                               treatment_key,
-                               "G")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
-                               treatment_key,
+                               dataset_name,
+                               ind_sp_dir,
                                "G")
 
 # Relative Abundance ------------------------------------------------------
