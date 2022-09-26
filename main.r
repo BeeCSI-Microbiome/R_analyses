@@ -12,7 +12,6 @@ packages <- c("tidyverse",
               "vegan",
               "modules",
               "data.table",
-              "metagenomeSeq",
               "ggplot2",
               "glue")
 lapply(packages, library, character.only = TRUE)
@@ -31,14 +30,14 @@ indicsp <- use("scripts/indicator_taxa_analysis.R")
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
 dataset_name <- "oxy_2021"
+# filepath to the taxon count table
+counts_path <- "path/to/taxon_table.csv"
 
 # Create strings for output directories
 main_outdir <- glue("results/{dataset_name}")
 nmds_dir <- glue("{main_outdir}/nmds_anosim")
 alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
 rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
-
-# <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
 ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
@@ -66,7 +65,6 @@ treatment_key <- list(d0="control",d1="oxytetracycline")
 
 
 # Read input files --------------------------------------------------------
-# Count table
 ct <- read_csv(counts_path)
 # _________________________________________________________________________
 
@@ -95,8 +93,6 @@ write.csv(tables[["raw_taxon"]],
           glue("{main_outdir}/raw_taxon_counts.csv"),
           row.names = FALSE)
 
-# source("scripts/snippets/taxa_cutoff_explore.R")
-# __________________________________________________________________________
 
 # ANCOMBC Differential Abundance ------------------------------------------
 da_ancombc$run_ancombc(tables[["raw_clade"]],
