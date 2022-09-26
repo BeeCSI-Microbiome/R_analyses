@@ -18,10 +18,18 @@ import('permute')
 import('stats')
 # ______________________________________________________________________________
 
+taxa_lvl_key <- c(D="Domain",
+                  P="Phylum",
+                  C="Class",
+                  O="Order",
+                  F="Family",
+                  G="Genus",
+                  S="Species",
+                  all="all")
 
 # --------------------------------- Functions ----------------------------------
 export("run_indicator_analysis")
-run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_key, rank_symbol="all") {
+run_indicator_analysis <- function(table, treatment_key, dataset_name, output_dir, rank_symbol="all") {
   ## takes in data set name (same as in main.R), the 
   ##    string for the desired table (e.g. "raw_taxon"),
   ##    the analysis function you'd like to use, and 
@@ -40,8 +48,8 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_ke
   # Pivot tables into wide format (1 column per taxa, 1 row per sample) and
   # create metadata category columns
   sample_id <- colnames((tt %>% select(-c("name", "taxRank", "taxID", "depth", "taxLineage")))[1])
-  regx <- reg_ex(sample_id)
-  meta_cols <- col_names(regx, sample_id)
+  regx <- get_reg_ex(sample_id)
+  meta_cols <- get_col_names(regx, sample_id)
   tt <- tt %>%
     pivot_longer(
       cols = !c("name", "taxRank", "taxID", "depth", "taxLineage"), 
@@ -75,9 +83,7 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_ke
   tt_abund <- tt[,(length(meta_cols)+1):ncol(tt)] 
   tt_treat <- tt$treatment
   tt_rep <- tt$replicate
-  
-  # Analysis function string for output naming
-  func_out_str <- str_replace("r.g", "\\.", "")
+
   
   # Analyze treatment and replicates
   inv_treat = multipatt(tt_abund, tt_treat, func = "r.g" , control = how(nperm=9999))
@@ -87,33 +93,33 @@ run_indicator_analysis <- function(dataset_name, table, ind_sp_dir, treatment_ke
   #extract table of stats
   inv_treat.sign <- as.data.table(inv_treat$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_treat.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
+  inv_treat.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
   #now can select only the indicators with adjusted significant p-values
-  inv_treat.sign[p.value.bh <= 0.05, ]
+  inv_treat.sign[p.value.adj <= 0.05, ]
   #for replicates now
   inv_rep.sign <- as.data.table(inv_rep$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_rep.sign[, p.value.bh := p.adjust(p.value, method = "BH")]
+  inv_rep.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
   #now can select only the indicators with adjusted significant p-values
-  inv_rep.sign[p.value.bh <= 0.05, ]
+  inv_rep.sign[p.value.adj <= 0.05, ]
   
-  # write to file using sink()
-  sink(glue("{ind_sp_dir}/{func_out_str}_treatment_indicators_{rank_symbol}.txt"))
-  summary(inv_treat)
-  cat("\n\n\nAdjusted p-values\n")
-  cat("-----------------\n")
-  print(inv_treat.sign)
-  sink()
-  sink(glue("{ind_sp_dir}/{func_out_str}_replicate_indicators_{rank_symbol}.txt"))
-  summary(inv_rep)
-  cat("\n\n\nAdjusted p-values\n")
-  cat("-----------------\n")
-  print(inv_rep.sign)
-  sink()
+  treatment_output_tbl <- inv_treat.sign %>%
+    mutate("significant" = p.value.adj <= 0.05) %>%
+    rename("name" = "rn")
+  replicate_output_tbl <- inv_rep.sign %>%
+    mutate("significant" = p.value.adj <= 0.05) %>%
+    rename("name" = "rn")
+  
+  utils::write.csv(treatment_output_tbl,
+            file = glue("{output_dir}/{dataset_name}_treatment_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
+            row.names = FALSE)
+  utils::write.csv(replicate_output_tbl,
+            file = glue("{output_dir}/{dataset_name}_replicate_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
+            row.names = FALSE)
 }
 
 
-reg_ex <- function(sampleID){
+get_reg_ex <- function(sampleID){
   ## takes in sample id and figures out activity 
   ##    number from it
   ## returns the regular expression to use in pivoting
@@ -132,7 +138,7 @@ reg_ex <- function(sampleID){
 }
 
 
-col_names <- function(reg_ex, sampleID){
+get_col_names <- function(reg_ex, sampleID){
   ## takes in the regular expression being used and one
   ##    sample id from a column in tt
   ## returns the metadata columns to use when pivoting
@@ -142,9 +148,10 @@ col_names <- function(reg_ex, sampleID){
   matches <- matches[!is.na(matches)]
   if(length(matches) == 5){
     cols <- c("sample", "replicate", "treatment", "time")
-  }
-  if(length(matches) == 4){
+  } else if(length(matches) == 4){
     cols <- c("sample", "replicate", "treatment")
+  } else {
+    stop("The sample column name did not retrieve a valid number of groups from the regex match")
   }
   return(cols)
 }

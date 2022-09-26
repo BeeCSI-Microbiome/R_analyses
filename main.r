@@ -12,7 +12,6 @@ packages <- c("tidyverse",
               "vegan",
               "modules",
               "data.table",
-              "metagenomeSeq",
               "ggplot2",
               "glue")
 lapply(packages, library, character.only = TRUE)
@@ -31,32 +30,82 @@ indicsp <- use("scripts/indicator_taxa_analysis.R")
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
 dataset_name <- "oxy_2021"
+# filepath to the taxon count table
+counts_path <- "path/to/taxon_table.csv"
 
 # Create strings for output directories
 main_outdir <- glue("results/{dataset_name}")
 nmds_dir <- glue("{main_outdir}/nmds_anosim")
 alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
 rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
-
-# <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
 ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
-ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
-ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
 
 create_dir_if_nonexistant <- function(path) {
   ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
 }
 ## Create output directories ####
 lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir, da_dir,
-         da_ancombc_dir,ind_sp_dir, ind_sp_dir_clade, ind_sp_dir_taxon),
-       create_dir_if_nonexistant)
+         da_ancombc_dir,ind_sp_dir), create_dir_if_nonexistant)
+
 
 ## User-defined values ####
 # Dataset-specific taxa of interest (provide a list of taxa strings)
 # e.g. c("Lactobacillus", "Gilliamella apis")
-additional_taxa <- c("Pantoea agglomerans")
+additional_taxa <- c(cor_2020=NA,
+                     cac_2020=NA,
+                     cas_2020=NA,
+                     cra_2020=NA,
+                     hbb_2020_t1=NA,
+                     hbb_2020_t2=c("Spiroplasma melliferum",
+                                   "Paenibacillus alvei"),
+                     hbb_2020_t3=c("Spiroplasma melliferum",
+                                   "Paenibacillus alvei"),
+                     hbb_2020_t4=c("Paenibacillus alvei"),
+                     soy_2020=c("Pantoea agglomerans"),
+                     clo_2020=c("Spiroplasma melliferum",
+                                "Serratia marcescens"),
+                     ctx_2020_dC=c("Pantoea agglomerans"),
+                     ctx_2020_dT=c("Pantoea agglomerans"),
+                     thi_2020=c("Spiroplasma apis"),
+                     a_bos_2021=NA,
+                     a_flx_2021=NA,
+                     a_pym_2021=NA,
+                     app_2021=NA,
+                     b_fly_2021=NA,
+                     b_pyc_2021=NA,
+                     c_chl_2021=NA,
+                     c_spn_2021=NA,
+                     c_spr_2021=NA,
+                     cac_2021=NA,
+                     cas_2021=c("Spiroplasma melliferum"),
+                     cfs_dC_2021=c("Pantoea agglomerans"),
+                     cfs_dF_2021=c("Pantoea agglomerans"),
+                     cfs_dS_2021=c("Pantoea agglomerans"),
+                     cra_2021=c("Paenibacillus alvei"),
+                     d_flp_2021=NA,
+                     d_sul_2021=NA,
+                     e_gly_2021=c("Serratia marcescens"),
+                     e_met_2021=NA,
+                     hbb_2021_t1=NA,
+                     hbb_2021_t2=c("Spiroplasma melliferum",
+                                   "Paenibacillus alvei"),
+                     hbb_2021_t3=c("Spiroplasma melliferum",
+                                   "Paenibacillus alvei"),
+                     hbb_2021_t4=c("Spiroplasma melliferum",
+                                   "Paenibacillus alvei"),
+                     lbb_2021=NA,
+                     pdv_2021_t1=NA,
+                     pdv_2021_t2=NA,
+                     pre_2021_t1=NA,
+                     pre_2021_t2=NA,
+                     afb_2021=NA,
+                     cha_2021=NA,
+                     iap_2021=c("Bombella intestini"),
+                     nos_2021=NA,
+                     var_2021=c("Bombella intestini"))
+additional_taxa <- additional_taxa[dataset_name]
 
 
 # The following key should match the substring in the sample name that specifies 
@@ -68,7 +117,6 @@ treatment_key <- list(d0="control",d1="oxytetracycline")
 
 
 # Read input files --------------------------------------------------------
-# Count table
 ct <- read_csv(counts_path)
 # _________________________________________________________________________
 
@@ -97,8 +145,6 @@ write.csv(tables[["raw_taxon"]],
           glue("{main_outdir}/raw_taxon_counts.csv"),
           row.names = FALSE)
 
-# source("scripts/snippets/taxa_cutoff_explore.R")
-# __________________________________________________________________________
 
 # ANCOMBC Differential Abundance ------------------------------------------
 da_ancombc$run_ancombc(tables[["raw_clade"]],
@@ -113,33 +159,19 @@ da_ancombc$run_ancombc(tables[["raw_clade"]],
                        da_ancombc_dir)
 
 # Indicator Taxa Analysis--------------------------------------------------
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
-                               treatment_key)
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
-                               treatment_key)
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
                                treatment_key,
+                               dataset_name,
+                               ind_sp_dir)
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
+                               treatment_key,
+                               dataset_name,
+                               ind_sp_dir,
                                "S")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
+indicsp$run_indicator_analysis(tables[["raw_clade"]],
                                treatment_key,
-                               "S")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_taxon"]],
-                               ind_sp_dir_taxon,
-                               treatment_key,
-                               "G")
-indicsp$run_indicator_analysis(dataset_name,
-                               tables[["raw_clade"]],
-                               ind_sp_dir_clade,
-                               treatment_key,
+                               dataset_name,
+                               ind_sp_dir,
                                "G")
 
 # Relative Abundance ------------------------------------------------------

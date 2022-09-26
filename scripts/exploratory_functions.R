@@ -244,7 +244,6 @@ prep_alpha_data <- function(d, treatment_key) {
 # runs and saves kruskal wallis on shannon index for both 
 # replicates and treatments
 alpha_KW_test <- function(d, dataset_name, index, outdir) {
-  # browser()
   heading <- glue("{index} Index - Kruskal Wallis Results:\n")
   rep_alpha <- stats::kruskal.test(stats::formula(glue("{index}~replicate")), d)
   treat_alpha <- stats::kruskal.test(stats::formula(glue("{index}~treatment")), d)
