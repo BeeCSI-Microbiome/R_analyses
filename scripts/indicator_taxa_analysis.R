@@ -93,29 +93,34 @@ run_indicator_analysis <- function(table, treatment_key, dataset_name, output_di
   #extract table of stats
   inv_treat.sign <- as.data.table(inv_treat$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_treat.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
-  #now can select only the indicators with adjusted significant p-values
-  inv_treat.sign[p.value.adj <= 0.05, ]
+  # inv_treat.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
+
   #for replicates now
   inv_rep.sign <- as.data.table(inv_rep$sign, keep.rownames = TRUE)
   #add adjusted p-value
-  inv_rep.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
-  #now can select only the indicators with adjusted significant p-values
-  inv_rep.sign[p.value.adj <= 0.05, ]
-  
+  # inv_rep.sign[, p.value.adj := p.adjust(p.value, method = "BH")]
+
+  # write summaries to files using sink()
+  sink(glue("{output_dir}/{dataset_name}_treatment_indicators_{taxa_lvl_key[rank_symbol]}.txt"))
+  summary(inv_treat)
+  sink()
+  sink(glue("{output_dir}/{dataset_name}_replicate_indicators_{taxa_lvl_key[rank_symbol]}.txt"))
+  summary(inv_rep)
+  sink()
+
   treatment_output_tbl <- inv_treat.sign %>%
-    mutate("significant" = p.value.adj <= 0.05) %>%
+    mutate("significant" = p.value <= 0.05) %>%
     rename("name" = "rn")
   replicate_output_tbl <- inv_rep.sign %>%
-    mutate("significant" = p.value.adj <= 0.05) %>%
+    mutate("significant" = p.value <= 0.05) %>%
     rename("name" = "rn")
   
   utils::write.csv(treatment_output_tbl,
-            file = glue("{output_dir}/{dataset_name}_treatment_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
-            row.names = FALSE)
+    file = glue("{output_dir}/{dataset_name}_treatment_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
+    row.names = FALSE)
   utils::write.csv(replicate_output_tbl,
-            file = glue("{output_dir}/{dataset_name}_replicate_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
-            row.names = FALSE)
+    file = glue("{output_dir}/{dataset_name}_replicate_indicators_{taxa_lvl_key[rank_symbol]}.csv"),
+    row.names = FALSE)
 }
 
 
