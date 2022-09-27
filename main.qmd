@@ -1,0 +1,362 @@
+---
+title: "BeeCSI Taxonomic Analysis Report"
+format:
+  pdf:
+    toc: true
+    toc-depth: 2
+---
+{{< pagebreak >}}
+
+# Experiment Details
+```{r, echo = TRUE}
+# Data and metadata information
+dataset_name <- "oxy_2021"
+experiment_key <- read.csv("Taxonomic_Experiment_Key.csv")
+```
+**Grouping:**
+```{r, echo = FALSE}
+subset(experiment_key$highest.grouping, experiment_key$dataset_key == dataset_name)
+```
+  
+**Year**:
+```{r, echo = FALSE}
+subset(experiment_key$year, experiment_key$dataset_key == dataset_name)
+```
+  
+**Activity:**
+```{r, echo = FALSE}
+subset(experiment_key$activity, experiment_key$dataset_key == dataset_name)
+```
+  
+**Stressor Name:**
+```{r, echo = FALSE}
+subset(experiment_key$highest.grouping, experiment_key$dataset_key == dataset_name)
+```
+  
+**Number of Samples:**
+```{r, echo = FALSE}
+subset(experiment_key$X..Samples, experiment_key$dataset_key == dataset_name)
+```
+  
+**Treatments:**
+```{r, echo = FALSE}
+if(subset(experiment_key$Number.of.Treatments, experiment_key$dataset_key == dataset_name) == 2) {
+  treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == dataset_name),
+  subset(experiment_key$d1_treatment, experiment_key$dataset_key == dataset_name))
+  
+} else {
+    treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == dataset_name),
+  subset(experiment_key$d1_treatment, experiment_key$dataset_key == dataset_name),
+    subset(experiment_key$d2_treatment, experiment_key$dataset_key == dataset_name))
+}
+
+treatmentNames
+```
+
+**Description:**
+```{r, echo = FALSE}
+subset(experiment_key$Description, experiment_key$dataset_key == dataset_name)
+```
+
+
+```{r install, message=FALSE, warning=FALSE, echo = FALSE}
+# install requirements and set directories. 
+if (!requireNamespace("glue", quietly = TRUE))
+    install.packages("glue")
+if (!requireNamespace("png", quietly = TRUE))
+    install.packages("png")
+
+library("glue")
+library("png")
+
+path <- getwd()
+
+# Kept in case this ever gets changed. 
+main_outdir <- glue("{path}/results/{dataset_name}")
+nmds_dir <- glue("{main_outdir}/nmds_anosim")
+alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
+rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
+# <DA> Subdirectory for kraken report matrices
+kraken_matrix_dir <-
+  glue("{main_outdir}/aggregated_kraken_reports")
+# <DA> Subdirectory for DA results
+da_dir <- glue("{main_outdir}/differential_abundance")
+da_fitzig_dir <- glue("{da_dir}/fitzig")
+da_ancombc_dir <- glue("{da_dir}/ancombc")
+ind_sp_dir <- glue("{main_outdir}/differential_abundance/indicator_species_analysis")
+ind_sp_dir_clade <- glue("{ind_sp_dir}/raw_clade")
+ind_sp_dir_taxon <- glue("{ind_sp_dir}/raw_taxon")
+
+```
+{{< pagebreak >}}
+
+# Alpha Diversity
+## Summary
+``` {r, echo = FALSE}
+temp <- readLines(glue("{alpha_div_dir}/alpha_stats.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+
+```{r, echo = FALSE}
+alphaSummary <- read.csv(glue("{alpha_div_dir}/alpha_div_data.csv"))
+
+alphaSummaryKey <- c("Sample", "Observed Richness", "Inverse Simpson", "Simpson", "Shannon", "Evenness", "Replicate", "Treatment")
+
+knitr::kable(alphaSummary, col.names = alphaSummaryKey, digits = 4)
+```
+{{< pagebreak >}}
+
+## Evenness
+```{r, echo = FALSE}
+# Figure Import 
+alphaEvenness <- readPNG(glue("{alpha_div_dir}/alpha_div_evenness.png"), native = TRUE, info = TRUE)
+
+# displaying an imported image:
+grid::grid.raster(alphaEvenness)
+treatmentNames
+```
+{{< pagebreak >}}
+
+## Shannon
+```{r, echo = FALSE}
+# Figure Import 
+alphaShannon <- readPNG(glue("{alpha_div_dir}/alpha_div_shannon.png"), native = TRUE, info = TRUE)
+
+# displaying an imported image:
+grid::grid.raster(alphaShannon)
+treatmentNames
+```
+{{< pagebreak >}}
+
+## Simpson
+```{r, echo = FALSE}
+# Figure Import 
+alphaSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_simpson.png"), native = TRUE, info = TRUE)
+
+# displaying an imported image:
+grid::grid.raster(alphaSimpson)
+treatmentNames
+```
+{{< pagebreak >}}
+
+## Inverse Simpson
+```{r, echo = FALSE}
+# Figure Import 
+alphaInverseSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_inverse_simpson.png"), native = TRUE, info = TRUE)
+
+# displaying an imported image:
+grid::grid.raster(alphaInverseSimpson)
+treatmentNames
+```
+{{< pagebreak >}}
+
+# Differential Abundance
+## Differential Abundance Genus
+```{r, echo = FALSE}
+# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+# Generalize this the output names are not good for this right now. 
+genusDA <- readPNG(glue("{da_ancombc_dir}/Cage Control vs oxytetracycline - Genus - {dataset_name}.png"), native = TRUE, info = TRUE)
+grid::grid.raster(genusDA)
+```
+
+```{r, echo = FALSE}
+# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+# Generalize this the output names are not good for this right now. 
+genusANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Genus_ancombc.csv"))
+
+ancomColNames <- c("Genus", "log2", "lfc", "p-val", "q-val", "diff. abundant", "change type")
+
+knitr::kable(genusANCOM, col.names = ancomColNames, digits = 4)
+```
+
+{{< pagebreak >}}
+## Differential Abundance Species
+```{r, echo = FALSE}
+speciesDA <- readPNG(glue("{da_ancombc_dir}/Cage Control vs oxytetracycline - Species - {dataset_name}.png"), native = TRUE, info = TRUE)
+grid::grid.raster(speciesDA)
+
+```
+
+```{r, echo = FALSE}
+# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+# Generalize this the output names are not good for this right now. 
+speciesANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"))
+
+ancomColNames <- c("Species", "log2", "lfc", "p-val", "q-val", "diff. abundant", "change type")
+
+knitr::kable(speciesANCOM, col.names = ancomColNames, digits = 4)
+```
+{{< pagebreak >}}
+
+# Anosim
+``` {r, echo = FALSE}
+temp <- readLines(glue("{nmds_dir}/anosim.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+
+```{r, echo = FALSE}
+genusMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_species.png"), native = TRUE, info = TRUE)
+grid::grid.raster(genusMNDS)
+```
+
+```{r, echo = FALSE}
+# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+# Generalize this the output names are not good for this right now. 
+genusNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_genus.csv"))
+knitr::kable(genusNMDS)
+```
+
+```{r, echo = FALSE}
+speciesMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_species.png"), native = TRUE, info = TRUE)
+grid::grid.raster(speciesMNDS)
+```
+
+```{r, echo = FALSE}
+# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+# Generalize this the output names are not good for this right now. 
+speciesNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_species.csv"))
+knitr::kable(speciesNMDS)
+```
+{{< pagebreak >}}
+
+# Relative Abundance
+```{r, echo = FALSE}
+speciesMNDS <- readPNG(glue("{rel_abund_dir}/relative_abundance_plot.png"), native = TRUE, info = TRUE)
+grid::grid.raster(speciesMNDS)
+```
+
+```{r, echo = FALSE}
+# Generalize this the output names are not good for this right now. 
+relativeAbundanceCSV <- read.csv(glue("{rel_abund_dir}/relative_abundance_proportions.csv"))
+
+RelColNames <-  colnames(relativeAbundanceCSV)
+RelColNames <- gsub('.', '\ ', RelColNames, fixed = TRUE)
+
+colnames(relativeAbundanceCSV) <- RelColNames
+
+knitr::kable(relativeAbundanceCSV[,c(1,2,3,4,14,15)], digits = 4)
+knitr::kable(relativeAbundanceCSV[,c(1,5,6,7,14,15)], digits = 4)
+knitr::kable(relativeAbundanceCSV[,c(1,8,9,10,14,15)], digits = 4)
+knitr::kable(relativeAbundanceCSV[,c(1,11,12,13,14,15)], digits = 4)
+```
+{{< pagebreak >}}
+
+# Differential Abundance Indicators
+## Replicate - All - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+## Replicate - Genus - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+## Replicate - Species - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+## Treatment - All - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+## Treatment - Genus - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+## Treatment - Species - Significant
+``` {r, echo = FALSE}
+Temp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
+
+temp <-gsub("\t","",temp)
+
+temp
+```
+{{< pagebreak >}}
+
+# Appendix A - Differential Abundance Indicators All Species
+## Replicate - All
+```{r, echo = FALSE}
+RepAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.csv"))
+
+knitr::kable(RepAll, digits = 3)
+```
+{{< pagebreak >}}
+
+## Replicate - Genus
+```{r, echo = FALSE}
+RepGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.csv"))
+
+knitr::kable(RepGenus, digits = 3)
+```
+{{< pagebreak >}}
+
+## Replicate - Species
+```{r, echo = FALSE}
+RepSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.csv"))
+
+knitr::kable(RepSpp, digits = 3)
+```
+{{< pagebreak >}}
+
+## Treatment - All
+```{r, echo = FALSE}
+TreatAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.csv"))
+
+knitr::kable(TreatAll, digits = 3)
+```
+{{< pagebreak >}}
+
+## Treatment - Genus
+```{r, echo = FALSE}
+TreatGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.csv"))
+
+knitr::kable(TreatGenus, digits = 3)
+```
+{{< pagebreak >}}
+
+## Treatment - Species
+```{r, echo = FALSE}
+TreatSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.csv"))
+
+knitr::kable(TreatSpp, digits = 3)
+```
