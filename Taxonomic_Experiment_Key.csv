@@ -2,7 +2,7 @@ dataset_key,highest grouping,year,activity,stressor,group,dataset,stressor name,
 CAC,Crops (2020),2020,2,crop,,CAC,canola oil,"CAC0{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 CAS,Crops (2020),2020,2,crop,,CAS,canola seed,"CAS0{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 CRA,Crops (2020),2020,2,crop,,CRA,cranberry,"CRA0{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
-HBB,Crops (2020),2020,2,crop,,HBB,highbush blueberry,"HBB0{1-5}{e,u}_t{1-4}_M",40,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
+HBB,Crops (2020),2020,2,crop,,HBB,highbush blueberry,"HBB0{1-5}{e,u}_t2_M",40,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 SOY,Crops (2020),2020,2,crop,,SOY,soybean,"SOY0{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 COR,Crops (2020),2020,2,crop,,COR,corn,"COR0{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 THI,Pesticides (2020),2020,1,pesticide,CTX,THI,thiamethoxam (cage),THI0{2-6}_d{0-2}_M,15,3,0 ng/uL,0.115 ng/uL,0.46 ng/uL,pesticide exposure - 8hr dose in feed
@@ -28,7 +28,7 @@ AMZ,Other pesticides,2021,1,pesticide,CFS,AMZ,amitraz,"AMZ0{1,2,4-6}_d{0,1}_M",1
 FMA,Other pesticides,2021,1,pesticide,CFS,FMA,formic acid,"FMA0{1-5}_d{0,1,2}_M",15,3,0%,38.113 ug/bee,152.452 ug/bee,pesticide exposure - 48 hr dose topical
 OXA,Other pesticides,2021,1,pesticide,CFS,OXA,oxalic acid,"OXA0{1,2,4-6}_d{0,1}_M",10,2,0%,3.5% w/v,N/A,pesticide exposure - 8 hr dose topical
 AFB,Pests and pathogens,2021,1,pathogen,CFS,AFB,American foulbrood,"AFB{08,09,10-12}_d{0,1,2}_M",15,3,non-infected,sub-clinically infected,dose clinically infected,pathogen exposure - samples collected when clinical symptoms were observed in 6 colonies
-IAP,Pests and pathogens,2021,1,pathogen,CFS,IAP,Isaeli acute paralysis virus (IAPV),"IAP0{1-5}_d{0,1}_M",10,2,non-infected,dose infected (4mg pure virus/bee ~10^7 particles),N/A,virus exposure - sampled 6 days after start of feeding with virus solution
+IAP,Pests and pathogens,2021,1,pathogen,CFS,IAP,Isaeli acute paralysis virus (IAPV),"IAP0{1-5}_d{0,1}_M",10,2,non-infected,2*10^7 genomes per bee,N/A,virus exposure - sampled 6 days after start of feeding with virus solution
 NOS,Pests and pathogens,2021,1,pathogen,CFS,NOS,Nosema,"NOS0{1-4,6}_d{0-2}_M",15,3,0 spores per bee,2 x 10^4 spores per bee,2 x 10^5 spores per bee,pathogen exposure - 10 days
 CHA,Pests and pathogens,2020/2021,1,pathogen,CFS,CHA,chalkbrood,"CHA{6-8,14,15}_d{0,1}_M",10,2,not inoculated,spore inoculated,N/A,pathogen exposure - unsure (7 days of 10 mummies per day)
 VAR,Pests and pathogens,2020/2021,1,pest,CFS,VAR,Varroa,"VAR{4-6,8,9}_d{0-2}_M",15,3,0% infestation,1%,5%,pest exposure - collection day 6 of exposure (% = varroa per bee)
@@ -42,4 +42,4 @@ CAC,Crops (2021),2021,2,crop,CFS,CAC,canola oil,"CAC{0{6-9},10}{e,u}_t2_M",10,2,
 CAS,Crops (2021),2021,2,crop,CFS,CAS,canola seed,"CAS{0{6-9},10}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 CRA,Crops (2021),2021,2,crop,CFS,CRA,cranberry,"CRA{0{6-9},10}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
 LBB,Crops (2021),2021,2,crop,CFS,LBB,lowbush blueberry,"LBB{1-5}{e,u}_t2_M",10,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
-HBB,Highbush blueberry (2021),2021,2,crop,CFS,HBB,highbush blueberry,"HBB{0{6-9},10}{e,u}_t{1,2,3,4}_M",40,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
+HBB,Highbush blueberry (2021),2021,2,crop,CFS,HBB,highbush blueberry,"HBB{0{6-9},10}{e,u}_t2_M",40,2,exposed,unexposed,,"Crop exposure - exposed apiary <= 500m from crop, unexposed apiary >1.5km from crop"
