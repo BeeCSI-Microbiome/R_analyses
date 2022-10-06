@@ -2,6 +2,8 @@
 title: "BeeCSI Taxonomic Analysis Report"
 format:
   pdf:
+    output-file: "./results/oxy_2021"
+    output-ext: "pdf"
     toc: true
     toc-depth: 2
 ---
@@ -106,18 +108,6 @@ knitr::kable(alphaSummary, col.names = alphaSummaryKey, digits = 4)
 ```
 {{< pagebreak >}}
 
-## Evenness Plot
-```{r, echo = FALSE}
-# Figure Import 
-alphaEvenness <- readPNG(glue("{alpha_div_dir}/alpha_div_evenness.png"), native = TRUE, info = TRUE)
-
-# displaying an imported image:
-grid::grid.raster(alphaEvenness)
-treatmentNames
-```
-
-{{< pagebreak >}}
-
 ## Shannon Plot
 ```{r, echo = FALSE}
 # Figure Import 
@@ -136,17 +126,6 @@ alphaSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_simpson.png"), native = 
 
 # displaying an imported image:
 grid::grid.raster(alphaSimpson)
-treatmentNames
-```
-{{< pagebreak >}}
-
-## Inverse Simpson Plot
-```{r, echo = FALSE}
-# Figure Import 
-alphaInverseSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_inverse_simpson.png"), native = TRUE, info = TRUE)
-
-# displaying an imported image:
-grid::grid.raster(alphaInverseSimpson)
 treatmentNames
 ```
 {{< pagebreak >}}
