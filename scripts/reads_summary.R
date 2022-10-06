@@ -13,10 +13,8 @@ taxa_list <- c("root", # total classified reads in a sample
                "unclassified",
                "Apis mellifera", # host
                "Bacteria",
-               "Nosema apis", 
-               "Nosema ceranae",
-               "Crithidia mellificae",
-               "Lotmaria passim")
+               "Metazoa", 
+               "Fungi")
 # ------------------------------------------------------------------------------
 
 
@@ -68,7 +66,7 @@ create_summary_table <- function(read_table, dataset_name){
   ))
   
   # Drop read # columns for taxa
-  ta <- ta %>% select(!matches("(?<!total|classified|Bacteria|Apis_mellifera)_reads", perl = TRUE))
+  ta <- ta %>% select(!matches("(?<!total|classified|Bacteria|Apis_mellifera|Metazoa|Fungi)_reads", perl = TRUE))
   ta <- ta %>% relocate("percent_classified_Bacteria", .after = "percent_classified_Apis_mellifera")
   
   write.table(ta, file = glue("results/{dataset_name}/{dataset_name}_read_summary.csv"), quote = F, sep = ",", row.names = F)
