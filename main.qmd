@@ -100,6 +100,8 @@ cat(readLines(glue('{alpha_div_dir}/alpha_stats.txt')), sep = "\n")
 
 ## Alpha diversity value table
 ```{r, echo = FALSE}
+knitr::kable(glue("{alpha_div_dir}/alpha_div_data.csv"), col.names = "File Location")
+
 alphaSummary <- read.csv(glue("{alpha_div_dir}/alpha_div_data.csv"))
 
 alphaSummaryKey <- c("Sample", "Observed Richness", "Inverse Simpson", "Simpson", "Shannon", "Evenness", "Replicate", "Treatment")
@@ -110,6 +112,8 @@ knitr::kable(alphaSummary, col.names = alphaSummaryKey, digits = 4)
 
 ## Shannon Plot
 ```{r, echo = FALSE}
+knitr::kable(glue("{alpha_div_dir}/alpha_div_shannon.png"), col.names = "File Location")
+
 # Figure Import 
 alphaShannon <- readPNG(glue("{alpha_div_dir}/alpha_div_shannon.png"), native = TRUE, info = TRUE)
 
@@ -121,6 +125,8 @@ treatmentNames
 
 ## Simpson Plot
 ```{r, echo = FALSE}
+knitr::kable(glue("{alpha_div_dir}/alpha_div_simpson.png"), col.names = "File Location")
+
 # Figure Import 
 alphaSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_simpson.png"), native = TRUE, info = TRUE)
 
@@ -131,17 +137,13 @@ treatmentNames
 {{< pagebreak >}}
 
 # Differential Abundance - ANCOM-BC
-## ANCOM-BC: Taxa Level Genus
-```{r, echo = FALSE}
-# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
 
-# Generalize this the output names are not good for this right now. 
-genusDA <- readPNG(glue("{da_ancombc_dir}/Cage Control vs oxytetracycline - Genus - {dataset_name}.png"), native = TRUE, info = TRUE)
-grid::grid.raster(genusDA)
-```
+## ANCOM-BC: Taxa LevelGenus
 
 ```{r, echo = FALSE}
 # I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+knitr::kable(glue("{da_ancombc_dir}/{dataset_name}_Genus_ancombc.csv"), col.names = "File Location")
 
 # Generalize this the output names are not good for this right now. 
 genusANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Genus_ancombc.csv"))
@@ -151,16 +153,40 @@ ancomColNames <- c("Genus", "log2", "lfc", "p-val", "q-val", "diff. abundant", "
 knitr::kable(genusANCOM, col.names = ancomColNames, digits = 4)
 ```
 
-{{< pagebreak >}}
-## ANCOM-BC: Taxa Level Species
 ```{r, echo = FALSE}
-speciesDA <- readPNG(glue("{da_ancombc_dir}/Cage Control vs oxytetracycline - Species - {dataset_name}.png"), native = TRUE, info = TRUE)
-grid::grid.raster(speciesDA)
+# Basically copied from Jonathan Ho's code. 
+controls <- c('control', 'unexposed')
+all_treatments = read.csv(glue("{main_outdir}/treatmentKey.csv"), header = TRUE)
+just_treats <- all_treatments[!all_treatments %in% controls]
+
+base_title <- 'Cage Control vs'
+  
+plot_title_i <-
+        paste(base_title, just_treats[1], '-', 'Genus', '-', dataset_name)
+
+Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
+grid::grid.raster(Temp)
 
 ```
 
 ```{r, echo = FALSE}
+if (length(just_treats) == 2) {
+  plot_title_i <-
+          paste(base_title, just_treats[2], '-', 'Genus', '-', dataset_name)
+  
+  Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
+  grid::grid.raster(Temp)
+}
+```
+
+{{< pagebreak >}}
+
+## ANCOM-BC: Taxa Level Species
+
+```{r, echo = FALSE}
 # I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+knitr::kable(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"), col.names = "File Location")
 
 # Generalize this the output names are not good for this right now. 
 speciesANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"))
@@ -169,6 +195,26 @@ ancomColNames <- c("Species", "log2", "lfc", "p-val", "q-val", "diff. abundant",
 
 knitr::kable(speciesANCOM, col.names = ancomColNames, digits = 4)
 ```
+{{< pagebreak >}}
+
+```{r, echo = FALSE}
+plot_title_i <-
+        paste(base_title, just_treats[1], '-', 'Species', '-', dataset_name)
+
+Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
+grid::grid.raster(Temp)
+```
+
+```{r, echo = FALSE}
+if (length(just_treats) == 2) {
+  plot_title_i <-
+          paste(base_title, just_treats[2], '-', 'Species', '-', dataset_name)
+  
+  Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
+  grid::grid.raster(Temp)
+}
+```
+
 {{< pagebreak >}}
 
 # Beta Diversity
@@ -180,28 +226,46 @@ temp <-gsub(",\\s*distance",",\n\tdistance",temp)
 
 cat(temp, sep = "\n")
 ```
+
+{{< pagebreak >}}
+
 ## NMDS Plots
 ### NMDS: Taxa Level Genus
 ```{r, echo = FALSE}
+knitr::kable(glue("{nmds_dir}/nmds_plot_treatment_genus.png"), col.names = "File Location")
+
 genusMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_genus.png"), native = TRUE, info = TRUE)
 grid::grid.raster(genusMNDS)
 ```
 
+{{< pagebreak >}}
+
 ```{r, echo = FALSE}
 # I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+knitr::kable(glue("{nmds_dir}/nmds_plot_data_genus.csv"), col.names = "File Location")
 
 # Generalize this the output names are not good for this right now. 
 genusNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_genus.csv"))
 knitr::kable(genusNMDS)
 ```
+
+{{< pagebreak >}}
+
 ### NMDS: Taxa Level Species
 ```{r, echo = FALSE}
+knitr::kable(glue("{nmds_dir}/nmds_plot_treatment_species.png"), col.names = "File Location")
+
 speciesMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_species.png"), native = TRUE, info = TRUE)
 grid::grid.raster(speciesMNDS)
 ```
 
+{{< pagebreak >}}
+
 ```{r, echo = FALSE}
 # I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+
+knitr::kable(glue("{nmds_dir}/nmds_plot_data_species.csv"), col.names = "File Location")
 
 # Generalize this the output names are not good for this right now. 
 speciesNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_species.csv"))
@@ -211,13 +275,20 @@ knitr::kable(speciesNMDS)
 
 # Relative Abundance
 ```{r, echo = FALSE}
+knitr::kable(glue("{rel_abund_dir}/relative_abundance_plot.png"), col.names = "File Location")
+
 speciesMNDS <- readPNG(glue("{rel_abund_dir}/relative_abundance_plot.png"), native = TRUE, info = TRUE)
 grid::grid.raster(speciesMNDS)
 ```
 
+{{< pagebreak >}}
+
 ```{r, echo = FALSE}
 # Generalize this the output names are not good for this right now. 
 # Make wide table into long table?
+
+knitr::kable(glue("{rel_abund_dir}/relative_abundance_proportions.csv"), col.names = "File Location")
+
 relativeAbundanceCSV <- read.csv(glue("{rel_abund_dir}/relative_abundance_proportions.csv"))
 
 RelColNames <-  colnames(relativeAbundanceCSV)
@@ -297,6 +368,8 @@ cat(temp, sep = "\n")
 # Appendix A - IndicSpecies 
 ## Treatment - All
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.csv"), col.names = "File Location")
+
 TreatAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.csv"))
 
 knitr::kable(TreatAll, digits = 3)
@@ -305,6 +378,8 @@ knitr::kable(TreatAll, digits = 3)
 
 ## Treatment - Genus
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.csv"), col.names = "File Location")
+
 TreatGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.csv"))
 
 knitr::kable(TreatGenus, digits = 3)
@@ -313,6 +388,8 @@ knitr::kable(TreatGenus, digits = 3)
 
 ## Treatment - Species
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.csv"), col.names = "File Location")
+
 TreatSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.csv"))
 
 knitr::kable(TreatSpp, digits = 3)
@@ -320,6 +397,8 @@ knitr::kable(TreatSpp, digits = 3)
 {{< pagebreak >}}
 ## Replicate - All
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.csv"), col.names = "File Location")
+
 RepAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.csv"))
 
 knitr::kable(RepAll, digits = 3)
@@ -328,6 +407,8 @@ knitr::kable(RepAll, digits = 3)
 
 ## Replicate - Genus
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.csv"), col.names = "File Location")
+
 RepGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.csv"))
 
 knitr::kable(RepGenus, digits = 3)
@@ -336,6 +417,8 @@ knitr::kable(RepGenus, digits = 3)
 
 ## Replicate - Species
 ```{r, echo = FALSE}
+knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.csv"), col.names = "File Location")
+
 RepSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.csv"))
 
 knitr::kable(RepSpp, digits = 3)
