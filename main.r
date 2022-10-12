@@ -5,7 +5,7 @@
 # Input: table from Pavian with clades AND taxon counts, not collapsed
 # User defined inputs (eg input file paths) must be set under section "Globals"
 
-setwd("~/beecsi/R_analyses")
+setwd("C:/Users/clarkeku/OneDrive - AGR-AGR/Documents/GitHub/R_analyses-main (4)/R_analyses-main")
 
 # Package setup -----------------------------------------------------------
 packages <- c("tidyverse",
@@ -31,7 +31,7 @@ indicsp <- use("scripts/indicator_taxa_analysis.R")
 # Name of the dataset for file writing purposes
 dataset_name <- "oxy_2021"
 # filepath to the taxon count table
-counts_path <- "path/to/taxon_table.csv"
+counts_path <- "C:/Users/clarkeku/OneDrive - AGR-AGR/Documents/GitHub/R_analyses-main (4)/R_analyses-main/data/oxy_2021/oxy_2021_aggregated_counts.csv"
 
 # Create strings for output directories
 main_outdir <- glue("results/{dataset_name}")
@@ -111,6 +111,12 @@ additional_taxa <- additional_taxa[dataset_name]
 # The following key should match the substring in the sample name that specifies 
 # a treatment with the name of that treatment, including control
 treatment_key <- list(d0="control",d1="oxytetracycline")
+
+# treatment key for generalized .qmd document output. 
+treatmentkey.df = as.data.frame(do.call(cbind, treatment_key))
+write.csv(treatmentkey.df, glue("{main_outdir}/treatmentKey.csv"),
+          row.names = FALSE)
+
 # a treatment with the name of that treatment
 # THE CONTROL TREATMENT MUST BE THE FIRST ELEMENT (e.g. control, unexposed)
 # _________________________________________________________________________
@@ -195,3 +201,4 @@ exploratory$make_nmds_plots(tables[["raw_clade"]],
                             dataset_name,
                             nmds_dir)
 # _________________________________________________________________________
+
