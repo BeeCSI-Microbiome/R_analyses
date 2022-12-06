@@ -140,10 +140,15 @@ get_taxa_order <- function(d) {
 # plots relative abundance data for taxa of interest
 # uses the taxa, value, treatment, and replicate column from data
 plot_interest_abundance <- function(d) {
-  abundance_plot <- ggplot(d, 
+  color_palette <- c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", "#3F4921",
+    "#C0717C", "#CBD588", "#5F7FC7", "#673770", "#D3D93E", "#508578", "#D7C1B1",
+    "#689030", "#AD6F3B", "#CD9BCD", "#D14285", "#6DDE88", "#652926", "#7FDCC0",
+    "#C84248", "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#38333E", "#599861")
+  abundance_plot <- ggplot(d,
                            aes(x = treatment,
                                y = value,
                                fill = taxa)) +
+    scale_fill_manual(values=color_palette) +
     geom_bar(stat = "identity", colour = "black") +
     facet_grid(~replicate) +
     labs(title = "Relative Abundance",
