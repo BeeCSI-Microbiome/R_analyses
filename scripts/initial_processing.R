@@ -21,6 +21,7 @@ firm5_list <- paste('Lactobacillus', sep=' ', c('kimbladii',
 
 # --------------------------------- Functions ----------------------------------
 export("format_count_table")
+#'* it's assigning tb as ct, which is from main.r and is the data matrix (after some reformatting)*
 format_count_table <- function(tb){
   # Performs some preliminary formatting on count table
   tb <-  tb %>%
@@ -46,10 +47,12 @@ group_taxa_of_interest <- function(tb){
 
 
 export('calculate_clade_counts')
+#'*being fed ct*
 calculate_clade_counts <- function(tb){
   # Given the formatted and filtered table, return a list of two items:
   # (Raw taxon table, raw clade table)
   
+  #'*this is basically removing NA and then removing the taxonReads prefix from sample names, which has already been done for our data*
   tb_raw_taxon <- drop_all_NA_rows(tb)
   names(tb_raw_taxon) <- gsub("taxonReads_", "", names(tb_raw_taxon))
   
