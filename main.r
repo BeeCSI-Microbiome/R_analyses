@@ -20,17 +20,17 @@ library(dplyr)
 
 
 # Load aux scripts as modules ---------------------------------------------
-rsummary <- use("scripts/reads_summary.R")
-ip <- use("scripts/initial_processing.R")
+# rsummary <- use("scripts/reads_summary.R")
+# ip <- use("scripts/initial_processing.R")
 exploratory <- use("scripts/exploratory_functions.R")
-da_ancombc <- use("scripts/da-ancombc.R")
-indicsp <- use("scripts/indicator_taxa_analysis.R")
+# da_ancombc <- use("scripts/da-ancombc.R")
+# indicsp <- use("scripts/indicator_taxa_analysis.R")
 # _________________________________________________________________________
 
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
-dataset_name <- "provinces_t2"
+dataset_name <- "test_paired"
 # filepath to the taxon count table
 counts_path <- "C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_analyses/AMR_crop_data/AMR_analytic_matrix_app21.csv"
 
@@ -121,7 +121,7 @@ treatment_key <- c(u="unexposed",e="exposed")
 ct <- read_csv(counts_path)
 
 ct = ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(ct) = paste(colnames(ct), str_sub(counts_path, -6, -5), sep="_")
 ct <- select(ct, !(matches("t1|t3|t4")))
 ct <- separate(ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -132,7 +132,7 @@ crop2_counts_path = "C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_ana
 
 crop2_ct = read_csv(crop2_counts_path)
 crop2_ct = crop2_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop2_ct) = paste(colnames(crop2_ct), str_sub(crop2_counts_path, -6, -5), sep="_")
 crop2_ct <- select(crop2_ct, !(matches("t1|t3|t4")))
 crop2_ct <- separate(crop2_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -142,7 +142,7 @@ crop3_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop3_ct = read_csv(crop3_counts_path)
 crop3_ct = crop3_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop3_ct) = paste(colnames(crop3_ct), str_sub(crop3_counts_path, -6, -5), sep="_")
 crop3_ct <- select(crop3_ct, !(matches("t1|t3|t4")))
 crop3_ct <- separate(crop3_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -152,7 +152,7 @@ crop4_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop4_ct = read_csv(crop4_counts_path)
 crop4_ct = crop4_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop4_ct) = paste(colnames(crop4_ct), str_sub(crop4_counts_path, -6, -5), sep="_")
 crop4_ct <- select(crop4_ct, !(matches("t1|t3|t4")))
 crop4_ct <- separate(crop4_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -162,7 +162,7 @@ crop5_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop5_ct = read_csv(crop5_counts_path)
 crop5_ct = crop5_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop5_ct) = paste(colnames(crop5_ct), str_sub(crop5_counts_path, -6, -5), sep="_")
 crop5_ct <- select(crop5_ct, !(matches("t1|t3|t4")))
 crop5_ct <- separate(crop5_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -172,7 +172,7 @@ crop6_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop6_ct = read_csv(crop6_counts_path)
 crop6_ct = crop6_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop6_ct) = paste(colnames(crop6_ct), str_sub(crop6_counts_path, -6, -5), sep="_")
 crop6_ct <- select(crop6_ct, !(matches("t1|t3|t4")))
 crop6_ct <- separate(crop6_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -182,7 +182,7 @@ crop7_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop7_ct = read_csv(crop7_counts_path)
 crop7_ct = crop7_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop7_ct) = paste(colnames(crop7_ct), str_sub(crop7_counts_path, -6, -5), sep="_")
 crop7_ct <- select(crop7_ct, !(matches("t1|t3|t4")))
 crop7_ct <- separate(crop7_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -192,7 +192,7 @@ crop8_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop8_ct = read_csv(crop8_counts_path)
 crop8_ct = crop8_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop8_ct) = paste(colnames(crop8_ct), str_sub(crop8_counts_path, -6, -5), sep="_")
 crop8_ct <- select(crop8_ct, !(matches("t1|t3|t4")))
 crop8_ct <- separate(crop8_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -202,7 +202,7 @@ crop9_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_anal
 
 crop9_ct = read_csv(crop9_counts_path)
 crop9_ct = crop9_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop9_ct) = paste(colnames(crop9_ct), str_sub(crop9_counts_path, -6, -5), sep="_")
 crop9_ct <- select(crop9_ct, !(matches("t1|t3|t4")))
 crop9_ct <- separate(crop9_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -212,7 +212,7 @@ crop10_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_ana
 
 crop10_ct = read_csv(crop10_counts_path)
 crop10_ct = crop10_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop10_ct) = paste(colnames(crop10_ct), str_sub(crop10_counts_path, -6, -5), sep="_")
 crop10_ct <- select(crop10_ct, !(matches("t1|t3|t4")))
 crop10_ct <- separate(crop10_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -222,17 +222,17 @@ crop11_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_ana
 
 crop11_ct = read_csv(crop11_counts_path)
 crop11_ct = crop11_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop11_ct) = paste(colnames(crop11_ct), str_sub(crop11_counts_path, -6, -5), sep="_")
 crop11_ct <- select(crop11_ct, !(matches("t1|t3|t4")))
 crop11_ct <- separate(crop11_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
 
 #Crop 12------
-crop12_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_analyses/AMR_crop_data/AMR_analytic_matrix_lbb21.csv"
+crop12_counts_path ="C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_analyses/AMR_crop_data/AMR_analytic_matrix_soy20.csv"
 
 crop12_ct = read_csv(crop12_counts_path)
 crop12_ct = crop12_ct %>% 
-  filter(!str_detect(c(1), "RequiresSNPConfirmation"))
+  filter(!str_detect(gene_accession, "RequiresSNPConfirmation"))
 colnames(crop12_ct) = paste(colnames(crop12_ct), str_sub(crop12_counts_path, -6, -5), sep="_")
 crop12_ct <- select(crop12_ct, !(matches("t1|t3|t4")))
 crop12_ct <- separate(crop12_ct, c(1), into = c("geneID", "type", "class", "mechanism", "gene"), sep = "/")
@@ -252,7 +252,7 @@ merged_crops = merge(ct, crop2_ct, all = TRUE) %>%
   merge(crop7_ct, all = TRUE) %>% 
   merge(crop8_ct, all = TRUE) %>% 
   merge(crop9_ct, all = TRUE)%>% 
-  merge(crop10_ct, all = TRUE) %>% 
+  merge(crop10_ct, all = TRUE) %>%
   merge(crop11_ct, all = TRUE)%>% 
   merge(crop12_ct, all = TRUE)
   
@@ -263,19 +263,26 @@ merged_crops = merge(ct, crop2_ct, all = TRUE) %>%
 # merged_crops <- separate(merged_crops, col = gene_accession, into = c("geneID", "type", "class", "mechanism", "gene", "SNP"), sep = "/")
 
 # Beta Diversity All Crops----------------------------------------------------------
+#'*not really needed anymore. Fulfilled by Province Beta*
 exploratory$make_nmds_plots_all_crops(merged_crops,
                             treatment_key,
                             dataset_name,
                             nmds_dir)
 # _________________________________________________________________________
 
-# Beta Diversity Between Provinces----------------------------------------------------------
-exploratory$make_nmds_plots_provinces(merged_crops,
+# Beta Diversity Between All Provinces----------------------------------------------------------
+ploto = exploratory$make_nmds_plots_provinces(merged_crops,
                                       treatment_key,
                                       dataset_name,
                                       nmds_dir)
 # _________________________________________________________________________
 
+# Beta Diversity Between Paired Provinces----------------------------------------------------------
+exploratory$make_nmds_plots_paired_provinces(merged_crops,
+                                              treatment_key,
+                                              dataset_name,
+                                              nmds_dir)
+# _________________________________________________________________________
 
 # Differential Abundance --------------------------------------------------
 
