@@ -13,24 +13,28 @@ import("stringr")
 # Scope Variables --------------------------------------------------------
 # Taxa of interest - common
 #'*is there an equivalent list for ARGs?  I think no*
-# interest_list <- c("Lactobacillus Firm-4",
-#                    "Lactobacillus Firm-5",
-#                    "Other Lactobacillus",
-#                    "Gilliamella apicola",
-#                    "Gilliamella apis",
-#                    "Bifidobacterium",
-#                    "Snodgrassella alvi",
-#                    "Frischella perrara",
-#                    "Bartonella apis",
-#                    "Melissococcus plutonius",
-#                    "Paenibacillus larvae",
-#                    "Bacteria")
+# interest_list <- c("Tetracyclines",
+#                    "Sulfonamides",
+#                    "Rifampin",
+#                    "Mupirocin",
+#                    "Multi-metal_resistance",
+#                    "Multi-drug_resistance",
+#                    "Multi-biocide_resistance",
+#                    "MLS",
+#                    "Iron_resistance",
+#                    "Glycopeptides",
+#                    "Drug_and_biocide_resistance",
+#                    "Drug_and_biocide_and_metal_resistance",
+#                    "Copper_resistance",
+#                    "betalactams",
+#                    "Aminoglycosides",
+#                    "Aminocoumarins")
 
 
 # Wrangling Functions -----------------------------------------------------
 # cleans data into tidy format
 #'*commented out to preserve original code*'
-#'#'*select() is removing those columns, which we don't have in the first place*
+#'#'*select() is removing those coluMBs, which we don't have in the first place*
 # tidy_data <- function(d) {
 #   clean_data <- select(d, -taxRank, -taxLineage, -taxID, -depth) %>%
 #     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
@@ -58,6 +62,33 @@ tidy_data_samples <- function(data) {
     # data.frame(crop = c("HBB"))
   clean_data = ungroup(clean_data)
     return(clean_data)
+}
+
+tidy_data_RA_samples <- function(data) {
+  clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
+    # browser()
+    pivot_longer(!class, names_to = "sample", values_to = "value")
+  # browser()
+  clean_data[is.na(clean_data)] <- 0
+  clean_data = group_by(clean_data, sample, class) %>%
+    summarise(value=sum(value)) %>%
+    # browser()
+    pivot_wider(names_from = "class", values_from = "value")
+  crop_label = substr(clean_data$sample,1,3)
+  year_label = str_sub(clean_data$sample, -2, -1)
+  # browser()
+  clean_data$crop = paste(crop_label,year_label, sep = "")
+  # browser()
+  
+  # data.frame(crop = c("HBB"))
+  clean_data = ungroup(clean_data)
+  colnames(clean_data)[37] = "Quaternary_Ammonium_Compounds_resistance"
+  colnames(clean_data)[26] = "Multi_biocide_resistance"
+  colnames(clean_data)[27] = "Multi_drug_resistance"
+  colnames(clean_data)[28] = "Multi_metal_resistance"
+  browser()
+  
+  return(clean_data)
 }
 
 # tidy_data_samples <- function(data) {
@@ -111,7 +142,7 @@ tidy_data_province <- function(data) {
     summarise(value=sum(value)) %>%
     # browser()
     pivot_wider(names_from = "class", values_from = "value")
-  browser()
+  # browser()
   crop_label = substr(clean_data$sample,1,3)
   year_label = str_sub(clean_data$sample, -2, -1)
   treatment_label = substr(clean_data$sample,6,6)
@@ -119,10 +150,7 @@ tidy_data_province <- function(data) {
   clean_data$crop = paste(crop_label,year_label,treatment_label, sep = "")
   clean_data$province = str_sub(clean_data$sample, -5, -4)
   # browser()
-  #'*does this distort the values?*
-  # clean_data[is.na(clean_data)] <- 0
-  # browser()
-  # data.frame(crop = c("HBB"))
+  
   clean_data = ungroup(clean_data)
   return(clean_data)
 }
@@ -138,36 +166,38 @@ tidy_data_crop_av <- function(data) {
   return(clean_data)
 }
 
-#'*don't need this - not dealing with taxa*
+#'*use for slimming down ARGs in legends*
 # calculates and adds Other Bacteria col
-# add_other_bac <- function(d) {
-#   column_index <- !(names(d) %in% c("taxRank","taxLineage","taxID","depth","name"))
-#   # Get the sum counts for taxa of interest, except Bacteria (domain), then
-#   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
-#   # representing all taxa of non-interest
-#   df <- d[d$name!="Bacteria", column_index]
-#   d[d$name=="Bacteria", column_index] <-
-#     d[d$name=="Bacteria", column_index] - as.list(colSums(df, na.rm=T))
-#   # Change the grouping name
-#   d[d$name=="Bacteria",]$name <- "Other Bacteria"
-#
-#   return(d)
-# }
-
-# calculates and adds Other Bacteria col
+#'*d is plot_data <- filter(data, name %in% interest_list)*
 add_other_bac <- function(d) {
-  column_index <- !(names(d) %in% c("taxRank","taxLineage","taxID","depth","name"))
+  coluMB_index <- !(names(d) %in% "class")
+  browser()
   # Get the sum counts for taxa of interest, except Bacteria (domain), then
   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
   # representing all taxa of non-interest
-  df <- d[d$name!="Bacteria", column_index]
-  d[d$name=="Bacteria", column_index] <-
-    d[d$name=="Bacteria", column_index] - as.list(colSums(df, na.rm=T))
+  df <- d[d$name!="Bacteria", coluMB_index]
+  d[d$name=="Bacteria", coluMB_index] <-
+    d[d$name=="Bacteria", coluMB_index] - as.list(colSums(df, na.rm=T))
   # Change the grouping name
-  d[d$name=="Bacteria",]$name <- "Other ARGs"
+  d[d$name=="Bacteria",]$name <- "Other Bacteria"
 
   return(d)
 }
+
+# calculates and adds Other Bacteria col
+# add_other_bac <- function(d) {
+#   coluMB_index <- !(names(d) %in% c("taxRank","taxLineage","taxID","depth","name"))
+#   # Get the sum counts for taxa of interest, except Bacteria (domain), then
+#   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
+#   # representing all taxa of non-interest
+#   df <- d[d$name!="Bacteria", coluMB_index]
+#   d[d$name=="Bacteria", coluMB_index] <-
+#     d[d$name=="Bacteria", coluMB_index] - as.list(colSums(df, na.rm=T))
+#   # Change the grouping name
+#   d[d$name=="Bacteria",]$name <- "Other ARGs"
+# 
+#   return(d)
+# }
 
 
 
@@ -227,10 +257,11 @@ calc_prop_all <- function(d) {
 
 calc_prop_province <- function(d) {
   # crop_col <- select(d, "crop")
+  # browser()
   sample_col <- select(d, "sample")
   crop_col <- select(d, "crop")
   province_col = select(d, "province")
-  browser()
+  # browser()
   plot_data_samples <- select(d, -"sample", -"crop", -"province") %>%
     apply(MARGIN = 1,
           FUN = function(x) x / sum(x) * 100) %>%
@@ -238,13 +269,12 @@ calc_prop_province <- function(d) {
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
-    relocate(sample)
+    relocate(sample) %>% 
     mutate(crop_col) %>%
-    relocate(crop)
+    relocate(crop) %>% 
     mutate(province_col) %>%
       relocate(province)
-  #browser()
-  #utils::write.csv(plot_data_samples, file = "car-speeds-cleaned.csv")
+
   # browser()
   return(plot_data_samples)
 }
@@ -262,7 +292,7 @@ calc_prop_crop_av <- function(d) {
   return(plot_data_crop_av)
 }
 # add in treatment and replicate cols
-# Samples gathered from column names are treated with regular expressions to
+# Samples gathered from coluMB names are treated with regular expressions to
 # extract replicate number and treatments.
 province_treat_reps <- function(d, treatment_key) {
   # browser()
@@ -322,7 +352,7 @@ extract_treatment_string <- function(sample_string, treatment_key) {
     treatment_codes <-
       str_extract(sample_string, "(?<=[[:upper:]]{3}\\d\\d)(e|u)")
   } else {
-    stop("The sample column names do not match the implemented regex patterns")
+    stop("The sample coluMB names do not match the implemented regex patterns")
   }
 
   if (all(treatment_codes %in% names(treatment_key))) {
@@ -348,7 +378,7 @@ extract_treatment_string <- function(sample_string, treatment_key) {
 
 tidy_to_long_samples <- function(d) {
   long_data_samples <- pivot_longer(d,
-                            cols = !c("sample", "treatment", "replicate", "crop"), #"crop"
+                            cols = !c("sample", "treatment", "replicate", "crop", "province"), #"crop"
                             names_to = "ARGs",
                             values_to = "value")
   # browser()
@@ -371,9 +401,9 @@ tidy_to_long_crop_av <- function(d) {
   return(long_data_crop_av)
 }
 
-# Reorders table using taxa column
+# Reorders table using taxa coluMB
 order_taxa <- function(d) {
-  browser()
+  # browser()
   taxa_order <- get_taxa_order(d)
   d$ARGs <- factor(d$ARGs, levels=taxa_order$Group.1)
   return(d)
@@ -406,7 +436,7 @@ get_taxa_order <- function(d) {
 # Relative Abundance ------------------------------------------------------
 
 # plots relative abundance data for taxa of interest
-# uses the taxa, value, treatment, and replicate column from data
+# uses the taxa, value, treatment, and replicate coluMB from data
 # plot_interest_abundance <- function(d) {
 #   abundance_plot <- ggplot(d,
 #                            aes(x = treatment,
@@ -442,7 +472,7 @@ plot_interest_abundance_samples <- function(d) {
 
 #'*creates the graphs with all the samples averaged into one bar.  Needs work*
 plot_interest_abundance_crop_av <- function(d) {
-  browser()
+  # browser()
   abundance_plot <- ggplot(d,
                            aes(x = crop,
                                y = value,
@@ -460,21 +490,489 @@ plot_interest_abundance_crop_av <- function(d) {
 # Returns relative abundance for taxa of interest
 #'*starting point, that calls all other functions in this script*
 #'*"data" is being fed "tables[["raw_clade"]]" from main.r*
+export("prov_make_interest_abundance")
+prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {  #additional_taxa,
+
+  plot_data_samples <- tidy_data_province(data) 
+  # browser()
+  
+  AB_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "AB"))
+  # browser()
+  AB_RA_data$Acetate_resistance = sum(AB_RA_data$Acetate_resistance)
+  AB_RA_data$Acid_resistance = sum(AB_RA_data$Acid_resistance)
+  AB_RA_data$Aldehyde_resistance = sum(AB_RA_data$Aldehyde_resistance)
+  AB_RA_data$Aluminum_resistance = sum(AB_RA_data$Aluminum_resistance)
+  AB_RA_data$Aminocoumarins = sum(AB_RA_data$Aminocoumarins)
+  AB_RA_data$Aminoglycosides = sum(AB_RA_data$Aminoglycosides)
+  AB_RA_data$Bacitracin = sum(AB_RA_data$Bacitracin)
+  AB_RA_data$Biguanide_resistance = sum(AB_RA_data$Biguanide_resistance)
+  AB_RA_data$betalactams = sum(AB_RA_data$betalactams)
+  AB_RA_data$Cadmium_resistance = sum(AB_RA_data$Cadmium_resistance)
+  AB_RA_data$Cationic_antimicrobial_peptides = sum(AB_RA_data$Cationic_antimicrobial_peptides)
+  AB_RA_data$Chromium_resistance = sum(AB_RA_data$Chromium_resistance)
+  AB_RA_data$Cobalt_resistance = sum(AB_RA_data$Cobalt_resistance)
+  AB_RA_data$Copper_resistance = sum(AB_RA_data$Copper_resistance)
+
+  AB_RA_data$Drug_and_biocide_and_metal_resistance = sum(AB_RA_data$Drug_and_biocide_and_metal_resistance)
+  AB_RA_data$Drug_and_biocide_resistance = sum(AB_RA_data$Drug_and_biocide_resistance)
+  AB_RA_data$Drug_and_metal_resistance = sum(AB_RA_data$Drug_and_metal_resistance)
+  AB_RA_data$Fluoroquinolones = sum(AB_RA_data$Fluoroquinolones)
+  AB_RA_data$Fosfomycin = sum(AB_RA_data$Fosfomycin)
+  AB_RA_data$Fusidic_acid = sum(AB_RA_data$Fusidic_acid)
+  AB_RA_data$Glycopeptides = sum(AB_RA_data$Glycopeptides)
+  AB_RA_data$Iron_resistance = sum(AB_RA_data$Iron_resistance)
+  AB_RA_data$Lipopeptides = sum(AB_RA_data$Lipopeptides)
+  AB_RA_data$Mercury_resistance = sum(AB_RA_data$Mercury_resistance)
+  AB_RA_data$Metronidazole = sum(AB_RA_data$Metronidazole)
+  AB_RA_data$MLS = sum(AB_RA_data$MLS)
+  AB_RA_data$Multi_biocide_resistance = sum(AB_RA_data$Multi_biocide_resistance)
+  AB_RA_data$Multi_drug_resistance = sum(AB_RA_data$Multi_drug_resistance)
+  
+  AB_RA_data$Multi_metal_resistance = sum(AB_RA_data$Multi_metal_resistance)
+  AB_RA_data$Mupirocin = sum(AB_RA_data$Mupirocin)
+  AB_RA_data$Naphthoquinone = sum(AB_RA_data$Naphthoquinone)
+  AB_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(AB_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  AB_RA_data$Nickel_resistance = sum(AB_RA_data$Nickel_resistance)
+  AB_RA_data$Nucleosides = sum(AB_RA_data$Nucleosides)
+  AB_RA_data$Paraquat_resistance = sum(AB_RA_data$Paraquat_resistance)
+  AB_RA_data$Peroxide_resistance = sum(AB_RA_data$Peroxide_resistance)
+  AB_RA_data$Phenicol = sum(AB_RA_data$Phenicol)
+  AB_RA_data$Phenolic_compound_resistance = sum(AB_RA_data$Phenolic_compound_resistance)
+  AB_RA_data$Polyamine_resistance = sum(AB_RA_data$Polyaqacmine_resistance)
+  AB_RA_data$QACs_resistance = sum(AB_RA_data$QACs_resistance)
+  AB_RA_data$Rifampin = sum(AB_RA_data$Rifampin)
+  AB_RA_data$Sodium_resistance = sum(AB_RA_data$Sodium_resistance)
+  
+  AB_RA_data$Sulfonamides = sum(AB_RA_data$Sulfonamides)
+  AB_RA_data$Tellurium_resistance = sum(AB_RA_data$Tellurium_resistance)
+  AB_RA_data$Tetracenomycin = sum(AB_RA_data$Tetracenomycin)
+  AB_RA_data$Tetracyclines = sum(AB_RA_data$Tetracyclines)
+  AB_RA_data$Trimethoprim = sum(AB_RA_data$Trimethoprim)
+  AB_RA_data$Tungsten_Resistance = sum(AB_RA_data$Tungsten_Resistance)
+  AB_RA_data$Zinc_resistance = sum(AB_RA_data$Zinc_resistance)
+  
+  AB_RA_data = AB_RA_data[1:1,]
+  # other_ARGs select(AB_RA_data, !c("Tetracyclines"))
+
+  # browser()
+  plot_data_AB_RA = calc_prop_province(AB_RA_data) %>%
+    treat_reps(treatment_key)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_AB_RA <- tidy_to_long_samples(plot_data_AB_RA)
+  # browser()
+  plot_AB_RA <- order_taxa(plot_AB_RA)
+  # browser()
+  plot_AB_RA <- plot_interest_abundance_crop_av(plot_AB_RA)
+
+  ggsave(plot = plot_AB_RA,
+         filename = glue("{outdir}/relative_abundance_AB.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_AB_RA,
+                   file = glue("{outdir}/relative_proportions_abundance_AB.csv"),
+                   row.names = F)
+
+#######
+  ON_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "ON"))
+  # browser()
+  ON_RA_data$Acetate_resistance = sum(ON_RA_data$Acetate_resistance)
+  ON_RA_data$Acid_resistance = sum(ON_RA_data$Acid_resistance)
+  ON_RA_data$Aldehyde_resistance = sum(ON_RA_data$Aldehyde_resistance)
+  ON_RA_data$Aluminum_resistance = sum(ON_RA_data$Aluminum_resistance)
+  ON_RA_data$Aminocoumarins = sum(ON_RA_data$Aminocoumarins)
+  ON_RA_data$Aminoglycosides = sum(ON_RA_data$Aminoglycosides)
+  ON_RA_data$Bacitracin = sum(ON_RA_data$Bacitracin)
+  ON_RA_data$Biguanide_resistance = sum(ON_RA_data$Biguanide_resistance)
+  ON_RA_data$betalactams = sum(ON_RA_data$betalactams)
+  ON_RA_data$Cadmium_resistance = sum(ON_RA_data$Cadmium_resistance)
+  ON_RA_data$Cationic_antimicrobial_peptides = sum(ON_RA_data$Cationic_antimicrobial_peptides)
+  ON_RA_data$Chromium_resistance = sum(ON_RA_data$Chromium_resistance)
+  ON_RA_data$Cobalt_resistance = sum(ON_RA_data$Cobalt_resistance)
+  ON_RA_data$Copper_resistance = sum(ON_RA_data$Copper_resistance)
+  
+  ON_RA_data$Drug_and_biocide_and_metal_resistance = sum(ON_RA_data$Drug_and_biocide_and_metal_resistance)
+  ON_RA_data$Drug_and_biocide_resistance = sum(ON_RA_data$Drug_and_biocide_resistance)
+  ON_RA_data$Drug_and_metal_resistance = sum(ON_RA_data$Drug_and_metal_resistance)
+  ON_RA_data$Fluoroquinolones = sum(ON_RA_data$Fluoroquinolones)
+  ON_RA_data$Fosfomycin = sum(ON_RA_data$Fosfomycin)
+  ON_RA_data$Fusidic_acid = sum(ON_RA_data$Fusidic_acid)
+  ON_RA_data$Glycopeptides = sum(ON_RA_data$Glycopeptides)
+  ON_RA_data$Iron_resistance = sum(ON_RA_data$Iron_resistance)
+  ON_RA_data$Lipopeptides = sum(ON_RA_data$Lipopeptides)
+  ON_RA_data$Mercury_resistance = sum(ON_RA_data$Mercury_resistance)
+  ON_RA_data$Metronidazole = sum(ON_RA_data$Metronidazole)
+  ON_RA_data$MLS = sum(ON_RA_data$MLS)
+  ON_RA_data$Multi_biocide_resistance = sum(ON_RA_data$Multi_biocide_resistance)
+  ON_RA_data$Multi_drug_resistance = sum(ON_RA_data$Multi_drug_resistance)
+  
+  ON_RA_data$Multi_metal_resistance = sum(ON_RA_data$Multi_metal_resistance)
+  ON_RA_data$Mupirocin = sum(ON_RA_data$Mupirocin)
+  ON_RA_data$Naphthoquinone = sum(ON_RA_data$Naphthoquinone)
+  ON_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(ON_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  ON_RA_data$Nickel_resistance = sum(ON_RA_data$Nickel_resistance)
+  ON_RA_data$Nucleosides = sum(ON_RA_data$Nucleosides)
+  ON_RA_data$Paraquat_resistance = sum(ON_RA_data$Paraquat_resistance)
+  ON_RA_data$Peroxide_resistance = sum(ON_RA_data$Peroxide_resistance)
+  ON_RA_data$Phenicol = sum(ON_RA_data$Phenicol)
+  ON_RA_data$Phenolic_compound_resistance = sum(ON_RA_data$Phenolic_compound_resistance)
+  ON_RA_data$Polyamine_resistance = sum(ON_RA_data$Polyaqacmine_resistance)
+  ON_RA_data$QACs_resistance = sum(ON_RA_data$QACs_resistance)
+  ON_RA_data$Rifampin = sum(ON_RA_data$Rifampin)
+  ON_RA_data$Sodium_resistance = sum(ON_RA_data$Sodium_resistance)
+  
+  ON_RA_data$Sulfonamides = sum(ON_RA_data$Sulfonamides)
+  ON_RA_data$Tellurium_resistance = sum(ON_RA_data$Tellurium_resistance)
+  ON_RA_data$Tetracenomycin = sum(ON_RA_data$Tetracenomycin)
+  ON_RA_data$Tetracyclines = sum(ON_RA_data$Tetracyclines)
+  ON_RA_data$Trimethoprim = sum(ON_RA_data$Trimethoprim)
+  ON_RA_data$Tungsten_Resistance = sum(ON_RA_data$Tungsten_Resistance)
+  ON_RA_data$Zinc_resistance = sum(ON_RA_data$Zinc_resistance)
+  
+  ON_RA_data = ON_RA_data[1:1,]
+  # other_ARGs select(ON_RA_data, !c("Tetracyclines"))
+  
+  # browser()
+  plot_data_ON_RA = calc_prop_province(ON_RA_data) %>%
+    treat_reps(treatment_key)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_ON_RA <- tidy_to_long_samples(plot_data_ON_RA)
+  # browser()
+  plot_ON_RA <- order_taxa(plot_ON_RA)
+  # browser()
+  plot_ON_RA <- plot_interest_abundance_crop_av(plot_ON_RA)
+  
+  ggsave(plot = plot_ON_RA,
+         filename = glue("{outdir}/relative_abundance_ON.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_ON_RA,
+                   file = glue("{outdir}/relative_proportions_abundance_ON.csv"),
+                   row.names = F)
+  
+  #########
+  
+  MB_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "MB"))
+  # browser()
+  MB_RA_data$Acetate_resistance = sum(MB_RA_data$Acetate_resistance)
+  MB_RA_data$Acid_resistance = sum(MB_RA_data$Acid_resistance)
+  MB_RA_data$Aldehyde_resistance = sum(MB_RA_data$Aldehyde_resistance)
+  MB_RA_data$Aluminum_resistance = sum(MB_RA_data$Aluminum_resistance)
+  MB_RA_data$Aminocoumarins = sum(MB_RA_data$Aminocoumarins)
+  MB_RA_data$Aminoglycosides = sum(MB_RA_data$Aminoglycosides)
+  MB_RA_data$Bacitracin = sum(MB_RA_data$Bacitracin)
+  MB_RA_data$Biguanide_resistance = sum(MB_RA_data$Biguanide_resistance)
+  MB_RA_data$betalactams = sum(MB_RA_data$betalactams)
+  MB_RA_data$Cadmium_resistance = sum(MB_RA_data$Cadmium_resistance)
+  MB_RA_data$Cationic_antimicrobial_peptides = sum(MB_RA_data$Cationic_antimicrobial_peptides)
+  MB_RA_data$Chromium_resistance = sum(MB_RA_data$Chromium_resistance)
+  MB_RA_data$Cobalt_resistance = sum(MB_RA_data$Cobalt_resistance)
+  MB_RA_data$Copper_resistance = sum(MB_RA_data$Copper_resistance)
+  
+  MB_RA_data$Drug_and_biocide_and_metal_resistance = sum(MB_RA_data$Drug_and_biocide_and_metal_resistance)
+  MB_RA_data$Drug_and_biocide_resistance = sum(MB_RA_data$Drug_and_biocide_resistance)
+  MB_RA_data$Drug_and_metal_resistance = sum(MB_RA_data$Drug_and_metal_resistance)
+  MB_RA_data$Fluoroquinolones = sum(MB_RA_data$Fluoroquinolones)
+  MB_RA_data$Fosfomycin = sum(MB_RA_data$Fosfomycin)
+  MB_RA_data$Fusidic_acid = sum(MB_RA_data$Fusidic_acid)
+  MB_RA_data$Glycopeptides = sum(MB_RA_data$Glycopeptides)
+  MB_RA_data$Iron_resistance = sum(MB_RA_data$Iron_resistance)
+  MB_RA_data$Lipopeptides = sum(MB_RA_data$Lipopeptides)
+  MB_RA_data$Mercury_resistance = sum(MB_RA_data$Mercury_resistance)
+  MB_RA_data$Metronidazole = sum(MB_RA_data$Metronidazole)
+  MB_RA_data$MLS = sum(MB_RA_data$MLS)
+  MB_RA_data$Multi_biocide_resistance = sum(MB_RA_data$Multi_biocide_resistance)
+  MB_RA_data$Multi_drug_resistance = sum(MB_RA_data$Multi_drug_resistance)
+  
+  MB_RA_data$Multi_metal_resistance = sum(MB_RA_data$Multi_metal_resistance)
+  MB_RA_data$Mupirocin = sum(MB_RA_data$Mupirocin)
+  MB_RA_data$Naphthoquinone = sum(MB_RA_data$Naphthoquinone)
+  MB_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(MB_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  MB_RA_data$Nickel_resistance = sum(MB_RA_data$Nickel_resistance)
+  MB_RA_data$Nucleosides = sum(MB_RA_data$Nucleosides)
+  MB_RA_data$Paraquat_resistance = sum(MB_RA_data$Paraquat_resistance)
+  MB_RA_data$Peroxide_resistance = sum(MB_RA_data$Peroxide_resistance)
+  MB_RA_data$Phenicol = sum(MB_RA_data$Phenicol)
+  MB_RA_data$Phenolic_compound_resistance = sum(MB_RA_data$Phenolic_compound_resistance)
+  MB_RA_data$Polyamine_resistance = sum(MB_RA_data$Polyaqacmine_resistance)
+  MB_RA_data$QACs_resistance = sum(MB_RA_data$QACs_resistance)
+  MB_RA_data$Rifampin = sum(MB_RA_data$Rifampin)
+  MB_RA_data$Sodium_resistance = sum(MB_RA_data$Sodium_resistance)
+  
+  MB_RA_data$Sulfonamides = sum(MB_RA_data$Sulfonamides)
+  MB_RA_data$Tellurium_resistance = sum(MB_RA_data$Tellurium_resistance)
+  MB_RA_data$Tetracenomycin = sum(MB_RA_data$Tetracenomycin)
+  MB_RA_data$Tetracyclines = sum(MB_RA_data$Tetracyclines)
+  MB_RA_data$Trimethoprim = sum(MB_RA_data$Trimethoprim)
+  MB_RA_data$Tungsten_Resistance = sum(MB_RA_data$Tungsten_Resistance)
+  MB_RA_data$Zinc_resistance = sum(MB_RA_data$Zinc_resistance)
+  
+  MB_RA_data = MB_RA_data[1:1,]
+  # other_ARGs select(MB_RA_data, !c("Tetracyclines"))
+  
+  # browser()
+  plot_data_MB_RA = calc_prop_province(MB_RA_data) %>%
+    treat_reps(treatment_key)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_MB_RA <- tidy_to_long_samples(plot_data_MB_RA)
+  # browser()
+  plot_MB_RA <- order_taxa(plot_MB_RA)
+  # browser()
+  plot_MB_RA <- plot_interest_abundance_crop_av(plot_MB_RA)
+  
+  ggsave(plot = plot_MB_RA,
+         filename = glue("{outdir}/relative_abundance_MB.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_MB_RA,
+                   file = glue("{outdir}/relative_proportions_abundance_MB.csv"),
+                   row.names = F)
+  #########
+  BC_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "BC"))
+  # browser()
+  BC_RA_data$Acetate_resistance = sum(BC_RA_data$Acetate_resistance)
+  BC_RA_data$Acid_resistance = sum(BC_RA_data$Acid_resistance)
+  BC_RA_data$Aldehyde_resistance = sum(BC_RA_data$Aldehyde_resistance)
+  BC_RA_data$Aluminum_resistance = sum(BC_RA_data$Aluminum_resistance)
+  BC_RA_data$Aminocoumarins = sum(BC_RA_data$Aminocoumarins)
+  BC_RA_data$Aminoglycosides = sum(BC_RA_data$Aminoglycosides)
+  BC_RA_data$Bacitracin = sum(BC_RA_data$Bacitracin)
+  BC_RA_data$Biguanide_resistance = sum(BC_RA_data$Biguanide_resistance)
+  BC_RA_data$betalactams = sum(BC_RA_data$betalactams)
+  BC_RA_data$Cadmium_resistance = sum(BC_RA_data$Cadmium_resistance)
+  BC_RA_data$Cationic_antimicrobial_peptides = sum(BC_RA_data$Cationic_antimicrobial_peptides)
+  BC_RA_data$Chromium_resistance = sum(BC_RA_data$Chromium_resistance)
+  BC_RA_data$Cobalt_resistance = sum(BC_RA_data$Cobalt_resistance)
+  BC_RA_data$Copper_resistance = sum(BC_RA_data$Copper_resistance)
+  
+  BC_RA_data$Drug_and_biocide_and_metal_resistance = sum(BC_RA_data$Drug_and_biocide_and_metal_resistance)
+  BC_RA_data$Drug_and_biocide_resistance = sum(BC_RA_data$Drug_and_biocide_resistance)
+  BC_RA_data$Drug_and_metal_resistance = sum(BC_RA_data$Drug_and_metal_resistance)
+  BC_RA_data$Fluoroquinolones = sum(BC_RA_data$Fluoroquinolones)
+  BC_RA_data$Fosfomycin = sum(BC_RA_data$Fosfomycin)
+  BC_RA_data$Fusidic_acid = sum(BC_RA_data$Fusidic_acid)
+  BC_RA_data$Glycopeptides = sum(BC_RA_data$Glycopeptides)
+  BC_RA_data$Iron_resistance = sum(BC_RA_data$Iron_resistance)
+  BC_RA_data$Lipopeptides = sum(BC_RA_data$Lipopeptides)
+  BC_RA_data$Mercury_resistance = sum(BC_RA_data$Mercury_resistance)
+  BC_RA_data$Metronidazole = sum(BC_RA_data$Metronidazole)
+  BC_RA_data$MLS = sum(BC_RA_data$MLS)
+  BC_RA_data$Multi_biocide_resistance = sum(BC_RA_data$Multi_biocide_resistance)
+  BC_RA_data$Multi_drug_resistance = sum(BC_RA_data$Multi_drug_resistance)
+  
+  BC_RA_data$Multi_metal_resistance = sum(BC_RA_data$Multi_metal_resistance)
+  BC_RA_data$Mupirocin = sum(BC_RA_data$Mupirocin)
+  BC_RA_data$Naphthoquinone = sum(BC_RA_data$Naphthoquinone)
+  BC_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(BC_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  BC_RA_data$Nickel_resistance = sum(BC_RA_data$Nickel_resistance)
+  BC_RA_data$Nucleosides = sum(BC_RA_data$Nucleosides)
+  BC_RA_data$Paraquat_resistance = sum(BC_RA_data$Paraquat_resistance)
+  BC_RA_data$Peroxide_resistance = sum(BC_RA_data$Peroxide_resistance)
+  BC_RA_data$Phenicol = sum(BC_RA_data$Phenicol)
+  BC_RA_data$Phenolic_compound_resistance = sum(BC_RA_data$Phenolic_compound_resistance)
+  BC_RA_data$Polyamine_resistance = sum(BC_RA_data$Polyaqacmine_resistance)
+  BC_RA_data$QACs_resistance = sum(BC_RA_data$QACs_resistance)
+  BC_RA_data$Rifampin = sum(BC_RA_data$Rifampin)
+  BC_RA_data$Sodium_resistance = sum(BC_RA_data$Sodium_resistance)
+  
+  BC_RA_data$Sulfonamides = sum(BC_RA_data$Sulfonamides)
+  BC_RA_data$Tellurium_resistance = sum(BC_RA_data$Tellurium_resistance)
+  BC_RA_data$Tetracenomycin = sum(BC_RA_data$Tetracenomycin)
+  BC_RA_data$Tetracyclines = sum(BC_RA_data$Tetracyclines)
+  BC_RA_data$Trimethoprim = sum(BC_RA_data$Trimethoprim)
+  BC_RA_data$Tungsten_Resistance = sum(BC_RA_data$Tungsten_Resistance)
+  BC_RA_data$Zinc_resistance = sum(BC_RA_data$Zinc_resistance)
+  
+  BC_RA_data = BC_RA_data[1:1,]
+  # other_ARGs select(BC_RA_data, !c("Tetracyclines"))
+  
+  # browser()
+  plot_data_BC_RA = calc_prop_province(BC_RA_data) %>%
+    treat_reps(treatment_key)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_BC_RA <- tidy_to_long_samples(plot_data_BC_RA)
+  # browser()
+  plot_BC_RA <- order_taxa(plot_BC_RA)
+  # browser()
+  plot_BC_RA <- plot_interest_abundance_crop_av(plot_BC_RA)
+  
+  ggsave(plot = plot_BC_RA,
+         filename = glue("{outdir}/relative_abundance_BC.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_BC_RA,
+                   file = glue("{outdir}/relative_proportions_abundance_BC.csv"),
+                   row.names = F)
+  
+  #######
+  QB_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "QB"))
+  # browser()
+  QB_RA_data$Acetate_resistance = sum(QB_RA_data$Acetate_resistance)
+  QB_RA_data$Acid_resistance = sum(QB_RA_data$Acid_resistance)
+  QB_RA_data$Aldehyde_resistance = sum(QB_RA_data$Aldehyde_resistance)
+  QB_RA_data$Aluminum_resistance = sum(QB_RA_data$Aluminum_resistance)
+  QB_RA_data$Aminocoumarins = sum(QB_RA_data$Aminocoumarins)
+  QB_RA_data$Aminoglycosides = sum(QB_RA_data$Aminoglycosides)
+  QB_RA_data$Bacitracin = sum(QB_RA_data$Bacitracin)
+  QB_RA_data$Biguanide_resistance = sum(QB_RA_data$Biguanide_resistance)
+  QB_RA_data$betalactams = sum(QB_RA_data$betalactams)
+  QB_RA_data$Cadmium_resistance = sum(QB_RA_data$Cadmium_resistance)
+  QB_RA_data$Cationic_antimicrobial_peptides = sum(QB_RA_data$Cationic_antimicrobial_peptides)
+  QB_RA_data$Chromium_resistance = sum(QB_RA_data$Chromium_resistance)
+  QB_RA_data$Cobalt_resistance = sum(QB_RA_data$Cobalt_resistance)
+  QB_RA_data$Copper_resistance = sum(QB_RA_data$Copper_resistance)
+  
+  QB_RA_data$Drug_and_biocide_and_metal_resistance = sum(QB_RA_data$Drug_and_biocide_and_metal_resistance)
+  QB_RA_data$Drug_and_biocide_resistance = sum(QB_RA_data$Drug_and_biocide_resistance)
+  QB_RA_data$Drug_and_metal_resistance = sum(QB_RA_data$Drug_and_metal_resistance)
+  QB_RA_data$Fluoroquinolones = sum(QB_RA_data$Fluoroquinolones)
+  QB_RA_data$Fosfomycin = sum(QB_RA_data$Fosfomycin)
+  QB_RA_data$Fusidic_acid = sum(QB_RA_data$Fusidic_acid)
+  QB_RA_data$Glycopeptides = sum(QB_RA_data$Glycopeptides)
+  QB_RA_data$Iron_resistance = sum(QB_RA_data$Iron_resistance)
+  QB_RA_data$Lipopeptides = sum(QB_RA_data$Lipopeptides)
+  QB_RA_data$Mercury_resistance = sum(QB_RA_data$Mercury_resistance)
+  QB_RA_data$Metronidazole = sum(QB_RA_data$Metronidazole)
+  QB_RA_data$MLS = sum(QB_RA_data$MLS)
+  QB_RA_data$Multi_biocide_resistance = sum(QB_RA_data$Multi_biocide_resistance)
+  QB_RA_data$Multi_drug_resistance = sum(QB_RA_data$Multi_drug_resistance)
+  
+  QB_RA_data$Multi_metal_resistance = sum(QB_RA_data$Multi_metal_resistance)
+  QB_RA_data$Mupirocin = sum(QB_RA_data$Mupirocin)
+  QB_RA_data$Naphthoquinone = sum(QB_RA_data$Naphthoquinone)
+  QB_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(QB_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  QB_RA_data$Nickel_resistance = sum(QB_RA_data$Nickel_resistance)
+  QB_RA_data$Nucleosides = sum(QB_RA_data$Nucleosides)
+  QB_RA_data$Paraquat_resistance = sum(QB_RA_data$Paraquat_resistance)
+  QB_RA_data$Peroxide_resistance = sum(QB_RA_data$Peroxide_resistance)
+  QB_RA_data$Phenicol = sum(QB_RA_data$Phenicol)
+  QB_RA_data$Phenolic_compound_resistance = sum(QB_RA_data$Phenolic_compound_resistance)
+  QB_RA_data$Polyamine_resistance = sum(QB_RA_data$Polyaqacmine_resistance)
+  QB_RA_data$QACs_resistance = sum(QB_RA_data$QACs_resistance)
+  QB_RA_data$Rifampin = sum(QB_RA_data$Rifampin)
+  QB_RA_data$Sodium_resistance = sum(QB_RA_data$Sodium_resistance)
+  
+  QB_RA_data$Sulfonamides = sum(QB_RA_data$Sulfonamides)
+  QB_RA_data$Tellurium_resistance = sum(QB_RA_data$Tellurium_resistance)
+  QB_RA_data$Tetracenomycin = sum(QB_RA_data$Tetracenomycin)
+  QB_RA_data$Tetracyclines = sum(QB_RA_data$Tetracyclines)
+  QB_RA_data$Trimethoprim = sum(QB_RA_data$Trimethoprim)
+  QB_RA_data$Tungsten_Resistance = sum(QB_RA_data$Tungsten_Resistance)
+  QB_RA_data$Zinc_resistance = sum(QB_RA_data$Zinc_resistance)
+  
+  QB_RA_data = QB_RA_data[1:1,]
+  # other_ARGs select(QB_RA_data, !c("Tetracyclines"))
+  
+  # browser()
+  plot_data_QB_RA = calc_prop_province(QB_RA_data) %>%
+    treat_reps(treatment_key)
+  browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_QB_RA <- tidy_to_long_samples(plot_data_QB_RA)
+  # browser()
+  plot_QB_RA <- order_taxa(plot_QB_RA)
+  # browser()
+  plot_QB_RA <- plot_interest_abundance_crop_av(plot_QB_RA)
+  
+  ggsave(plot = plot_QB_RA,
+         filename = glue("{outdir}/relative_abundance_QB.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_QB_RA,
+                   file = glue("{outdir}/relative_proportions_abundance_QB.csv"),
+                   row.names = F)
+  
+}
+
+# Returns relative abundance for taxa of interest
+#'*starting point, that calls all other functions in this script*
+#'*"data" is being fed "tables[["raw_clade"]]" from main.r*
 export("make_interest_abundance")
-make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
+make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {  #additional_taxa,
+  #'*I think this is just adding the taxa for specific crops (see main.r for list)*
   # if (any(!is.na(additional_taxa))) {
   #   interest_list <- append(interest_list, additional_taxa)
   # }
   # browser()
+  # interest_list <- c("Tetracyclines",
+  #                    "Sulfonamides",
+  #                    "Rifampin",
+  #                    "Mupirocin",
+  #                    "Multi-metal_resistance",
+  #                    "Multi-drug_resistance",
+  #                    "Multi-biocide_resistance",
+  #                    "MLS",
+  #                    "Iron_resistance",
+  #                    "Glycopeptides",
+  #                    "Drug_and_biocide_resistance",
+  #                    "Drug_and_biocide_and_metal_resistance",
+  #                    "Copper_resistance",
+  #                    "betalactams",
+  #                    "Aminoglycosides",
+  #                    "Aminocoumarins")
+  
   #'*original plot_data before my edits:*
-  # plot_data <- filter(data, name %in% interest_list) %>%
-  #   add_other_bac() %>%
-  #   tidy_data() %>%
-  #   calc_prop() %>%
-  #   treat_reps(treatment_key)
-
-  plot_data_samples <- tidy_data_samples(data) %>%
-    calc_prop_samples() %>%
+  # total_ARGs = sum(data$class)
+  # plot_data <- filter(data, class %in% interest_list) %>%
+  #   add_other_bac() #%>%
+  # #   tidy_data() %>%
+  # #   calc_prop() %>%
+  # #   treat_reps(treatment_key)
+  browser()
+  
+  # plot_data_samples <- tidy_data_RA_samples(data)
+  # total_ARGs = sum(plot_data_samples$Acetate_resistance + 
+  #                    plot_data_samples$Acid_resistance + 
+  #                    plot_data_samples$Aldehyde_resistance + 
+  #                    plot_data_samples$Aminocoumarins + 
+  #                    plot_data_samples$Aminoglycosides + 
+  #                    plot_data_samples$Bacitracin +
+  #                    plot_data_samples$betalactams + 
+  #                    plot_data_samples$Biguanide_resistance + 
+  #                    plot_data_samples$Biocide_and_metal_resistance +
+  #                    plot_data_samples$Cationic_antimicrobial_peptides + 
+  #                    plot_data_samples$Chromium_resistance + 
+  #                    plot_data_samples$Copper_resistance +
+  #                    plot_data_samples$Drug_and_biocide_and_metal_resistance + 
+  #                    plot_data_samples$Drug_and_biocide_resistance + 
+  #                    plot_data_samples$Fluoroquinolones +
+  #                    plot_data_samples$Fosfomycin + 
+  #                    plot_data_samples$Fusidic_acid + 
+  #                    plot_data_samples$Glycopeptides +
+  #                    plot_data_samples$Iron_resistance +
+  #                    plot_data_samples$Mercury_resistance + 
+  #                    plot_data_samples$Metronidazole + 
+  #                    plot_data_samples$MLS + 
+  #                    plot_data_samples$Multi_biocide_resistance + 
+  #                    plot_data_samples$Multi_drug_resistance +
+  #                    plot_data_samples$Multi_metal_resistance + 
+  #                    plot_data_samples$Mupirocin + 
+  #                    plot_data_samples$Nickel_resistance +
+  #                    plot_data_samples$Nucleosides + 
+  #                    plot_data_samples$Paraquat_resistance + 
+  #                    plot_data_samples$Peroxide_resistance +
+  #                    plot_data_samples$Phenicol + 
+  #                    plot_data_samples$Phenolic_compound_resistance + 
+  #                    plot_data_samples$Polyamine_resistance +
+  #                    plot_data_samples$Quaternary_Ammonium_Compounds_resistance + 
+  #                    plot_data_samples$Rifampin + 
+  #                    plot_data_samples$Sodium_resistance +
+  #                    plot_data_samples$Sulfonamides + 
+  #                    plot_data_samples$Tellurium_resistance +
+  #                    plot_data_samples$Tetracyclines + 
+  #                    plot_data_samples$Trimethoprim + 
+  #                    plot_data_samples$Zinc_resistance)
+  # browser()
+  plot_data_samples <- tidy_data_samples(data)  
+  plot_data_samples = calc_prop_samples(plot_data_samples) %>%
     treat_reps(treatment_key)
 
   # plot_data_crop_av <- tidy_data_crop_av(data) %>%
@@ -483,9 +981,9 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
 
   #' #'*sends the relative abundance data up to the ggplot function*
   plot_samples <- tidy_to_long_samples(plot_data_samples)
-  browser()
+  # browser()
   plot_samples <- order_taxa(plot_samples)
-  browser()
+  # browser()
   plot_samples <- plot_interest_abundance_crop_av(plot_samples)
 
   # plot_crop_av = tidy_to_long_crop_av(plot_data_crop_av) %>%
@@ -503,10 +1001,11 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
   utils::write.csv(plot_data_samples,
                    file = glue("{outdir}/relative_abundance_proportions_samples.csv"),
                    row.names = F)
-  plot_samples
+  # return(plot_1)
   # utils::write.csv(plot_data_crop_av,
   #                  file = glue("{outdir}/relative_abundance_proportions_crop_av.csv"),
   #                  row.names = F)
+  # browser()
 }
 
 # separate bar plots for each treatment vs control
@@ -542,7 +1041,7 @@ make_separate_ctx_bars <- function(data, treatment_key, dataset_name,
 
 # Alpha Diversity ---------------------------------------------------------
 # calc alpha metrics
-# assumes data in tidy format and no extra columns
+# assumes data in tidy format and no extra coluMBs
 calc_diversity_df <- function(d){
   sample_col <- select(d, "sample")
   sample_data <- select(d, -"sample")
@@ -642,7 +1141,7 @@ all_calc_nmds <- function(data) {
   sample_col <- select(data, "sample")
   nmds_data <- select(data, -"sample") %>%  #, -"crop"?
   # browser()
-  #'*as.matrix converts a data.table into a matrix, optionally using one of the columns in the data.table as the matrix row names*
+  #'*as.matrix converts a data.table into a matrix, optionally using one of the coluMBs in the data.table as the matrix row names*
     as.matrix() %>%
     metaMDS(distance = "bray") %>%
   #'*Function to access either species or site scores for specified axes in some ordination methods*
@@ -666,7 +1165,7 @@ pair_calc_nmds <- function(data) {
   prov_col = select(data, "crop")
     nmds_data <- select(data, -"sample", -"crop", -"province") %>%  #, -"crop"?
     # browser()
-    #'*as.matrix converts a data.table into a matrix, optionally using one of the columns in the data.table as the matrix row names*
+    #'*as.matrix converts a data.table into a matrix, optionally using one of the coluMBs in the data.table as the matrix row names*
     as.matrix() %>%
     metaMDS(distance = "bray") %>%
     #'*Function to access either species or site scores for specified axes in some ordination methods*
@@ -782,13 +1281,13 @@ all_prep_and_ano <- function(d, treatment_key, all_crops_title, dataset_name, ou
 }
 
 province_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
-  browser()
+  # browser()
   #'*at this point HBB21 sample names have the format HBB05u_t2>, while all other crops are CORe_t2_M_ON_20.  ie, have lost the year and province info*
   province_prop_data_samples <- tidy_data_province(d)
-  browser()
+  # browser()
   province_prop_data_samples = calc_prop_province(province_prop_data_samples)
 
-  browser()
+  # browser()
 
   group_data <- province_prop_data_samples %>%
     all_calc_nmds() %>%
@@ -1078,7 +1577,7 @@ make_nmds_plots_all_crops <- function(merged_crops, treatment_key, dataset_name,
 
 export("make_nmds_plots_provinces")
 make_nmds_plots_provinces <- function(merged_crops, treatment_key, dataset_name, outdir) {
-  browser()
+  # browser()
   #'*at this point HBB21 is already corrupted - in the form HBB01u_t2>, when all the other provinces are in the form COR04e_t2_ON_20*
   province_data <- province_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
 

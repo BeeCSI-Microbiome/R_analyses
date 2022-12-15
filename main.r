@@ -30,7 +30,7 @@ exploratory <- use("scripts/exploratory_functions.R")
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
-dataset_name <- "test_paired"
+dataset_name <- "beta_div_prov_no_HBB21"
 # filepath to the taxon count table
 counts_path <- "C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_analyses/AMR_crop_data/AMR_analytic_matrix_app21.csv"
 
@@ -252,7 +252,7 @@ merged_crops = merge(ct, crop2_ct, all = TRUE) %>%
   merge(crop7_ct, all = TRUE) %>% 
   merge(crop8_ct, all = TRUE) %>% 
   merge(crop9_ct, all = TRUE)%>% 
-  merge(crop10_ct, all = TRUE) %>%
+  # merge(crop10_ct, all = TRUE) %>%
   merge(crop11_ct, all = TRUE)%>% 
   merge(crop12_ct, all = TRUE)
   
@@ -342,10 +342,10 @@ exploratory$make_nmds_plots_paired_provinces(merged_crops,
 plot1 = exploratory$make_interest_abundance(ct,
                                     treatment_key,
                                     dataset_name,
-                                    rel_abund_dir)
+                                    rel_abund_dir) #additional_taxa,
 
 # Relative Abundance of Individual Provinces------------------------------------------------------
-exploratory$make_interest_abundance(ct,
+exploratory$prov_make_interest_abundance(merged_crops,
                                             treatment_key,
                                             dataset_name,
                                             rel_abund_dir)
