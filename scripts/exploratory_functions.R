@@ -35,20 +35,20 @@ import("stringr")
 #   clean_data <- select(d, -taxRank, -taxLineage, -taxID, -depth) %>%
 #     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
 #     pivot_wider(names_from = "name", values_from = "value")
-# 
+#
 #   return(clean_data)
 # }
 #'*updated. see screenshot 463 to see result*
 tidy_data_samples <- function(data) {
   clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
     # browser()
-    pivot_longer(!class, names_to = "sample", values_to = "value") 
+    pivot_longer(!class, names_to = "sample", values_to = "value")
   # browser()
   clean_data[is.na(clean_data)] <- 0
-  clean_data = group_by(clean_data, sample, class) %>% 
+  clean_data = group_by(clean_data, sample, class) %>%
     summarise(value=sum(value)) %>%
     # browser()
-    pivot_wider(names_from = "class", values_from = "value")  
+    pivot_wider(names_from = "class", values_from = "value")
   crop_label = substr(clean_data$sample,1,3)
   year_label = str_sub(clean_data$sample, -2, -1)
   #browser()
@@ -63,35 +63,35 @@ tidy_data_samples <- function(data) {
 # tidy_data_samples <- function(data) {
 #   clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
 #     # browser()
-#     pivot_longer(!class, names_to = "sample", values_to = "value") %>% 
+#     pivot_longer(!class, names_to = "sample", values_to = "value") %>%
 #     # browser()
-#     group_by(class, sample) %>% 
+#     group_by(class, sample) %>%
 #     summarise(value=sum(value)) %>%
 #     # browser()
-#     pivot_wider(names_from = "class", values_from = "value") 
+#     pivot_wider(names_from = "class", values_from = "value")
 #   browser()
-#   
+#
 #   # data.frame(crop = c("HBB"))
-#   
+#
 #   return(clean_data)
 # }
 
 tidy_data_all <- function(data) {
   clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
     # browser()
-    pivot_longer(!class, names_to = "sample", values_to = "value") 
+    pivot_longer(!class, names_to = "sample", values_to = "value")
     # browser()
   clean_data[is.na(clean_data)] <- 0
-  clean_data = group_by(clean_data, sample, class) %>% 
+  clean_data = group_by(clean_data, sample, class) %>%
     summarise(value=sum(value)) %>%
     # browser()
-    pivot_wider(names_from = "class", values_from = "value") 
+    pivot_wider(names_from = "class", values_from = "value")
   #browser()
   crop_label = substr(clean_data$sample,1,3)
   year_label = str_sub(clean_data$sample, -2, -1)
   #browser()
   clean_data$crop = paste(crop_label,year_label, sep = "")
-  
+
   #browser()
   #'*does this distort the values?*
   # clean_data[is.na(clean_data)] <- 0
@@ -104,13 +104,13 @@ tidy_data_all <- function(data) {
 tidy_data_province <- function(data) {
   clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
     # browser()
-    pivot_longer(!class, names_to = "sample", values_to = "value") 
+    pivot_longer(!class, names_to = "sample", values_to = "value")
     # browser()
   clean_data[is.na(clean_data)] <- 0
-  clean_data = group_by(clean_data, sample, class) %>% 
+  clean_data = group_by(clean_data, sample, class) %>%
     summarise(value=sum(value)) %>%
     # browser()
-    pivot_wider(names_from = "class", values_from = "value") 
+    pivot_wider(names_from = "class", values_from = "value")
   browser()
   crop_label = substr(clean_data$sample,1,3)
   year_label = str_sub(clean_data$sample, -2, -1)
@@ -128,13 +128,13 @@ tidy_data_province <- function(data) {
 }
 
 tidy_data_crop_av <- function(data) {
-  clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%  
-    pivot_longer(!class, names_to = "sample", values_to = "value") %>%    
-    group_by(class) %>% 
-    summarise(value=sum(value)) %>% 
-    pivot_wider(names_from = "class", values_from = "value") %>% 
+  clean_data <- select(data, -geneID, -type, -mechanism, -gene) %>%
+    pivot_longer(!class, names_to = "sample", values_to = "value") %>%
+    group_by(class) %>%
+    summarise(value=sum(value)) %>%
+    pivot_wider(names_from = "class", values_from = "value") %>%
     data.frame(crop = c("HBB"))
-  
+
   return(clean_data)
 }
 
@@ -142,15 +142,15 @@ tidy_data_crop_av <- function(data) {
 # calculates and adds Other Bacteria col
 # add_other_bac <- function(d) {
 #   column_index <- !(names(d) %in% c("taxRank","taxLineage","taxID","depth","name"))
-#   # Get the sum counts for taxa of interest, except Bacteria (domain), then 
+#   # Get the sum counts for taxa of interest, except Bacteria (domain), then
 #   # subtract their sum from Bacteria clade count. This leaves the Bacteria row
-#   # representing all taxa of non-interest 
+#   # representing all taxa of non-interest
 #   df <- d[d$name!="Bacteria", column_index]
 #   d[d$name=="Bacteria", column_index] <-
 #     d[d$name=="Bacteria", column_index] - as.list(colSums(df, na.rm=T))
 #   # Change the grouping name
 #   d[d$name=="Bacteria",]$name <- "Other Bacteria"
-#   
+#
 #   return(d)
 # }
 
@@ -181,23 +181,23 @@ add_other_bac <- function(d) {
 #     as.data.frame() %>%
 #     mutate(sample_col) %>%
 #     relocate(sample)
-#   
+#
 #   return(prop_data)
 # }
 
 calc_prop_samples <- function(d) {
   sample_col <- select(d, "sample")
   crop_col <- select(d, "crop")
-  plot_data_samples <- select(d, -"sample", -"crop") %>% 
+  plot_data_samples <- select(d, -"sample", -"crop") %>%
     apply(MARGIN = 1,
           FUN = function(x) x / sum(x) * 100) %>%
   # browser()
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
-    relocate(sample) %>% 
+    relocate(sample) %>%
     mutate(crop_col)
-  
+
 
   #utils::write.csv(plot_data_samples, file = "car-speeds-cleaned.csv")
   # browser()
@@ -209,14 +209,14 @@ calc_prop_all <- function(d) {
   sample_col <- select(d, "sample")
   crop_col <- select(d, "crop")
   #browser()
-  plot_data_samples <- select(d, -"sample", -"crop") %>% 
+  plot_data_samples <- select(d, -"sample", -"crop") %>%
     apply(MARGIN = 1,
           FUN = function(x) x / sum(x) * 100) %>%
     #browser()
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
-    relocate(sample) 
+    relocate(sample)
   mutate(crop_col) %>%
     relocate(crop)
   #browser()
@@ -231,14 +231,14 @@ calc_prop_province <- function(d) {
   crop_col <- select(d, "crop")
   province_col = select(d, "province")
   browser()
-  plot_data_samples <- select(d, -"sample", -"crop", -"province") %>% 
+  plot_data_samples <- select(d, -"sample", -"crop", -"province") %>%
     apply(MARGIN = 1,
           FUN = function(x) x / sum(x) * 100) %>%
     #browser()
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
-    relocate(sample) 
+    relocate(sample)
     mutate(crop_col) %>%
     relocate(crop)
     mutate(province_col) %>%
@@ -253,16 +253,16 @@ calc_prop_crop_av <- function(d) {
   crop_col <- select(d, "crop")
   plot_data_crop_av <- select(d, -"crop") %>%
     apply(MARGIN = 1,
-          FUN = function(x) x / sum(x) * 100) %>% 
+          FUN = function(x) x / sum(x) * 100) %>%
     t() %>%
-    as.data.frame() %>% 
+    as.data.frame() %>%
     mutate(crop_col) %>%
     relocate(crop)
-  
+
   return(plot_data_crop_av)
 }
 # add in treatment and replicate cols
-# Samples gathered from column names are treated with regular expressions to 
+# Samples gathered from column names are treated with regular expressions to
 # extract replicate number and treatments.
 province_treat_reps <- function(d, treatment_key) {
   # browser()
@@ -275,7 +275,7 @@ province_treat_reps <- function(d, treatment_key) {
   treatment_label = substr(d$sample,6,6)
   d$crop = paste(crop_label,year_label,treatment_label, sep = "")
   d$province = str_sub(d$sample, -5, -4)
-  
+
   #browser()
   return(d)
 }
@@ -289,7 +289,7 @@ all_treat_reps <- function(d, treatment_key) {
   crop_label = substr(d$sample,1,3)
   year_label = str_sub(d$sample, -2, -1)
   d$crop = paste(crop_label,year_label, sep = "")
-  
+
   #browser()
   return(d)
 }
@@ -300,13 +300,13 @@ treat_reps <- function(d, treatment_key) {
   d <- d %>% mutate(replicate = extract_replicate_string(sample),
                     treatment = extract_treatment_string(sample, treatment_key))
 
-  
+
   #browser()
   return(d)
 }
 
 extract_replicate_string <- function(sample_string) {
-  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>% 
+  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>%
     str_remove("^0+")
     paste0("Rep ", digits)
 }
@@ -324,7 +324,7 @@ extract_treatment_string <- function(sample_string, treatment_key) {
   } else {
     stop("The sample column names do not match the implemented regex patterns")
   }
-  
+
   if (all(treatment_codes %in% names(treatment_key))) {
     unlist(treatment_key[treatment_codes], use.names = FALSE)
   } else {
@@ -375,18 +375,18 @@ tidy_to_long_crop_av <- function(d) {
 order_taxa <- function(d) {
   browser()
   taxa_order <- get_taxa_order(d)
-  d$crop <- factor(d$crop, levels=taxa_order)
-  
+  d$ARGs <- factor(d$ARGs, levels=taxa_order$Group.1)
+  return(d)
 }
 
 # Returns a list of taxa of interest in order of descending average percent
 # but with "Other Bacteria" always last
 # get_taxa_order <- function(d) {
 #   pdlong <- filter(d, taxa!="Other Bacteria")
-#   
+#
 #   pd_avg <- aggregate(pdlong[,c("value")], list(pdlong$taxa), mean) %>%
 #     arrange(value)
-#   
+#
 #   taxa_order <- append(pd_avg$Group.1, "Other Bacteria")
 # }
 
@@ -396,7 +396,7 @@ get_taxa_order <- function(d) {
   # browser()
   # d$crop = substr(d$sample,1,3)
   # browser()
-  pd_avg <- aggregate(d[,c("value")], list(d$crop), mean) %>%
+  pd_avg <- aggregate(d[,c("value")], list(d$ARGs), mean) %>%
     arrange(value)
   # browser()
   #taxa_order <- append(pd_avg$Group.1, "Other Bacteria")
@@ -408,7 +408,7 @@ get_taxa_order <- function(d) {
 # plots relative abundance data for taxa of interest
 # uses the taxa, value, treatment, and replicate column from data
 # plot_interest_abundance <- function(d) {
-#   abundance_plot <- ggplot(d, 
+#   abundance_plot <- ggplot(d,
 #                            aes(x = treatment,
 #                                y = value,
 #                                fill = taxa)) +
@@ -425,7 +425,7 @@ get_taxa_order <- function(d) {
 
 #'*creates the graphs with all the samples laid out. Works, except the graph isn't pretty.  Bars too thin, etc.*
 plot_interest_abundance_samples <- function(d) {
-  abundance_plot <- ggplot(d, 
+  abundance_plot <- ggplot(d,
                            aes(x = crop,
                                y = value,
                                fill = ARGs)) +
@@ -443,7 +443,7 @@ plot_interest_abundance_samples <- function(d) {
 #'*creates the graphs with all the samples averaged into one bar.  Needs work*
 plot_interest_abundance_crop_av <- function(d) {
   browser()
-  abundance_plot <- ggplot(d, 
+  abundance_plot <- ggplot(d,
                            aes(x = crop,
                                y = value,
                                fill = ARGs)) +
@@ -472,31 +472,31 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
   #   tidy_data() %>%
   #   calc_prop() %>%
   #   treat_reps(treatment_key)
-  
-  plot_data_samples <- tidy_data_samples(data) %>% 
-    calc_prop_samples() %>% 
+
+  plot_data_samples <- tidy_data_samples(data) %>%
+    calc_prop_samples() %>%
     treat_reps(treatment_key)
- 
+
   # plot_data_crop_av <- tidy_data_crop_av(data) %>%
   #   calc_prop_crop_av()
   #treat_reps(treatment_key)
 
   #' #'*sends the relative abundance data up to the ggplot function*
-  plot_samples <- tidy_to_long_samples(plot_data_samples) 
+  plot_samples <- tidy_to_long_samples(plot_data_samples)
   browser()
   plot_samples <- order_taxa(plot_samples)
   browser()
   plot_samples <- plot_interest_abundance_crop_av(plot_samples)
-  
+
   # plot_crop_av = tidy_to_long_crop_av(plot_data_crop_av) %>%
-  #   order_taxa() %>% 
+  #   order_taxa() %>%
   #   plot_interest_abundance_crop_av()
-  
+
 
   ggsave(plot = plot_samples,
          filename = glue("{outdir}/relative_abundance_samples_plot.png"),
          bg = "white")
-  
+
   # ggsave(plot = plot_crop_av,
   #        filename = glue("{outdir}/relative_abundance_crop_av_plot.png"),
   #        bg = "white")
@@ -514,28 +514,28 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
 export("make_separate_ctx_bars")
 make_separate_ctx_bars <- function(data, treatment_key, dataset_name,
                                    additional_taxa, outdir) {
-  
+
   interest_list <- append(interest_list, additional_taxa)
-  
+
   clo_treat <- c("Control", "CLO")
   thi_treat <- c("Control", "THI")
-  
+
   process <- filter(data, name %in% interest_list) %>%
     add_other_bac() %>%
     tidy_data() %>%
     calc_prop() %>%
-    treat_reps(treatment_key) 
-  
+    treat_reps(treatment_key)
+
   clo_plot <- filter(process, treatment %in% clo_treat) %>%
     tidy_to_long() %>%
     order_taxa() %>%
     plot_interest_abundance()
-  
+
   thi_plot <- filter(process, treatment %in% thi_treat) %>%
     tidy_to_long() %>%
     order_taxa() %>%
     plot_interest_abundance()
-  
+
   ggsave(plot = clo_plot, filename = glue("{outdir}/clo_abundance.png"), bg = "white")
   ggsave(plot = thi_plot, filename = glue("{outdir}/thi_abundance.png"), bg = "white")
 }
@@ -570,13 +570,13 @@ prep_alpha_data <- function(d, treatment_key) {
     treat_reps(treatment_key)
 }
 
-# runs and saves kruskal wallis on shannon index for both 
+# runs and saves kruskal wallis on shannon index for both
 # replicates and treatments
 alpha_KW_test <- function(d, dataset_name, index, outdir) {
   heading <- glue("{index} Index - Kruskal Wallis Results:\n")
   rep_alpha <- stats::kruskal.test(stats::formula(glue("{index}~replicate")), d)
   treat_alpha <- stats::kruskal.test(stats::formula(glue("{index}~treatment")), d)
-  
+
   cat(heading, file = glue("{outdir}/alpha_stats.txt"), append = T)
   utils::capture.output(rep_alpha, file = glue("{outdir}/alpha_stats.txt"), append = T)
   utils::capture.output(treat_alpha, file = glue("{outdir}/alpha_stats.txt"), append = T)
@@ -595,11 +595,11 @@ plot_alpha <- function(d, alpha, dataset_name) {
 export("make_all_alpha_plots")
 make_all_alpha_plots <- function(data, treatment_key, dataset_name, outdir) {
   plot_data <- prep_alpha_data(data, treatment_key)
-  
+
   utils::write.csv(plot_data,
                    file = glue("{outdir}/alpha_div_data.csv"),
                    row.names = F)
-  
+
   file.create(glue("{outdir}/alpha_stats.txt"))
   alpha_KW_test(plot_data, dataset_name, "Shannon", outdir)
   alpha_KW_test(plot_data, dataset_name, "Simpson", outdir)
@@ -608,7 +608,7 @@ make_all_alpha_plots <- function(data, treatment_key, dataset_name, outdir) {
   plot_2 <- plot_alpha(plot_data, "Simpson", dataset_name)
   plot_3 <- plot_alpha(plot_data, "Inv_Simpson", dataset_name)
   plot_4 <- plot_alpha(plot_data, "Evenness", dataset_name)
-  
+
   ggsave(plot = plot_1, filename = glue("{outdir}/alpha_div_shannon.png"), bg = "white")
   ggsave(plot = plot_2, filename = glue("{outdir}/alpha_div_simpson.png"), bg = "white")
   ggsave(plot = plot_3, filename = glue("{outdir}/alpha_div_inverse_simpson.png"), bg = "white")
@@ -648,8 +648,8 @@ all_calc_nmds <- function(data) {
   #'*Function to access either species or site scores for specified axes in some ordination methods*
     scores()
   #browser()
-  nmds_data <- nmds_data$sites %>% 
-  #browser()  
+  nmds_data <- nmds_data$sites %>%
+  #browser()
   as.data.frame() %>%
     mutate(sample_col) %>%
     relocate(sample)
@@ -672,8 +672,8 @@ pair_calc_nmds <- function(data) {
     #'*Function to access either species or site scores for specified axes in some ordination methods*
     scores()
   #browser()
-  nmds_data <- nmds_data$sites %>% 
-    #browser()  
+  nmds_data <- nmds_data$sites %>%
+    #browser()
     as.data.frame() %>%
     mutate(sample_col) %>%
     mutate(crop_col) %>%
@@ -693,12 +693,12 @@ calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
                     group_data$replicate,
                     distance = "bray",
                     permutations = 9999)
-  
+
   treat_ano <- anosim(ano_data,
                       group_data$treatment,
                       distance = "bray",
                       permutations = 9999)
-  
+
   cat(heading,
       file = glue("{outdir}/anosim.txt"), append = T)
   utils::capture.output(
@@ -748,18 +748,18 @@ province_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
 prep_and_ano <- function(d, treatment_key, taxa_level, dataset_name, outdir) {
   prop_data_samples <- tidy_data_samples(d) %>%
     calc_prop_samples()
-  
+
   # browser()
-  
+
   group_data <- prop_data_samples %>%
     calc_nmds() %>%
     treat_reps(treatment_key)
   # browser()
- 
+
   prop_data_samples$crop = substr(prop_data_samples$sample,1,3)
   # browser()
   calc_ano(prop_data_samples, group_data, taxa_level, dataset_name, outdir)
-  
+
   return(group_data)
 }
 
@@ -768,111 +768,111 @@ all_prep_and_ano <- function(d, treatment_key, all_crops_title, dataset_name, ou
     calc_prop_all()
 
   # browser()
-  
+
   group_data <- all_prop_data_samples %>%
     all_calc_nmds() %>%
     all_treat_reps(treatment_key)
   # browser()
-  
+
   all_prop_data_samples$crop = substr(all_prop_data_samples$sample,1,3)
   # browser()
   all_calc_ano(all_prop_data_samples, group_data, all_crops_title, dataset_name, outdir)
-  
+
   return(group_data)
 }
 
 province_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
   browser()
   #'*at this point HBB21 sample names have the format HBB05u_t2>, while all other crops are CORe_t2_M_ON_20.  ie, have lost the year and province info*
-  province_prop_data_samples <- tidy_data_province(d) 
+  province_prop_data_samples <- tidy_data_province(d)
   browser()
   province_prop_data_samples = calc_prop_province(province_prop_data_samples)
-  
+
   browser()
-  
+
   group_data <- province_prop_data_samples %>%
     all_calc_nmds() %>%
     province_treat_reps(treatment_key)
   # browser()
-  
+
   province_prop_data_samples$crop = substr(province_prop_data_samples$sample,1,3)
   province_prop_data_samples$province = substr(province_prop_data_samples$sample,-5,-4)
   # browser()
   province_calc_ano(province_prop_data_samples, group_data, province_title, dataset_name, outdir)
-  
+
   return(group_data)
 }
 
 
 BC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
   browser()
-  
-  pair_province_prop_data_samples <- tidy_data_province(d) 
+
+  pair_province_prop_data_samples <- tidy_data_province(d)
   browser()
   pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples)
-  
+
   browser()
-  
+
   pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
   pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
   browser()
-  BC_AB = pair_province_prop_data_samples %>% 
+  BC_AB = pair_province_prop_data_samples %>%
     filter(str_detect(province, "BC|AB", negate = FALSE))
   browser()
-  
+
   group_data <- BC_AB %>%
     pair_calc_nmds() %>%
     province_treat_reps(treatment_key)
   # browser()
   province_calc_ano(BC_AB, group_data, province_title, dataset_name, outdir)
-  
+
   return(group_data)
 }
 
 QC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
   browser()
-  
-  pair_province_prop_data_samples <- tidy_data_province(d) 
+
+  pair_province_prop_data_samples <- tidy_data_province(d)
   browser()
   pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples)
-  
+
   browser()
-  
+
   pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
   pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
   browser()
-  QC_AB = pair_province_prop_data_samples %>% 
+  QC_AB = pair_province_prop_data_samples %>%
     filter(str_detect(province, "BC|AB", negate = FALSE))
   browser()
-  
+
   group_data <- QC_AB %>%
     pair_calc_nmds() %>%
     province_treat_reps(treatment_key)
   # browser()
   province_calc_ano(QC_AB, group_data, province_title, dataset_name, outdir)
-  
+
   return(group_data)
 }
 
 # plots the nmds for activity 2 data
 plot_nmds_2 <- function(data, h_var, plot_title) {
   hull_var <- sym(h_var)
-  
+
   hull <- data %>%
     group_by(!!hull_var) %>%
     slice(grDevices::chull(NMDS1, NMDS2))
-  
+
   #'*hull_var is "treatment"*
-  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + 
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) +
     geom_polygon(data = hull, alpha = 0.5) +
     geom_point(aes(shape = replicate), size = 3) +
     aes(fill = !!hull_var) +
     labs(title = plot_title,
-         x = "NMDS1", 
+         x = "NMDS1",
          y = "NMDS2",
          shape = "Replicate",
          fill = tools::toTitleCase(h_var))
-  
+
   plot
 }
 
@@ -880,45 +880,45 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
 
 plot_nmds_2_all <- function(data, h_var, plot_title) {
   hull_var <- sym(h_var)
-  
+
   hull <- data %>%
     group_by(!!hull_var) %>%
     slice(grDevices::chull(NMDS1, NMDS2))
-  
+
   #'*h_var is "crop"*
-  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + 
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) +
     geom_polygon(data = hull, alpha = 0.5) +
     geom_point(aes(shape = crop), size = 3) +
     aes(fill = !!hull_var) +
     labs(title = plot_title,
-         x = "NMDS1", 
+         x = "NMDS1",
          y = "NMDS2",
          shape = "Crop",
          fill = tools::toTitleCase(h_var))
-  
+
   plot
 }
 #'*data is province_crop_data, plot_title is NMDS: by province*
 plot_nmds_2_province <- function(data, h_var, plot_title) {
   #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
   hull_var <- sym(h_var)
-  
+
   hull <- data %>%
     group_by(!!hull_var) %>%
     slice(grDevices::chull(NMDS1, NMDS2))
   # browser()
   #'*h_var is "province"*
-  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) + 
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) +
     geom_polygon(aes(colour = !!hull_var), data = hull, alpha = 0.5, fill = NA) +
     scale_shape_manual(values=c(7,9,10,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
-    geom_point( aes(shape = crop, colour = !!hull_var), size = 3) + #!!hull_var; show.legend = FALSE, 
+    geom_point( aes(shape = crop, colour = !!hull_var), size = 3) + #!!hull_var; show.legend = FALSE,
     aes(fill = !!hull_var) +
     labs(title = plot_title,
-         x = "NMDS1", 
+         x = "NMDS1",
          y = "NMDS2",
          shape = "Crop",
          fill = tools::toTitleCase(h_var))
-  
+
   plot
 }
 
@@ -926,23 +926,23 @@ plot_nmds_2_province <- function(data, h_var, plot_title) {
 plot_nmds_2_paired <- function(data, h_var, plot_title) {
   #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
   hull_var <- sym(h_var)
-  
+
   hull <- data %>%
     group_by(!!hull_var) %>%
     slice(grDevices::chull(NMDS1, NMDS2))
   # browser()
   #'*h_var is "province"*
-  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) + 
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) +
     geom_polygon(aes(colour = !!hull_var), data = hull, alpha = 0.5, fill = NA) +
     scale_shape_manual(values=c(7,9,10,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
-    geom_point( aes(shape = crop, colour = !!hull_var), size = 3) + #!!hull_var; show.legend = FALSE, 
+    geom_point( aes(shape = crop, colour = !!hull_var), size = 3) + #!!hull_var; show.legend = FALSE,
     aes(fill = !!hull_var) +
     labs(title = plot_title,
-         x = "NMDS1", 
+         x = "NMDS1",
          y = "NMDS2",
          shape = "Crop",
          fill = tools::toTitleCase(h_var))
-  
+
   plot
 }
 
@@ -960,17 +960,17 @@ act_1_nmds <- function(genus_data, speci_data, dataset_name, outdir) {
   speci_reps_nmds <- plot_nmds_1(speci_data,
                                  "replicate",
                                  "Species NMDS - Bray Curtis")
-  
-  ggsave(plot = genus_treat_nmds, 
+
+  ggsave(plot = genus_treat_nmds,
          filename = glue("{outdir}/nmds_plot_treatment_genus.png"),
          bg = "white")
-  ggsave(plot = genus_reps_nmds, 
+  ggsave(plot = genus_reps_nmds,
          filename = glue("{outdir}/nmds_plot_replicate_genus.png"),
          bg = "white")
-  ggsave(plot = speci_treat_nmds, 
+  ggsave(plot = speci_treat_nmds,
          filename = glue("{outdir}/nmds_plot_treatment_species.png"),
          bg = "white")
-  ggsave(plot = speci_reps_nmds, 
+  ggsave(plot = speci_reps_nmds,
          filename = glue("{outdir}/nmds_plot_replicate_species.png"),
          bg = "white")
 }
@@ -1037,7 +1037,7 @@ make_nmds_plots <- function(data, treatment_key, dataset_name, outdir) {
   #   prep_and_ano(treatment_key, "Genus", dataset_name, outdir)
   # speci_data <- filter(data, taxRank == "S") %>%
   #   prep_and_ano(treatment_key, "Species", dataset_name, outdir)
-  
+
   crop_samples_data <- prep_and_ano(data, treatment_key, "Crop's Samples", dataset_name, outdir)
   # browser()
   # crop_samples_data <- select(crop_samples_data, -"crop")
@@ -1048,7 +1048,7 @@ make_nmds_plots <- function(data, treatment_key, dataset_name, outdir) {
   # utils::write.csv(speci_data,
   #                  file = glue("{outdir}/nmds_plot_data_species.csv"),
   #                  row.names = F)
-  
+
   # split act 1 and 2 nmds here, based on number of treatments
   # if (length(unique(genus_data$treatment)) > 2) {
   #   # can make convex hulls for both replicate and treatment
@@ -1065,14 +1065,14 @@ make_nmds_plots <- function(data, treatment_key, dataset_name, outdir) {
 export("make_nmds_plots_all_crops")
 make_nmds_plots_all_crops <- function(merged_crops, treatment_key, dataset_name, outdir) {
   file.create(glue("{outdir}/anosim.txt"))
- 
+
   all_crop_data <- all_prep_and_ano(merged_crops, treatment_key, "All Crops Compared", dataset_name, outdir)
   #browser()
-  
+
   utils::write.csv(all_crop_data,
                    file = glue("{outdir}/nmds_plot_data_all_crops.csv"),
                    row.names = F)
- 
+
   all_act_2_nmds(all_crop_data, dataset_name, outdir)
 }
 
@@ -1081,12 +1081,12 @@ make_nmds_plots_provinces <- function(merged_crops, treatment_key, dataset_name,
   browser()
   #'*at this point HBB21 is already corrupted - in the form HBB01u_t2>, when all the other provinces are in the form COR04e_t2_ON_20*
   province_data <- province_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
-  
-  
+
+
   utils::write.csv(province_data,
                    file = glue("{outdir}/nmds_plot_data_provinces.csv"),
                    row.names = F)
-  
+
   province_act_2_nmds(province_data, dataset_name, outdir)
 }
 
@@ -1095,18 +1095,18 @@ make_nmds_plots_paired_provinces <- function(merged_crops, treatment_key, datase
   # browser()
   #'*at this point HBB21 is already corrupted - in the form HBB01u_t2>, when all the other provinces are in the form COR04e_t2_ON_20*
   BC_AB_paired <- BC_AB_pair_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
-  
+
   utils::write.csv(BC_AB_paired,
                    file = glue("{outdir}/nmds_plot_data_BC_AB.csv"),
                    row.names = F)
-  
+
   pair_act_2_nmds(BC_AB_paired, dataset_name, outdir)
-  
+
   QC_AB_paired <- QC_AB_pair_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
-  
+
   utils::write.csv(QC_AB_paired,
                    file = glue("{outdir}/nmds_plot_data_QC_AB.csv"),
                    row.names = F)
-  
+
   pair_act_2_nmds(QC_AB_paired, dataset_name, outdir)
 }
