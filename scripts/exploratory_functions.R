@@ -49,7 +49,11 @@ tidy_data_samples <- function(data) {
     summarise(value=sum(value)) %>%
     # browser()
     pivot_wider(names_from = "class", values_from = "value")  
-  browser()
+  crop_label = substr(clean_data$sample,1,3)
+  year_label = str_sub(clean_data$sample, -2, -1)
+  #browser()
+  clean_data$crop = paste(crop_label,year_label, sep = "")
+  # browser()
 
     # data.frame(crop = c("HBB"))
   clean_data = ungroup(clean_data)
@@ -183,14 +187,17 @@ add_other_bac <- function(d) {
 
 calc_prop_samples <- function(d) {
   sample_col <- select(d, "sample")
-  plot_data_samples <- select(d, -"sample") %>% 
+  crop_col <- select(d, "crop")
+  plot_data_samples <- select(d, -"sample", -"crop") %>% 
     apply(MARGIN = 1,
           FUN = function(x) x / sum(x) * 100) %>%
   # browser()
     t() %>%
     as.data.frame() %>%
     mutate(sample_col) %>%
-    relocate(sample) 
+    relocate(sample) %>% 
+    mutate(crop_col)
+  
 
   #utils::write.csv(plot_data_samples, file = "car-speeds-cleaned.csv")
   # browser()
@@ -344,7 +351,7 @@ tidy_to_long_samples <- function(d) {
                             cols = !c("sample", "treatment", "replicate", "crop"), #"crop"
                             names_to = "ARGs",
                             values_to = "value")
-  browser()
+  # browser()
   return(long_data_samples)
 }
 
@@ -386,12 +393,12 @@ order_taxa <- function(d) {
 
 get_taxa_order <- function(d) {
   #pdlong <- filter(d, taxa!="Other Bacteria")
-  browser()
-  d$crop = substr(d$sample,1,3)
-  browser()
+  # browser()
+  # d$crop = substr(d$sample,1,3)
+  # browser()
   pd_avg <- aggregate(d[,c("value")], list(d$crop), mean) %>%
     arrange(value)
-  browser()
+  # browser()
   #taxa_order <- append(pd_avg$Group.1, "Other Bacteria")
 }
 
@@ -419,7 +426,7 @@ get_taxa_order <- function(d) {
 #'*creates the graphs with all the samples laid out. Works, except the graph isn't pretty.  Bars too thin, etc.*
 plot_interest_abundance_samples <- function(d) {
   abundance_plot <- ggplot(d, 
-                           aes(x = treatment,
+                           aes(x = crop,
                                y = value,
                                fill = ARGs)) +
     geom_bar(width = 1, stat = "identity", colour = "black") +
@@ -435,6 +442,7 @@ plot_interest_abundance_samples <- function(d) {
 
 #'*creates the graphs with all the samples averaged into one bar.  Needs work*
 plot_interest_abundance_crop_av <- function(d) {
+  browser()
   abundance_plot <- ggplot(d, 
                            aes(x = crop,
                                y = value,
@@ -457,7 +465,7 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
   # if (any(!is.na(additional_taxa))) {
   #   interest_list <- append(interest_list, additional_taxa)
   # }
-  
+  # browser()
   #'*original plot_data before my edits:*
   # plot_data <- filter(data, name %in% interest_list) %>%
   #   add_other_bac() %>%
@@ -478,7 +486,7 @@ make_interest_abundance <- function(data, treatment_key, dataset_name, outdir) {
   browser()
   plot_samples <- order_taxa(plot_samples)
   browser()
-  plot_samples <- plot_interest_abundance_samples(plot_samples)
+  plot_samples <- plot_interest_abundance_crop_av(plot_samples)
   
   # plot_crop_av = tidy_to_long_crop_av(plot_data_crop_av) %>%
   #   order_taxa() %>% 
