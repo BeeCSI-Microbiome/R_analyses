@@ -1,0 +1,12 @@
+Across Crops Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$crop, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.3544 
+      Significance: 1e-04 
+
+Permutation: free
+Number of permutations: 9999
+

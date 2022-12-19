@@ -1,0 +1,156 @@
+BC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.06389 
+      Significance: 0.017 
+
+Permutation: free
+Number of permutations: 9999
+
+QC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.2079 
+      Significance: 6e-04 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+
+BC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.06389 
+      Significance: 0.017 
+
+Permutation: free
+Number of permutations: 9999
+
+BC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.06389 
+      Significance: 0.017 
+
+Permutation: free
+Number of permutations: 9999
+
+QC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.2079 
+      Significance: 6e-04 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+
+BC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.06389 
+      Significance: 0.017 
+
+Permutation: free
+Number of permutations: 9999
+
+QC AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.2079 
+      Significance: 6e-04 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+
+MB AB Compared ANOSIM results:
+
+Call:
+anosim(x = ano_data, grouping = group_data$province, permutations = 9999,      distance = "bray") 
+Dissimilarity: bray 
+
+ANOSIM statistic R: 0.1326 
+      Significance: 0.0098 
+
+Permutation: free
+Number of permutations: 9999
+

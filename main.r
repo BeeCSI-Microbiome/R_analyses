@@ -30,7 +30,7 @@ exploratory <- use("scripts/exploratory_functions.R")
 
 # Globals -----------------------------------------------------------------
 # Name of the dataset for file writing purposes
-dataset_name <- "beta_div_prov_no_HBB21"
+dataset_name <- "1beta_acrosscrops_allprov_withhbb21_onlyexposed"
 # filepath to the taxon count table
 counts_path <- "C:/Users/obrienj/OneDrive - AGR-AGR/Desktop/Bee Stuff/R_analyses/AMR_crop_data/AMR_analytic_matrix_app21.csv"
 
@@ -252,7 +252,7 @@ merged_crops = merge(ct, crop2_ct, all = TRUE) %>%
   merge(crop7_ct, all = TRUE) %>% 
   merge(crop8_ct, all = TRUE) %>% 
   merge(crop9_ct, all = TRUE)%>% 
-  # merge(crop10_ct, all = TRUE) %>%
+  merge(crop10_ct, all = TRUE) %>%
   merge(crop11_ct, all = TRUE)%>% 
   merge(crop12_ct, all = TRUE)
   
@@ -263,11 +263,17 @@ merged_crops = merge(ct, crop2_ct, all = TRUE) %>%
 # merged_crops <- separate(merged_crops, col = gene_accession, into = c("geneID", "type", "class", "mechanism", "gene", "SNP"), sep = "/")
 
 # Beta Diversity All Crops----------------------------------------------------------
-#'*not really needed anymore. Fulfilled by Province Beta*
-exploratory$make_nmds_plots_all_crops(merged_crops,
-                            treatment_key,
-                            dataset_name,
-                            nmds_dir)
+#'*replaced by across crops.  other functions call some of the "all" functions, so can't delete them*
+# exploratory$make_nmds_plots_all_crops(merged_crops,
+#                             treatment_key,
+#                             dataset_name,
+#                             nmds_dir)
+
+#'*requested in meeting*
+vIew_plot = exploratory$make_nmds_plots_across_crops(merged_crops,
+                                      treatment_key,
+                                      dataset_name,
+                                      nmds_dir)
 # _________________________________________________________________________
 
 # Beta Diversity Between All Provinces----------------------------------------------------------
@@ -276,8 +282,21 @@ ploto = exploratory$make_nmds_plots_provinces(merged_crops,
                                       dataset_name,
                                       nmds_dir)
 # _________________________________________________________________________
+#'*requested in meeting*
+# Beta Diversity for All Crops of a Province, Between Paired Provinces.  Unexposed crops lumped together as one "crop"---
+paired = exploratory$make_nmds_paired_prov_unex_by_crop(merged_crops,
+                                                      treatment_key,
+                                                      dataset_name,
+                                                      nmds_dir)
 
-# Beta Diversity Between Paired Provinces----------------------------------------------------------
+# Beta Diversity comparing Crops between years.  Each crop looked at individually.  Unexposed and exposed together
+exploratory$make_nmds_paired_crop_by_year(merged_crops,
+                                                        treatment_key,
+                                                        dataset_name,
+                                                        nmds_dir)
+
+
+# Beta Diversity Between Paired Provinces (WIP)----------------------------------------------------------
 exploratory$make_nmds_plots_paired_provinces(merged_crops,
                                               treatment_key,
                                               dataset_name,
@@ -349,7 +368,18 @@ exploratory$prov_make_interest_abundance(merged_crops,
                                             treatment_key,
                                             dataset_name,
                                             rel_abund_dir)
-  
+
+#'*requested in meeting*
+# Relative Abundance Across All Crops------------------------------------------------------
+exploratory$across_crop_abundance(merged_crops,
+                                         treatment_key,
+                                         dataset_name,
+                                         rel_abund_dir)
+# Relative Abundance Across All Crops, for one graph for each year (WIP)------------------------------------------------------
+exploratory$across_crop_abundance_20(merged_crops,
+                                  treatment_key,
+                                  dataset_name,
+                                  rel_abund_dir)
 #' #'*need to group ARGs with small percentages together.  Can adapt the add other bac function? Needs to be after calc_prop*
 #' #'*calc_prop produces the .csv file that is saved to the results folder (ie, prop_data* 
 #'    # add_other_bac <- function(d) {
@@ -397,10 +427,10 @@ exploratory$prov_make_interest_abundance(merged_crops,
 #                                  alpha_div_dir)
 
 
-# Beta Diversity ----------------------------------------------------------
-exploratory$make_nmds_plots(ct,
-                            treatment_key,
-                            dataset_name,
-                            nmds_dir)
-# _________________________________________________________________________
+# # Beta Diversity ----------------------------------------------------------
+# exploratory$make_nmds_plots(ct,
+#                             treatment_key,
+#                             dataset_name,
+#                             nmds_dir)
+# # _________________________________________________________________________
 

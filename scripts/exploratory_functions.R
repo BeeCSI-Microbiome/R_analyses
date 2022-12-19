@@ -12,7 +12,7 @@ import("stringr")
 
 # Scope Variables --------------------------------------------------------
 # Taxa of interest - common
-#'*is there an equivalent list for ARGs?  I think no*
+#'*is there an equivalent list for ARGs?*
 # interest_list <- c("Tetracyclines",
 #                    "Sulfonamides",
 #                    "Rifampin",
@@ -123,7 +123,7 @@ tidy_data_all <- function(data) {
   #browser()
   clean_data$crop = paste(crop_label,year_label, sep = "")
 
-  #browser()
+  browser()
   #'*does this distort the values?*
   # clean_data[is.na(clean_data)] <- 0
   # browser()
@@ -214,6 +214,27 @@ add_other_bac <- function(d) {
 #
 #   return(prop_data)
 # }
+
+calc_prop_across_RA_samples <- function(d) {
+  sample_col <- select(d, "sample")
+  crop_col <- select(d, "crop")
+  prov_col = select(d, "province")
+  plot_data_samples <- select(d, -"sample", -"crop", -"province") %>%
+    apply(MARGIN = 1,
+          FUN = function(x) x / sum(x) * 100) %>%
+    # browser()
+    t() %>%
+    as.data.frame() %>%
+    mutate(sample_col) %>%
+    relocate(sample) %>%
+    mutate(crop_col) %>% 
+    mutate(prov_col)
+  
+  
+  #utils::write.csv(plot_data_samples, file = "car-speeds-cleaned.csv")
+  # browser()
+  return(plot_data_samples)
+}
 
 calc_prop_samples <- function(d) {
   sample_col <- select(d, "sample")
@@ -468,6 +489,7 @@ plot_interest_abundance_samples <- function(d) {
     theme(axis.text.x = element_text(angle = 45,
                                      vjust = 1,
                                      hjust = 1))
+  
 }
 
 #'*creates the graphs with all the samples averaged into one bar.  Needs work*
@@ -487,6 +509,363 @@ plot_interest_abundance_crop_av <- function(d) {
                                      hjust = 1))
 }
 
+#'*creates the graphs with all the samples laid out. Works, except the graph isn't pretty.  Bars too thin, etc.*
+plot_RA_across_crops_all_samples <- function(d) {
+  # browser()
+  abundance_plot <- ggplot(d,
+                           aes(x = sample,
+                               y = value,
+                               fill = ARGs)) +
+    geom_bar(width = 1, stat = "identity", colour = "black") +
+    #facet_nested(~ province + crop) +
+    facet_grid(~province, scale = "free", space = "free") +
+    labs(title = "Relative Abundance for All Crops, by Province - 2021",
+         x = "Sample",
+         y = "Relative Abundance (%)",
+         fill = "ARG Class") +
+    theme(axis.text.x = element_text(angle = 90,
+                                     vjust = 1,
+                                     hjust = 1))
+    # theme(axis.text.x=element_blank(),
+    #       axis.ticks.x=element_blank()
+    # )
+  color_palette <- c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", "#3F4921",
+                     "#C0717C", "#CBD588", "#5F7FC7", "#673770", "#D3D93E", "#508578", "#D7C1B1",
+                     "#689030", "#AD6F3B", "#CD9BCD", "#D14285", "#6DDE88", "#652926", "#7FDCC0",
+                     "#C84248", "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#38333E", "#599861")
+ 
+  
+  abundance_plot + scale_color_manual(values=color_palette) +
+    scale_fill_manual(values=color_palette)
+}
+
+export("across_crop_abundance")
+across_crop_abundance <- function(data, treatment_key, dataset_name, outdir) {  #additional_taxa,
+  
+  plot_data_RA_across <- tidy_data_province(data) 
+  # browser()
+  #'*need to filter out unexposed crops*
+  plot_data_RA_across = plot_data_RA_across %>% 
+    filter(!str_detect(crop, "u"))
+  
+  # browser()
+  plot_data_RA_across = plot_data_RA_across %>%
+    relocate(Tetracyclines) %>% 
+    relocate(Sulfonamides) %>% 
+    relocate(Rifampin) %>% 
+    relocate(Mupirocin) %>% 
+    relocate(Multi_metal_resistance) %>% 
+    relocate(Multi_biocide_resistance) %>% 
+    relocate(MLS) %>% 
+    relocate(Iron_resistance) %>% 
+    relocate(Glycopeptides) %>% 
+    relocate(Drug_and_biocide_and_metal_resistance) %>% 
+    relocate(Drug_and_biocide_and_metal_resistance) %>% 
+    relocate(Copper_resistance) %>% 
+    relocate(betalactams) %>% 
+    relocate(Aminoglycosides) %>% 
+    relocate(Aminocoumarins)
+  # browser()
+  last_other_ARG = ncol(plot_data_RA_across) - 2
+  # browser()
+  plot_data_RA_across$Other_ARGs<-rowSums(plot_data_RA_across[,16:last_other_ARG])
+  # browser()
+  #'#'*and add the province label to the crop label*
+  # plot_data_RA_across$crop = paste(plot_data_RA_across$crop, plot_data_RA_across$province, sep ="")
+  # browser()
+  plot_data_RA_across = select(plot_data_RA_across, "Other_ARGs", "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance",
+                          "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance",
+                          "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
+  # browser()
+  plot_data_RA_across = calc_prop_across_RA_samples(plot_data_RA_across)
+  # browser()
+  
+  
+  ###########
+  #' #'*summing the non-interest ARGs into one column*
+  #' APP_RA_data = plot_data_RA_across %>% 
+  #'   filter(str_detect(crop, "APP"))
+  #' browser()
+  #' APP_RA_data$Acetate_resistance = sum(APP_RA_data$Acetate_resistance)
+  #' APP_RA_data$Acid_resistance = sum(APP_RA_data$Acid_resistance)
+  #' APP_RA_data$Aldehyde_resistance = sum(APP_RA_data$Aldehyde_resistance)
+  #' APP_RA_data$Aluminum_resistance = sum(APP_RA_data$Aluminum_resistance)
+  #' APP_RA_data$Aminocoumarins = sum(APP_RA_data$Aminocoumarins)
+  #' APP_RA_data$Aminoglycosides = sum(APP_RA_data$Aminoglycosides)
+  #' APP_RA_data$Bacitracin = sum(APP_RA_data$Bacitracin)
+  #' APP_RA_data$Biguanide_resistance = sum(APP_RA_data$Biguanide_resistance)
+  #' APP_RA_data$betalactams = sum(APP_RA_data$betalactams)
+  #' APP_RA_data$Cadmium_resistance = sum(APP_RA_data$Cadmium_resistance)
+  #' APP_RA_data$Cationic_antimicrobial_peptides = sum(APP_RA_data$Cationic_antimicrobial_peptides)
+  #' APP_RA_data$Chromium_resistance = sum(APP_RA_data$Chromium_resistance)
+  #' APP_RA_data$Cobalt_resistance = sum(APP_RA_data$Cobalt_resistance)
+  #' APP_RA_data$Copper_resistance = sum(APP_RA_data$Copper_resistance)
+  #' 
+  #' APP_RA_data$Drug_and_biocide_and_metal_resistance = sum(APP_RA_data$Drug_and_biocide_and_metal_resistance)
+  #' APP_RA_data$Drug_and_biocide_resistance = sum(APP_RA_data$Drug_and_biocide_resistance)
+  #' APP_RA_data$Drug_and_metal_resistance = sum(APP_RA_data$Drug_and_metal_resistance)
+  #' APP_RA_data$Fluoroquinolones = sum(APP_RA_data$Fluoroquinolones)
+  #' APP_RA_data$Fosfomycin = sum(APP_RA_data$Fosfomycin)
+  #' APP_RA_data$Fusidic_acid = sum(APP_RA_data$Fusidic_acid)
+  #' APP_RA_data$Glycopeptides = sum(APP_RA_data$Glycopeptides)
+  #' APP_RA_data$Iron_resistance = sum(APP_RA_data$Iron_resistance)
+  #' APP_RA_data$Lipopeptides = sum(APP_RA_data$Lipopeptides)
+  #' APP_RA_data$Mercury_resistance = sum(APP_RA_data$Mercury_resistance)
+  #' APP_RA_data$Metronidazole = sum(APP_RA_data$Metronidazole)
+  #' APP_RA_data$MLS = sum(APP_RA_data$MLS)
+  #' APP_RA_data$Multi_biocide_resistance = sum(APP_RA_data$Multi_biocide_resistance)
+  #' APP_RA_data$Multi_drug_resistance = sum(APP_RA_data$Multi_drug_resistance)
+  #' 
+  #' APP_RA_data$Multi_metal_resistance = sum(APP_RA_data$Multi_metal_resistance)
+  #' APP_RA_data$Mupirocin = sum(APP_RA_data$Mupirocin)
+  #' APP_RA_data$Naphthoquinone = sum(APP_RA_data$Naphthoquinone)
+  #' APP_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(APP_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  #' APP_RA_data$Nickel_resistance = sum(APP_RA_data$Nickel_resistance)
+  #' APP_RA_data$Nucleosides = sum(APP_RA_data$Nucleosides)
+  #' APP_RA_data$Paraquat_resistance = sum(APP_RA_data$Paraquat_resistance)
+  #' APP_RA_data$Peroxide_resistance = sum(APP_RA_data$Peroxide_resistance)
+  #' APP_RA_data$Phenicol = sum(APP_RA_data$Phenicol)
+  #' APP_RA_data$Phenolic_compound_resistance = sum(APP_RA_data$Phenolic_compound_resistance)
+  #' APP_RA_data$Polyamine_resistance = sum(APP_RA_data$Polyamine_resistance)
+  #' APP_RA_data$QACs_resistance = sum(APP_RA_data$QACs_resistance)
+  #' APP_RA_data$Rifampin = sum(APP_RA_data$Rifampin)
+  #' APP_RA_data$Sodium_resistance = sum(APP_RA_data$Sodium_resistance)
+  #' 
+  #' APP_RA_data$Sulfonamides = sum(APP_RA_data$Sulfonamides)
+  #' APP_RA_data$Tellurium_resistance = sum(APP_RA_data$Tellurium_resistance)
+  #' APP_RA_data$Tetracenomycin = sum(APP_RA_data$Tetracenomycin)
+  #' APP_RA_data$Tetracyclines = sum(APP_RA_data$Tetracyclines)
+  #' APP_RA_data$Trimethoprim = sum(APP_RA_data$Trimethoprim)
+  #' APP_RA_data$Tungsten_Resistance = sum(APP_RA_data$Tungsten_Resistance)
+  #' APP_RA_data$Zinc_resistance = sum(APP_RA_data$Zinc_resistance)
+  #' 
+  #' browser()
+  #' APP_RA_data = APP_RA_data[1:1,]
+  #' other_ARGs = select(APP_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"Sulfonamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+  #'                     -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+  #'                     "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  # APP_RA_data = select(APP_RA_data, "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance",
+  #                     "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance",
+  #                     "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
+ 
+  # browser()
+  #' sum_other_ARGs <- other_ARGs%>%
+  #'   mutate(Other_ARGs = rowSums(.))
+  #' # browser()
+  #' sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  #' # browser()
+  #' APP_RA_data = APP_RA_data %>% 
+  #'   mutate(sum_other_ARGs_column)
+  #' # browser()
+  #' plot_data_APP_RA = calc_prop_province(APP_RA_data) %>%
+  #'   treat_reps(treatment_key)
+  #' # browser()
+  #' #' #'*sends the relative abundance data up to the ggplot function*
+  #' plot_APP_RA <- tidy_to_long_samples(plot_data_APP_RA)
+  #' # browser()
+  #' plot_APP_RA <- order_taxa(plot_APP_RA)
+  #' # browser()
+  #' plot_APP_RA <- plot_interest_abundance_crop_av(plot_APP_RA)
+  #' 
+  #' ggsave(plot = plot_APP_RA,
+  #'        filename = glue("{outdir}/relative_abundance_APP.png"),
+  #'        bg = "white")
+  #' 
+  #' utils::write.csv(plot_data_APP_RA,
+  #'                  file = glue("{outdir}/relative_proportions_abundance_APP.csv"),
+  #'                  row.names = F)
+###########
+  
+  
+  # browser()
+  plot_RA_across = plot_data_RA_across %>%
+    treat_reps(treatment_key)
+  # browser()
+
+  plot_RA_across <- tidy_to_long_samples(plot_RA_across)
+  # browser()
+  plot_RA_across <- order_taxa(plot_RA_across)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_RA_across <- plot_RA_across_crops_all_samples(plot_RA_across)
+  
+  ggsave(plot = plot_RA_across,
+         filename = glue("{outdir}/RA_across_crops_incl_hbb21_indiv_samples.png"),
+         bg = "white")
+  
+  utils::write.csv(plot_data_RA_across,
+                   file = glue("{outdir}/RA_across_crops_incl_hbb21_indiv_samples.csv"),
+                   row.names = F)
+  
+}
+
+export("across_crop_abundance_20")
+across_crop_abundance_20 <- function(data, treatment_key, dataset_name, outdir) {  #additional_taxa,
+  
+  plot_data_RA_across <- tidy_data_province(data) 
+  # browser()
+  #'*filtering out 2021 samples*
+  plot_data_RA_across = plot_data_RA_across %>% 
+    filter(!str_detect(crop, "20"))
+  #'*filtering out unexposed samples*
+  plot_data_RA_across = plot_data_RA_across %>% 
+    filter(!str_detect(crop, "u"))
+  
+  # browser()
+  plot_data_RA_across = plot_data_RA_across %>%
+    relocate(Tetracyclines) %>% 
+    relocate(Sulfonamides) %>% 
+    relocate(Rifampin) %>% 
+    relocate(Mupirocin) %>% 
+    relocate(Multi_metal_resistance) %>% 
+    relocate(Multi_biocide_resistance) %>% 
+    relocate(MLS) %>% 
+    relocate(Iron_resistance) %>% 
+    relocate(Glycopeptides) %>% 
+    relocate(Drug_and_biocide_and_metal_resistance) %>% 
+    relocate(Drug_and_biocide_and_metal_resistance) %>% 
+    relocate(Copper_resistance) %>% 
+    relocate(betalactams) %>% 
+    relocate(Aminoglycosides) %>% 
+    relocate(Aminocoumarins)
+  # browser()
+  last_other_ARG = ncol(plot_data_RA_across) - 2
+  # browser()
+  plot_data_RA_across$Other_ARGs<-rowSums(plot_data_RA_across[,16:last_other_ARG])
+  # browser()
+  #'#'*and add the province label to the crop label*
+  # plot_data_RA_across$crop = paste(plot_data_RA_across$crop, plot_data_RA_across$province, sep ="")
+  # browser()
+  plot_data_RA_across = select(plot_data_RA_across, "Other_ARGs", "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance",
+                               "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance",
+                               "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
+  # browser()
+  plot_data_RA_across = calc_prop_across_RA_samples(plot_data_RA_across)
+  # browser()
+  
+  
+  ###########
+  #' #'*summing the non-interest ARGs into one column*
+  #' APP_RA_data = plot_data_RA_across %>% 
+  #'   filter(str_detect(crop, "APP"))
+  #' browser()
+  #' APP_RA_data$Acetate_resistance = sum(APP_RA_data$Acetate_resistance)
+  #' APP_RA_data$Acid_resistance = sum(APP_RA_data$Acid_resistance)
+  #' APP_RA_data$Aldehyde_resistance = sum(APP_RA_data$Aldehyde_resistance)
+  #' APP_RA_data$Aluminum_resistance = sum(APP_RA_data$Aluminum_resistance)
+  #' APP_RA_data$Aminocoumarins = sum(APP_RA_data$Aminocoumarins)
+  #' APP_RA_data$Aminoglycosides = sum(APP_RA_data$Aminoglycosides)
+  #' APP_RA_data$Bacitracin = sum(APP_RA_data$Bacitracin)
+  #' APP_RA_data$Biguanide_resistance = sum(APP_RA_data$Biguanide_resistance)
+  #' APP_RA_data$betalactams = sum(APP_RA_data$betalactams)
+  #' APP_RA_data$Cadmium_resistance = sum(APP_RA_data$Cadmium_resistance)
+  #' APP_RA_data$Cationic_antimicrobial_peptides = sum(APP_RA_data$Cationic_antimicrobial_peptides)
+  #' APP_RA_data$Chromium_resistance = sum(APP_RA_data$Chromium_resistance)
+  #' APP_RA_data$Cobalt_resistance = sum(APP_RA_data$Cobalt_resistance)
+  #' APP_RA_data$Copper_resistance = sum(APP_RA_data$Copper_resistance)
+  #' 
+  #' APP_RA_data$Drug_and_biocide_and_metal_resistance = sum(APP_RA_data$Drug_and_biocide_and_metal_resistance)
+  #' APP_RA_data$Drug_and_biocide_resistance = sum(APP_RA_data$Drug_and_biocide_resistance)
+  #' APP_RA_data$Drug_and_metal_resistance = sum(APP_RA_data$Drug_and_metal_resistance)
+  #' APP_RA_data$Fluoroquinolones = sum(APP_RA_data$Fluoroquinolones)
+  #' APP_RA_data$Fosfomycin = sum(APP_RA_data$Fosfomycin)
+  #' APP_RA_data$Fusidic_acid = sum(APP_RA_data$Fusidic_acid)
+  #' APP_RA_data$Glycopeptides = sum(APP_RA_data$Glycopeptides)
+  #' APP_RA_data$Iron_resistance = sum(APP_RA_data$Iron_resistance)
+  #' APP_RA_data$Lipopeptides = sum(APP_RA_data$Lipopeptides)
+  #' APP_RA_data$Mercury_resistance = sum(APP_RA_data$Mercury_resistance)
+  #' APP_RA_data$Metronidazole = sum(APP_RA_data$Metronidazole)
+  #' APP_RA_data$MLS = sum(APP_RA_data$MLS)
+  #' APP_RA_data$Multi_biocide_resistance = sum(APP_RA_data$Multi_biocide_resistance)
+  #' APP_RA_data$Multi_drug_resistance = sum(APP_RA_data$Multi_drug_resistance)
+  #' 
+  #' APP_RA_data$Multi_metal_resistance = sum(APP_RA_data$Multi_metal_resistance)
+  #' APP_RA_data$Mupirocin = sum(APP_RA_data$Mupirocin)
+  #' APP_RA_data$Naphthoquinone = sum(APP_RA_data$Naphthoquinone)
+  #' APP_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(APP_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  #' APP_RA_data$Nickel_resistance = sum(APP_RA_data$Nickel_resistance)
+  #' APP_RA_data$Nucleosides = sum(APP_RA_data$Nucleosides)
+  #' APP_RA_data$Paraquat_resistance = sum(APP_RA_data$Paraquat_resistance)
+  #' APP_RA_data$Peroxide_resistance = sum(APP_RA_data$Peroxide_resistance)
+  #' APP_RA_data$Phenicol = sum(APP_RA_data$Phenicol)
+  #' APP_RA_data$Phenolic_compound_resistance = sum(APP_RA_data$Phenolic_compound_resistance)
+  #' APP_RA_data$Polyamine_resistance = sum(APP_RA_data$Polyamine_resistance)
+  #' APP_RA_data$QACs_resistance = sum(APP_RA_data$QACs_resistance)
+  #' APP_RA_data$Rifampin = sum(APP_RA_data$Rifampin)
+  #' APP_RA_data$Sodium_resistance = sum(APP_RA_data$Sodium_resistance)
+  #' 
+  #' APP_RA_data$Sulfonamides = sum(APP_RA_data$Sulfonamides)
+  #' APP_RA_data$Tellurium_resistance = sum(APP_RA_data$Tellurium_resistance)
+  #' APP_RA_data$Tetracenomycin = sum(APP_RA_data$Tetracenomycin)
+  #' APP_RA_data$Tetracyclines = sum(APP_RA_data$Tetracyclines)
+  #' APP_RA_data$Trimethoprim = sum(APP_RA_data$Trimethoprim)
+  #' APP_RA_data$Tungsten_Resistance = sum(APP_RA_data$Tungsten_Resistance)
+  #' APP_RA_data$Zinc_resistance = sum(APP_RA_data$Zinc_resistance)
+  #' 
+  #' browser()
+  #' APP_RA_data = APP_RA_data[1:1,]
+  #' other_ARGs = select(APP_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"Sulfonamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+  #'                     -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+  #'                     "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  # APP_RA_data = select(APP_RA_data, "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance",
+  #                     "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance",
+  #                     "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
+  
+  # browser()
+  #' sum_other_ARGs <- other_ARGs%>%
+  #'   mutate(Other_ARGs = rowSums(.))
+  #' # browser()
+  #' sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  #' # browser()
+  #' APP_RA_data = APP_RA_data %>% 
+  #'   mutate(sum_other_ARGs_column)
+  #' # browser()
+  #' plot_data_APP_RA = calc_prop_province(APP_RA_data) %>%
+  #'   treat_reps(treatment_key)
+  #' # browser()
+  #' #' #'*sends the relative abundance data up to the ggplot function*
+  #' plot_APP_RA <- tidy_to_long_samples(plot_data_APP_RA)
+  #' # browser()
+  #' plot_APP_RA <- order_taxa(plot_APP_RA)
+  #' # browser()
+  #' plot_APP_RA <- plot_interest_abundance_crop_av(plot_APP_RA)
+  #' 
+  #' ggsave(plot = plot_APP_RA,
+  #'        filename = glue("{outdir}/relative_abundance_APP.png"),
+  #'        bg = "white")
+  #' 
+  #' utils::write.csv(plot_data_APP_RA,
+  #'                  file = glue("{outdir}/relative_proportions_abundance_APP.csv"),
+  #'                  row.names = F)
+  ###########
+  
+  
+  # browser()
+  plot_RA_across = plot_data_RA_across %>%
+    treat_reps(treatment_key)
+  # browser()
+  
+  plot_RA_across <- tidy_to_long_samples(plot_RA_across)
+  # browser()
+  plot_RA_across <- order_taxa(plot_RA_across)
+  # browser()
+  #' #'*sends the relative abundance data up to the ggplot function*
+  plot_RA_across <- plot_RA_across_crops_all_samples(plot_RA_across)
+  
+  ggsave(plot = plot_RA_across,
+         filename = glue("{outdir}/RA_across_crops_incl_hbb21_indiv_samples.png"),
+         width=10, height=10, dpi=300,
+         bg = "white")
+  
+  utils::write.csv(plot_data_RA_across,
+                   file = glue("{outdir}/RA_across_crops_incl_hbb21_indiv_samples.csv"),
+                   row.names = F)
+  # ggsave(plot = across_crops_nmds,
+  #        filename = glue("{outdir}/nmds_plot_data_across_all_crops_prov.png"),
+  #        width=8, height=10, dpi=300,
+  #        bg = "white")
+}
+
 # Returns relative abundance for taxa of interest
 #'*starting point, that calls all other functions in this script*
 #'*"data" is being fed "tables[["raw_clade"]]" from main.r*
@@ -495,7 +874,8 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
 
   plot_data_samples <- tidy_data_province(data) 
   # browser()
-  
+
+  ###########
   AB_RA_data = plot_data_samples %>% 
     filter(str_detect(province, "AB"))
   # browser()
@@ -539,7 +919,7 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   AB_RA_data$Peroxide_resistance = sum(AB_RA_data$Peroxide_resistance)
   AB_RA_data$Phenicol = sum(AB_RA_data$Phenicol)
   AB_RA_data$Phenolic_compound_resistance = sum(AB_RA_data$Phenolic_compound_resistance)
-  AB_RA_data$Polyamine_resistance = sum(AB_RA_data$Polyaqacmine_resistance)
+  AB_RA_data$Polyamine_resistance = sum(AB_RA_data$Polyamine_resistance)
   AB_RA_data$QACs_resistance = sum(AB_RA_data$QACs_resistance)
   AB_RA_data$Rifampin = sum(AB_RA_data$Rifampin)
   AB_RA_data$Sodium_resistance = sum(AB_RA_data$Sodium_resistance)
@@ -552,9 +932,23 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   AB_RA_data$Tungsten_Resistance = sum(AB_RA_data$Tungsten_Resistance)
   AB_RA_data$Zinc_resistance = sum(AB_RA_data$Zinc_resistance)
   
+  # browser()
   AB_RA_data = AB_RA_data[1:1,]
-  # other_ARGs select(AB_RA_data, !c("Tetracyclines"))
+  other_ARGs = select(AB_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"Sulfonamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+                      -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  AB_RA_data = select(AB_RA_data, "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance", 
+                      "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
 
+  # browser()
+  sum_other_ARGs <- other_ARGs%>%
+    mutate(Other_ARGs = rowSums(.))
+  # browser()
+  sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  # browser()
+  AB_RA_data = AB_RA_data %>% 
+    mutate(sum_other_ARGs_column)
   # browser()
   plot_data_AB_RA = calc_prop_province(AB_RA_data) %>%
     treat_reps(treatment_key)
@@ -618,7 +1012,7 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   ON_RA_data$Peroxide_resistance = sum(ON_RA_data$Peroxide_resistance)
   ON_RA_data$Phenicol = sum(ON_RA_data$Phenicol)
   ON_RA_data$Phenolic_compound_resistance = sum(ON_RA_data$Phenolic_compound_resistance)
-  ON_RA_data$Polyamine_resistance = sum(ON_RA_data$Polyaqacmine_resistance)
+  ON_RA_data$Polyamine_resistance = sum(ON_RA_data$Polyamine_resistance)
   ON_RA_data$QACs_resistance = sum(ON_RA_data$QACs_resistance)
   ON_RA_data$Rifampin = sum(ON_RA_data$Rifampin)
   ON_RA_data$Sodium_resistance = sum(ON_RA_data$Sodium_resistance)
@@ -631,9 +1025,23 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   ON_RA_data$Tungsten_Resistance = sum(ON_RA_data$Tungsten_Resistance)
   ON_RA_data$Zinc_resistance = sum(ON_RA_data$Zinc_resistance)
   
+  # browser()
   ON_RA_data = ON_RA_data[1:1,]
-  # other_ARGs select(ON_RA_data, !c("Tetracyclines"))
+  other_ARGs = select(ON_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"Sulfonamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+                      -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  ON_RA_data = select(ON_RA_data, "sample", "crop", "province", "Tetracyclines", "Sulfonamides", "Rifampin", "Mupirocin", "Multi_metal_resistance", 
+                      "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
   
+  # browser()
+  sum_other_ARGs <- other_ARGs%>%
+    mutate(Other_ARGs = rowSums(.))
+  # browser()
+  sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  # browser()
+  ON_RA_data = ON_RA_data %>% 
+    mutate(sum_other_ARGs_column)
   # browser()
   plot_data_ON_RA = calc_prop_province(ON_RA_data) %>%
     treat_reps(treatment_key)
@@ -654,7 +1062,6 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
                    row.names = F)
   
   #########
-  
   MB_RA_data = plot_data_samples %>% 
     filter(str_detect(province, "MB"))
   # browser()
@@ -668,7 +1075,7 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   MB_RA_data$Biguanide_resistance = sum(MB_RA_data$Biguanide_resistance)
   MB_RA_data$betalactams = sum(MB_RA_data$betalactams)
   MB_RA_data$Cadmium_resistance = sum(MB_RA_data$Cadmium_resistance)
-  MB_RA_data$Cationic_antimicrobial_peptides = sum(MB_RA_data$Cationic_antimicrobial_peptides)
+  MB_RA_data$CatiMBic_antimicrobial_peptides = sum(MB_RA_data$CatiMBic_antimicrobial_peptides)
   MB_RA_data$Chromium_resistance = sum(MB_RA_data$Chromium_resistance)
   MB_RA_data$Cobalt_resistance = sum(MB_RA_data$Cobalt_resistance)
   MB_RA_data$Copper_resistance = sum(MB_RA_data$Copper_resistance)
@@ -676,21 +1083,21 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   MB_RA_data$Drug_and_biocide_and_metal_resistance = sum(MB_RA_data$Drug_and_biocide_and_metal_resistance)
   MB_RA_data$Drug_and_biocide_resistance = sum(MB_RA_data$Drug_and_biocide_resistance)
   MB_RA_data$Drug_and_metal_resistance = sum(MB_RA_data$Drug_and_metal_resistance)
-  MB_RA_data$Fluoroquinolones = sum(MB_RA_data$Fluoroquinolones)
+  MB_RA_data$FluoroquinolMBes = sum(MB_RA_data$FluoroquinolMBes)
   MB_RA_data$Fosfomycin = sum(MB_RA_data$Fosfomycin)
   MB_RA_data$Fusidic_acid = sum(MB_RA_data$Fusidic_acid)
   MB_RA_data$Glycopeptides = sum(MB_RA_data$Glycopeptides)
   MB_RA_data$Iron_resistance = sum(MB_RA_data$Iron_resistance)
   MB_RA_data$Lipopeptides = sum(MB_RA_data$Lipopeptides)
   MB_RA_data$Mercury_resistance = sum(MB_RA_data$Mercury_resistance)
-  MB_RA_data$Metronidazole = sum(MB_RA_data$Metronidazole)
+  MB_RA_data$MetrMBidazole = sum(MB_RA_data$MetrMBidazole)
   MB_RA_data$MLS = sum(MB_RA_data$MLS)
   MB_RA_data$Multi_biocide_resistance = sum(MB_RA_data$Multi_biocide_resistance)
   MB_RA_data$Multi_drug_resistance = sum(MB_RA_data$Multi_drug_resistance)
   
   MB_RA_data$Multi_metal_resistance = sum(MB_RA_data$Multi_metal_resistance)
   MB_RA_data$Mupirocin = sum(MB_RA_data$Mupirocin)
-  MB_RA_data$Naphthoquinone = sum(MB_RA_data$Naphthoquinone)
+  MB_RA_data$NaphthoquinMBe = sum(MB_RA_data$NaphthoquinMBe)
   MB_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(MB_RA_data$Mycobacterium_tuberculosis_specific_Drug)
   MB_RA_data$Nickel_resistance = sum(MB_RA_data$Nickel_resistance)
   MB_RA_data$Nucleosides = sum(MB_RA_data$Nucleosides)
@@ -698,12 +1105,12 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   MB_RA_data$Peroxide_resistance = sum(MB_RA_data$Peroxide_resistance)
   MB_RA_data$Phenicol = sum(MB_RA_data$Phenicol)
   MB_RA_data$Phenolic_compound_resistance = sum(MB_RA_data$Phenolic_compound_resistance)
-  MB_RA_data$Polyamine_resistance = sum(MB_RA_data$Polyaqacmine_resistance)
+  MB_RA_data$Polyamine_resistance = sum(MB_RA_data$Polyamine_resistance)
   MB_RA_data$QACs_resistance = sum(MB_RA_data$QACs_resistance)
   MB_RA_data$Rifampin = sum(MB_RA_data$Rifampin)
   MB_RA_data$Sodium_resistance = sum(MB_RA_data$Sodium_resistance)
   
-  MB_RA_data$Sulfonamides = sum(MB_RA_data$Sulfonamides)
+  MB_RA_data$SulfMBamides = sum(MB_RA_data$SulfMBamides)
   MB_RA_data$Tellurium_resistance = sum(MB_RA_data$Tellurium_resistance)
   MB_RA_data$Tetracenomycin = sum(MB_RA_data$Tetracenomycin)
   MB_RA_data$Tetracyclines = sum(MB_RA_data$Tetracyclines)
@@ -711,14 +1118,28 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   MB_RA_data$Tungsten_Resistance = sum(MB_RA_data$Tungsten_Resistance)
   MB_RA_data$Zinc_resistance = sum(MB_RA_data$Zinc_resistance)
   
+  # browser()
   MB_RA_data = MB_RA_data[1:1,]
-  # other_ARGs select(MB_RA_data, !c("Tetracyclines"))
+  other_ARGs = select(MB_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"SulfMBamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+                      -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  MB_RA_data = select(MB_RA_data, "sample", "crop", "province", "Tetracyclines", "SulfMBamides", "Rifampin", "Mupirocin", "Multi_metal_resistance", 
+                      "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
   
+  # browser()
+  sum_other_ARGs <- other_ARGs%>%
+    mutate(Other_ARGs = rowSums(.))
+  # browser()
+  sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  # browser()
+  MB_RA_data = MB_RA_data %>% 
+    mutate(sum_other_ARGs_column)
   # browser()
   plot_data_MB_RA = calc_prop_province(MB_RA_data) %>%
     treat_reps(treatment_key)
   # browser()
-  #' #'*sends the relative abundance data up to the ggplot function*
+  #' #'*sends the relative abundance data up to the ggplot functiMB*
   plot_MB_RA <- tidy_to_long_samples(plot_data_MB_RA)
   # browser()
   plot_MB_RA <- order_taxa(plot_MB_RA)
@@ -730,7 +1151,7 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
          bg = "white")
   
   utils::write.csv(plot_data_MB_RA,
-                   file = glue("{outdir}/relative_proportions_abundance_MB.csv"),
+                   file = glue("{outdir}/relative_proportiMBs_abundance_MB.csv"),
                    row.names = F)
   #########
   BC_RA_data = plot_data_samples %>% 
@@ -746,7 +1167,7 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   BC_RA_data$Biguanide_resistance = sum(BC_RA_data$Biguanide_resistance)
   BC_RA_data$betalactams = sum(BC_RA_data$betalactams)
   BC_RA_data$Cadmium_resistance = sum(BC_RA_data$Cadmium_resistance)
-  BC_RA_data$Cationic_antimicrobial_peptides = sum(BC_RA_data$Cationic_antimicrobial_peptides)
+  BC_RA_data$CatiBCic_antimicrobial_peptides = sum(BC_RA_data$CatiBCic_antimicrobial_peptides)
   BC_RA_data$Chromium_resistance = sum(BC_RA_data$Chromium_resistance)
   BC_RA_data$Cobalt_resistance = sum(BC_RA_data$Cobalt_resistance)
   BC_RA_data$Copper_resistance = sum(BC_RA_data$Copper_resistance)
@@ -754,21 +1175,21 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   BC_RA_data$Drug_and_biocide_and_metal_resistance = sum(BC_RA_data$Drug_and_biocide_and_metal_resistance)
   BC_RA_data$Drug_and_biocide_resistance = sum(BC_RA_data$Drug_and_biocide_resistance)
   BC_RA_data$Drug_and_metal_resistance = sum(BC_RA_data$Drug_and_metal_resistance)
-  BC_RA_data$Fluoroquinolones = sum(BC_RA_data$Fluoroquinolones)
+  BC_RA_data$FluoroquinolBCes = sum(BC_RA_data$FluoroquinolBCes)
   BC_RA_data$Fosfomycin = sum(BC_RA_data$Fosfomycin)
   BC_RA_data$Fusidic_acid = sum(BC_RA_data$Fusidic_acid)
   BC_RA_data$Glycopeptides = sum(BC_RA_data$Glycopeptides)
   BC_RA_data$Iron_resistance = sum(BC_RA_data$Iron_resistance)
   BC_RA_data$Lipopeptides = sum(BC_RA_data$Lipopeptides)
   BC_RA_data$Mercury_resistance = sum(BC_RA_data$Mercury_resistance)
-  BC_RA_data$Metronidazole = sum(BC_RA_data$Metronidazole)
+  BC_RA_data$MetrBCidazole = sum(BC_RA_data$MetrBCidazole)
   BC_RA_data$MLS = sum(BC_RA_data$MLS)
   BC_RA_data$Multi_biocide_resistance = sum(BC_RA_data$Multi_biocide_resistance)
   BC_RA_data$Multi_drug_resistance = sum(BC_RA_data$Multi_drug_resistance)
   
   BC_RA_data$Multi_metal_resistance = sum(BC_RA_data$Multi_metal_resistance)
   BC_RA_data$Mupirocin = sum(BC_RA_data$Mupirocin)
-  BC_RA_data$Naphthoquinone = sum(BC_RA_data$Naphthoquinone)
+  BC_RA_data$NaphthoquinBCe = sum(BC_RA_data$NaphthoquinBCe)
   BC_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(BC_RA_data$Mycobacterium_tuberculosis_specific_Drug)
   BC_RA_data$Nickel_resistance = sum(BC_RA_data$Nickel_resistance)
   BC_RA_data$Nucleosides = sum(BC_RA_data$Nucleosides)
@@ -776,12 +1197,12 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   BC_RA_data$Peroxide_resistance = sum(BC_RA_data$Peroxide_resistance)
   BC_RA_data$Phenicol = sum(BC_RA_data$Phenicol)
   BC_RA_data$Phenolic_compound_resistance = sum(BC_RA_data$Phenolic_compound_resistance)
-  BC_RA_data$Polyamine_resistance = sum(BC_RA_data$Polyaqacmine_resistance)
+  BC_RA_data$Polyamine_resistance = sum(BC_RA_data$Polyamine_resistance)
   BC_RA_data$QACs_resistance = sum(BC_RA_data$QACs_resistance)
   BC_RA_data$Rifampin = sum(BC_RA_data$Rifampin)
   BC_RA_data$Sodium_resistance = sum(BC_RA_data$Sodium_resistance)
   
-  BC_RA_data$Sulfonamides = sum(BC_RA_data$Sulfonamides)
+  BC_RA_data$SulfBCamides = sum(BC_RA_data$SulfBCamides)
   BC_RA_data$Tellurium_resistance = sum(BC_RA_data$Tellurium_resistance)
   BC_RA_data$Tetracenomycin = sum(BC_RA_data$Tetracenomycin)
   BC_RA_data$Tetracyclines = sum(BC_RA_data$Tetracyclines)
@@ -789,14 +1210,28 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
   BC_RA_data$Tungsten_Resistance = sum(BC_RA_data$Tungsten_Resistance)
   BC_RA_data$Zinc_resistance = sum(BC_RA_data$Zinc_resistance)
   
+  # browser()
   BC_RA_data = BC_RA_data[1:1,]
-  # other_ARGs select(BC_RA_data, !c("Tetracyclines"))
+  other_ARGs = select(BC_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"SulfBCamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+                      -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  BC_RA_data = select(BC_RA_data, "sample", "crop", "province", "Tetracyclines", "SulfBCamides", "Rifampin", "Mupirocin", "Multi_metal_resistance", 
+                      "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
   
+  # browser()
+  sum_other_ARGs <- other_ARGs%>%
+    mutate(Other_ARGs = rowSums(.))
+  # browser()
+  sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  # browser()
+  BC_RA_data = BC_RA_data %>% 
+    mutate(sum_other_ARGs_column)
   # browser()
   plot_data_BC_RA = calc_prop_province(BC_RA_data) %>%
     treat_reps(treatment_key)
   # browser()
-  #' #'*sends the relative abundance data up to the ggplot function*
+  #' #'*sends the relative abundance data up to the ggplot functiBC*
   plot_BC_RA <- tidy_to_long_samples(plot_data_BC_RA)
   # browser()
   plot_BC_RA <- order_taxa(plot_BC_RA)
@@ -808,88 +1243,101 @@ prov_make_interest_abundance <- function(data, treatment_key, dataset_name, outd
          bg = "white")
   
   utils::write.csv(plot_data_BC_RA,
-                   file = glue("{outdir}/relative_proportions_abundance_BC.csv"),
+                   file = glue("{outdir}/relative_proportiBCs_abundance_BC.csv"),
                    row.names = F)
   
   #######
-  QB_RA_data = plot_data_samples %>% 
-    filter(str_detect(province, "QB"))
+  QC_RA_data = plot_data_samples %>% 
+    filter(str_detect(province, "QC"))
   # browser()
-  QB_RA_data$Acetate_resistance = sum(QB_RA_data$Acetate_resistance)
-  QB_RA_data$Acid_resistance = sum(QB_RA_data$Acid_resistance)
-  QB_RA_data$Aldehyde_resistance = sum(QB_RA_data$Aldehyde_resistance)
-  QB_RA_data$Aluminum_resistance = sum(QB_RA_data$Aluminum_resistance)
-  QB_RA_data$Aminocoumarins = sum(QB_RA_data$Aminocoumarins)
-  QB_RA_data$Aminoglycosides = sum(QB_RA_data$Aminoglycosides)
-  QB_RA_data$Bacitracin = sum(QB_RA_data$Bacitracin)
-  QB_RA_data$Biguanide_resistance = sum(QB_RA_data$Biguanide_resistance)
-  QB_RA_data$betalactams = sum(QB_RA_data$betalactams)
-  QB_RA_data$Cadmium_resistance = sum(QB_RA_data$Cadmium_resistance)
-  QB_RA_data$Cationic_antimicrobial_peptides = sum(QB_RA_data$Cationic_antimicrobial_peptides)
-  QB_RA_data$Chromium_resistance = sum(QB_RA_data$Chromium_resistance)
-  QB_RA_data$Cobalt_resistance = sum(QB_RA_data$Cobalt_resistance)
-  QB_RA_data$Copper_resistance = sum(QB_RA_data$Copper_resistance)
+  QC_RA_data$Acetate_resistance = sum(QC_RA_data$Acetate_resistance)
+  QC_RA_data$Acid_resistance = sum(QC_RA_data$Acid_resistance)
+  QC_RA_data$Aldehyde_resistance = sum(QC_RA_data$Aldehyde_resistance)
+  QC_RA_data$Aluminum_resistance = sum(QC_RA_data$Aluminum_resistance)
+  QC_RA_data$Aminocoumarins = sum(QC_RA_data$Aminocoumarins)
+  QC_RA_data$Aminoglycosides = sum(QC_RA_data$Aminoglycosides)
+  QC_RA_data$Bacitracin = sum(QC_RA_data$Bacitracin)
+  QC_RA_data$Biguanide_resistance = sum(QC_RA_data$Biguanide_resistance)
+  QC_RA_data$betalactams = sum(QC_RA_data$betalactams)
+  QC_RA_data$Cadmium_resistance = sum(QC_RA_data$Cadmium_resistance)
+  QC_RA_data$CatiQCic_antimicrobial_peptides = sum(QC_RA_data$CatiQCic_antimicrobial_peptides)
+  QC_RA_data$Chromium_resistance = sum(QC_RA_data$Chromium_resistance)
+  QC_RA_data$Cobalt_resistance = sum(QC_RA_data$Cobalt_resistance)
+  QC_RA_data$Copper_resistance = sum(QC_RA_data$Copper_resistance)
   
-  QB_RA_data$Drug_and_biocide_and_metal_resistance = sum(QB_RA_data$Drug_and_biocide_and_metal_resistance)
-  QB_RA_data$Drug_and_biocide_resistance = sum(QB_RA_data$Drug_and_biocide_resistance)
-  QB_RA_data$Drug_and_metal_resistance = sum(QB_RA_data$Drug_and_metal_resistance)
-  QB_RA_data$Fluoroquinolones = sum(QB_RA_data$Fluoroquinolones)
-  QB_RA_data$Fosfomycin = sum(QB_RA_data$Fosfomycin)
-  QB_RA_data$Fusidic_acid = sum(QB_RA_data$Fusidic_acid)
-  QB_RA_data$Glycopeptides = sum(QB_RA_data$Glycopeptides)
-  QB_RA_data$Iron_resistance = sum(QB_RA_data$Iron_resistance)
-  QB_RA_data$Lipopeptides = sum(QB_RA_data$Lipopeptides)
-  QB_RA_data$Mercury_resistance = sum(QB_RA_data$Mercury_resistance)
-  QB_RA_data$Metronidazole = sum(QB_RA_data$Metronidazole)
-  QB_RA_data$MLS = sum(QB_RA_data$MLS)
-  QB_RA_data$Multi_biocide_resistance = sum(QB_RA_data$Multi_biocide_resistance)
-  QB_RA_data$Multi_drug_resistance = sum(QB_RA_data$Multi_drug_resistance)
+  QC_RA_data$Drug_and_biocide_and_metal_resistance = sum(QC_RA_data$Drug_and_biocide_and_metal_resistance)
+  QC_RA_data$Drug_and_biocide_resistance = sum(QC_RA_data$Drug_and_biocide_resistance)
+  QC_RA_data$Drug_and_metal_resistance = sum(QC_RA_data$Drug_and_metal_resistance)
+  QC_RA_data$FluoroquinolQCes = sum(QC_RA_data$FluoroquinolQCes)
+  QC_RA_data$Fosfomycin = sum(QC_RA_data$Fosfomycin)
+  QC_RA_data$Fusidic_acid = sum(QC_RA_data$Fusidic_acid)
+  QC_RA_data$Glycopeptides = sum(QC_RA_data$Glycopeptides)
+  QC_RA_data$Iron_resistance = sum(QC_RA_data$Iron_resistance)
+  QC_RA_data$Lipopeptides = sum(QC_RA_data$Lipopeptides)
+  QC_RA_data$Mercury_resistance = sum(QC_RA_data$Mercury_resistance)
+  QC_RA_data$MetrQCidazole = sum(QC_RA_data$MetrQCidazole)
+  QC_RA_data$MLS = sum(QC_RA_data$MLS)
+  QC_RA_data$Multi_biocide_resistance = sum(QC_RA_data$Multi_biocide_resistance)
+  QC_RA_data$Multi_drug_resistance = sum(QC_RA_data$Multi_drug_resistance)
   
-  QB_RA_data$Multi_metal_resistance = sum(QB_RA_data$Multi_metal_resistance)
-  QB_RA_data$Mupirocin = sum(QB_RA_data$Mupirocin)
-  QB_RA_data$Naphthoquinone = sum(QB_RA_data$Naphthoquinone)
-  QB_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(QB_RA_data$Mycobacterium_tuberculosis_specific_Drug)
-  QB_RA_data$Nickel_resistance = sum(QB_RA_data$Nickel_resistance)
-  QB_RA_data$Nucleosides = sum(QB_RA_data$Nucleosides)
-  QB_RA_data$Paraquat_resistance = sum(QB_RA_data$Paraquat_resistance)
-  QB_RA_data$Peroxide_resistance = sum(QB_RA_data$Peroxide_resistance)
-  QB_RA_data$Phenicol = sum(QB_RA_data$Phenicol)
-  QB_RA_data$Phenolic_compound_resistance = sum(QB_RA_data$Phenolic_compound_resistance)
-  QB_RA_data$Polyamine_resistance = sum(QB_RA_data$Polyaqacmine_resistance)
-  QB_RA_data$QACs_resistance = sum(QB_RA_data$QACs_resistance)
-  QB_RA_data$Rifampin = sum(QB_RA_data$Rifampin)
-  QB_RA_data$Sodium_resistance = sum(QB_RA_data$Sodium_resistance)
+  QC_RA_data$Multi_metal_resistance = sum(QC_RA_data$Multi_metal_resistance)
+  QC_RA_data$Mupirocin = sum(QC_RA_data$Mupirocin)
+  QC_RA_data$NaphthoquinQCe = sum(QC_RA_data$NaphthoquinQCe)
+  QC_RA_data$Mycobacterium_tuberculosis_specific_Drug = sum(QC_RA_data$Mycobacterium_tuberculosis_specific_Drug)
+  QC_RA_data$Nickel_resistance = sum(QC_RA_data$Nickel_resistance)
+  QC_RA_data$Nucleosides = sum(QC_RA_data$Nucleosides)
+  QC_RA_data$Paraquat_resistance = sum(QC_RA_data$Paraquat_resistance)
+  QC_RA_data$Peroxide_resistance = sum(QC_RA_data$Peroxide_resistance)
+  QC_RA_data$Phenicol = sum(QC_RA_data$Phenicol)
+  QC_RA_data$Phenolic_compound_resistance = sum(QC_RA_data$Phenolic_compound_resistance)
+  QC_RA_data$Polyamine_resistance = sum(QC_RA_data$Polyamine_resistance)
+  QC_RA_data$QACs_resistance = sum(QC_RA_data$QACs_resistance)
+  QC_RA_data$Rifampin = sum(QC_RA_data$Rifampin)
+  QC_RA_data$Sodium_resistance = sum(QC_RA_data$Sodium_resistance)
   
-  QB_RA_data$Sulfonamides = sum(QB_RA_data$Sulfonamides)
-  QB_RA_data$Tellurium_resistance = sum(QB_RA_data$Tellurium_resistance)
-  QB_RA_data$Tetracenomycin = sum(QB_RA_data$Tetracenomycin)
-  QB_RA_data$Tetracyclines = sum(QB_RA_data$Tetracyclines)
-  QB_RA_data$Trimethoprim = sum(QB_RA_data$Trimethoprim)
-  QB_RA_data$Tungsten_Resistance = sum(QB_RA_data$Tungsten_Resistance)
-  QB_RA_data$Zinc_resistance = sum(QB_RA_data$Zinc_resistance)
-  
-  QB_RA_data = QB_RA_data[1:1,]
-  # other_ARGs select(QB_RA_data, !c("Tetracyclines"))
+  QC_RA_data$SulfQCamides = sum(QC_RA_data$SulfQCamides)
+  QC_RA_data$Tellurium_resistance = sum(QC_RA_data$Tellurium_resistance)
+  QC_RA_data$Tetracenomycin = sum(QC_RA_data$Tetracenomycin)
+  QC_RA_data$Tetracyclines = sum(QC_RA_data$Tetracyclines)
+  QC_RA_data$Trimethoprim = sum(QC_RA_data$Trimethoprim)
+  QC_RA_data$Tungsten_Resistance = sum(QC_RA_data$Tungsten_Resistance)
+  QC_RA_data$Zinc_resistance = sum(QC_RA_data$Zinc_resistance)
   
   # browser()
-  plot_data_QB_RA = calc_prop_province(QB_RA_data) %>%
+  QC_RA_data = QC_RA_data[1:1,]
+  other_ARGs = select(QC_RA_data, -"sample", -"crop", -"province", -"Tetracyclines", -"SulfQCamides", -"Rifampin", -"Mupirocin", -"Multi_metal_resistance", 
+                      -"Multi_biocide_resistance", -"MLS", -"Iron_resistance", -"Glycopeptides", -"Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", -"Copper_resistance", -"betalactams", -"Aminoglycosides", -"Aminocoumarins")
+  QC_RA_data = select(QC_RA_data, "sample", "crop", "province", "Tetracyclines", "SulfQCamides", "Rifampin", "Mupirocin", "Multi_metal_resistance", 
+                      "Multi_biocide_resistance", "MLS", "Iron_resistance", "Glycopeptides", "Drug_and_biocide_resistance", 
+                      "Drug_and_biocide_and_metal_resistance", "Copper_resistance", "betalactams", "Aminoglycosides", "Aminocoumarins")
+  
+  # browser()
+  sum_other_ARGs <- other_ARGs%>%
+    mutate(Other_ARGs = rowSums(.))
+  # browser()
+  sum_other_ARGs_column = sum_other_ARGs$Other_ARGs
+  # browser()
+  QC_RA_data = QC_RA_data %>% 
+    mutate(sum_other_ARGs_column)
+  # browser()
+  plot_data_QC_RA = calc_prop_province(QC_RA_data) %>%
     treat_reps(treatment_key)
-  browser()
-  #' #'*sends the relative abundance data up to the ggplot function*
-  plot_QB_RA <- tidy_to_long_samples(plot_data_QB_RA)
   # browser()
-  plot_QB_RA <- order_taxa(plot_QB_RA)
+  #' #'*sends the relative abundance data up to the ggplot functiQC*
+  plot_QC_RA <- tidy_to_long_samples(plot_data_QC_RA)
   # browser()
-  plot_QB_RA <- plot_interest_abundance_crop_av(plot_QB_RA)
+  plot_QC_RA <- order_taxa(plot_QC_RA)
+  # browser()
+  plot_QC_RA <- plot_interest_abundance_crop_av(plot_QC_RA)
   
-  ggsave(plot = plot_QB_RA,
-         filename = glue("{outdir}/relative_abundance_QB.png"),
+  ggsave(plot = plot_QC_RA,
+         filename = glue("{outdir}/relative_abundance_QC.png"),
          bg = "white")
   
-  utils::write.csv(plot_data_QB_RA,
-                   file = glue("{outdir}/relative_proportions_abundance_QB.csv"),
+  utils::write.csv(plot_data_QC_RA,
+                   file = glue("{outdir}/relative_proportiQCs_abundance_QC.csv"),
                    row.names = F)
-  
 }
 
 # Returns relative abundance for taxa of interest
@@ -1136,10 +1584,12 @@ calc_nmds <- function(data) {
 #'* running into a bug with the NAs in the dataframe, I think*
 all_calc_nmds <- function(data) {
   #'*Setting a seed in R means to initialize a pseudorandom number generator*
-  browser()
+  # browser()
   set.seed(1)
   sample_col <- select(data, "sample")
-  nmds_data <- select(data, -"sample") %>%  #, -"crop"?
+  crop_col = select(data, "crop")
+  prov_col = select(data, "province")
+  nmds_data <- select(data, -"sample", -"crop", -"province") %>%  #, -"crop"?
   # browser()
   #'*as.matrix converts a data.table into a matrix, optionally using one of the coluMBs in the data.table as the matrix row names*
     as.matrix() %>%
@@ -1151,6 +1601,36 @@ all_calc_nmds <- function(data) {
   #browser()
   as.data.frame() %>%
     mutate(sample_col) %>%
+    relocate(sample) %>% 
+    mutate(crop_col) %>%
+    relocate(crop)
+  #browser()
+  return(nmds_data)
+}
+
+pair_cropyear_calc_nmds <- function(data) {
+  #'*Setting a seed in R means to initialize a pseudorandom number generator*
+  # browser()
+  set.seed(1)
+  sample_col <- select(data, "sample")
+  crop_col = select(data, "crop")
+  prov_col = select(data, "province")
+  year_col = select(data, "year")
+  nmds_data <- select(data, -"sample", -"crop", -"province", -"year") %>%  #, -"crop"?
+    # browser()
+    #'*as.matrix converts a data.table into a matrix, optionally using one of the coluMBs in the data.table as the matrix row names*
+    as.matrix() %>%
+    metaMDS(distance = "bray") %>%
+    #'*Function to access either species or site scores for specified axes in some ordination methods*
+    scores()
+  #browser()
+  nmds_data <- nmds_data$sites %>%
+    #browser()
+    as.data.frame() %>%
+    mutate(sample_col) %>%
+    mutate(crop_col) %>%
+    mutate(prov_col) %>%
+    mutate(year_col) %>%
     relocate(sample)
   #browser()
   return(nmds_data)
@@ -1158,11 +1638,11 @@ all_calc_nmds <- function(data) {
 
 pair_calc_nmds <- function(data) {
   #'*Setting a seed in R means to initialize a pseudorandom number generator*
-  browser()
+  # browser()
   set.seed(1)
   sample_col <- select(data, "sample")
   crop_col = select(data, "crop")
-  prov_col = select(data, "crop")
+  prov_col = select(data, "province")
     nmds_data <- select(data, -"sample", -"crop", -"province") %>%  #, -"crop"?
     # browser()
     #'*as.matrix converts a data.table into a matrix, optionally using one of the coluMBs in the data.table as the matrix row names*
@@ -1225,6 +1705,23 @@ all_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
     file = glue("{outdir}/anosim.txt"), append = T)
 }
 
+cropyear_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
+  heading <- paste(taxa_level, "ANOSIM results:\n")
+  #browser()
+  ano_data <- select(d, -"sample", -"crop", -"province", -"year") %>%
+    as.matrix()
+  province_ano <- anosim(ano_data,
+                         group_data$year,
+                         distance = "bray",
+                         permutations = 9999)
+  # browser()
+  cat(heading,
+      file = glue("{outdir}/anosim.txt"), append = T)
+  utils::capture.output(
+    province_ano,
+    file = glue("{outdir}/anosim.txt"), append = T)
+}
+
 province_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
   heading <- paste(taxa_level, "ANOSIM results:\n")
   #browser()
@@ -1234,6 +1731,24 @@ province_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
                      group_data$province,
                      distance = "bray",
                      permutations = 9999)
+  # browser()
+  cat(heading,
+      file = glue("{outdir}/anosim.txt"), append = T)
+  utils::capture.output(
+    province_ano,
+    file = glue("{outdir}/anosim.txt"), append = T)
+}
+
+across_calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
+  heading <- paste(taxa_level, "ANOSIM results:\n")
+  #browser()
+  ano_data <- select(d, -"sample", -"crop", -"province") %>%
+    as.matrix()
+  
+  province_ano <- anosim(ano_data,
+                         group_data$crop,
+                         distance = "bray",
+                         permutations = 9999)
   # browser()
   cat(heading,
       file = glue("{outdir}/anosim.txt"), append = T)
@@ -1263,15 +1778,16 @@ prep_and_ano <- function(d, treatment_key, taxa_level, dataset_name, outdir) {
 }
 
 all_prep_and_ano <- function(d, treatment_key, all_crops_title, dataset_name, outdir) {
+  browser()
   all_prop_data_samples <- tidy_data_all(d) %>%
     calc_prop_all()
 
-  # browser()
+  browser()
 
   group_data <- all_prop_data_samples %>%
     all_calc_nmds() %>%
     all_treat_reps(treatment_key)
-  # browser()
+  browser()
 
   all_prop_data_samples$crop = substr(all_prop_data_samples$sample,1,3)
   # browser()
@@ -1302,22 +1818,285 @@ province_prep_and_ano <- function(d, treatment_key, province_title, dataset_name
   return(group_data)
 }
 
+across_crops_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  across_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  across_prop_data_samples = calc_prop_province(across_prop_data_samples) 
+  # browser()
+  
+  across_prop_data_samples$crop = substr(across_prop_data_samples$sample,1,3)
+  across_prop_data_samples$province = str_sub(across_prop_data_samples$sample,-5,-4)
+  # across_prop_data_samples$treatment = substr(across_prop_data_samples$sample,6,6)
+  # browser()
+  # BC_AB = across_prop_data_samples %>%
+  #   filter(str_detect(province, "BC|AB", negate = FALSE))
+  # browser()
+  
+  # browser()
+  across_prop_data_samples <- across_prop_data_samples %>% 
+    filter(!str_detect(sample, "u"))
+  # browser()
+  across_prop_data_samples <- across_prop_data_samples %>% 
+    filter(!str_detect(crop, "20"))
+  
+  group_data <- across_prop_data_samples %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  #'*does across_calc_ano need to be edited?*
+  across_calc_ano(across_prop_data_samples, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+hbb_year_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  #'*need the numbers for year position*
+  pair_province_prop_data_samples$year = substr(pair_province_prop_data_samples$sample,16,17)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  cac_only = pair_province_prop_data_samples %>%
+    filter(str_detect(crop, "HBB", negate = FALSE))
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- cac_only %>%
+    pair_cropyear_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  cropyear_calc_ano(cac_only, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+cra_year_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  #'*need the numbers for year position*
+  pair_province_prop_data_samples$year = substr(pair_province_prop_data_samples$sample,16,17)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  cac_only = pair_province_prop_data_samples %>%
+    filter(str_detect(crop, "CRA", negate = FALSE))
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- cac_only %>%
+    pair_cropyear_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  cropyear_calc_ano(cac_only, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+cas_year_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  #'*need the numbers for year position*
+  pair_province_prop_data_samples$year = substr(pair_province_prop_data_samples$sample,16,17)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  cac_only = pair_province_prop_data_samples %>%
+    filter(str_detect(crop, "CAS", negate = FALSE))
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- cac_only %>%
+    pair_cropyear_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  cropyear_calc_ano(cac_only, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+cac_year_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  #'*need the numbers for year position*
+  pair_province_prop_data_samples$year = substr(pair_province_prop_data_samples$sample,16,17)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  cac_only = pair_province_prop_data_samples %>%
+    filter(str_detect(crop, "CAC", negate = FALSE))
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- cac_only %>%
+    pair_cropyear_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  cropyear_calc_ano(cac_only, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+
+BC_AB_unexp_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  BC_AB = pair_province_prop_data_samples %>%
+    filter(str_detect(province, "BC|AB", negate = FALSE))
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- BC_AB %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  province_calc_ano(BC_AB, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+QC_AB_unexp_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  QC_AB = pair_province_prop_data_samples %>%
+    filter(str_detect(province, "QC|AB", negate = FALSE))
+  # browser()
+  
+  # QC_AB = mutate(QC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- QC_AB %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  province_calc_ano(QC_AB, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+MB_AB_unexp_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  MB_AB = pair_province_prop_data_samples %>%
+    filter(str_detect(province, "MB|AB", negate = FALSE))
+  # browser()
+  
+  # MB_AB = mutate(MB_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- MB_AB %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  province_calc_ano(MB_AB, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
+
+ON_AB_unexp_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
+  ON_AB = pair_province_prop_data_samples %>%
+    filter(str_detect(province, "ON|AB", negate = FALSE))
+  # browser()
+  
+  # ON_AB = mutate(ON_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
+  
+  group_data <- ON_AB %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  province_calc_ano(ON_AB, group_data, province_title, dataset_name, outdir)
+  
+  return(group_data)
+}
 
 BC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
-  browser()
+  # browser()
 
   pair_province_prop_data_samples <- tidy_data_province(d)
-  browser()
-  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples)
-
-  browser()
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples) 
+  # browser()
 
   pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
   pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
-  browser()
+  # pair_province_prop_data_samples$treatment = substr(pair_province_prop_data_samples$sample,6,6)
+  # browser()
   BC_AB = pair_province_prop_data_samples %>%
     filter(str_detect(province, "BC|AB", negate = FALSE))
-  browser()
+  # browser()
+  
+  # BC_AB = mutate(BC_AB, crop = case_when(str_detect(sample, "u") ~ "unexposed",
 
   group_data <- BC_AB %>%
     pair_calc_nmds() %>%
@@ -1329,20 +2108,20 @@ BC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_na
 }
 
 QC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
-  browser()
+  # browser()
 
   pair_province_prop_data_samples <- tidy_data_province(d)
-  browser()
+  # browser()
   pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples)
 
-  browser()
+  # browser()
 
   pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
   pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
-  browser()
+  # browser()
   QC_AB = pair_province_prop_data_samples %>%
-    filter(str_detect(province, "BC|AB", negate = FALSE))
-  browser()
+    filter(str_detect(province, "QC|AB", negate = FALSE))
+  # browser()
 
   group_data <- QC_AB %>%
     pair_calc_nmds() %>%
@@ -1350,6 +2129,31 @@ QC_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_na
   # browser()
   province_calc_ano(QC_AB, group_data, province_title, dataset_name, outdir)
 
+  return(group_data)
+}
+
+MB_AB_pair_prep_and_ano <- function(d, treatment_key, province_title, dataset_name, outdir) {
+  # browser()
+  
+  pair_province_prop_data_samples <- tidy_data_province(d)
+  # browser()
+  pair_province_prop_data_samples = calc_prop_province(pair_province_prop_data_samples)
+  
+  # browser()
+  
+  pair_province_prop_data_samples$crop = substr(pair_province_prop_data_samples$sample,1,3)
+  pair_province_prop_data_samples$province = str_sub(pair_province_prop_data_samples$sample,-5,-4)
+  # browser()
+  QC_AB = pair_province_prop_data_samples %>%
+    filter(str_detect(province, "MB|AB", negate = FALSE))
+  # browser()
+  
+  group_data <- QC_AB %>%
+    pair_calc_nmds() %>%
+    province_treat_reps(treatment_key)
+  # browser()
+  province_calc_ano(QC_AB, group_data, province_title, dataset_name, outdir)
+  
   return(group_data)
 }
 
@@ -1376,27 +2180,6 @@ plot_nmds_2 <- function(data, h_var, plot_title) {
 }
 
 
-
-plot_nmds_2_all <- function(data, h_var, plot_title) {
-  hull_var <- sym(h_var)
-
-  hull <- data %>%
-    group_by(!!hull_var) %>%
-    slice(grDevices::chull(NMDS1, NMDS2))
-
-  #'*h_var is "crop"*
-  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) +
-    geom_polygon(data = hull, alpha = 0.5) +
-    geom_point(aes(shape = crop), size = 3) +
-    aes(fill = !!hull_var) +
-    labs(title = plot_title,
-         x = "NMDS1",
-         y = "NMDS2",
-         shape = "Crop",
-         fill = tools::toTitleCase(h_var))
-
-  plot
-}
 #'*data is province_crop_data, plot_title is NMDS: by province*
 plot_nmds_2_province <- function(data, h_var, plot_title) {
   #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
@@ -1421,10 +2204,87 @@ plot_nmds_2_province <- function(data, h_var, plot_title) {
   plot
 }
 
+plot_nmds_paired_year_crop <- function(data, h_var, plot_title) {
+  #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
+  hull_var <- sym(h_var)
+  data <- data %>% 
+    mutate(crop = case_when(str_detect(sample, "u") ~ "unexposed",
+                            TRUE ~ crop))
+  data <- data %>% 
+    mutate(crop = case_when(str_detect(sample, "e") ~ "exposed",
+                            TRUE ~ crop))
+  
+  
+  color_palette <- c("#D14285", "#508578", "#C84248", "#89C5DA", "#74D944", "#CE50CA", "#3F4921",
+                     "#C0717C", "#5F7FC7", "#673770", "#D3D93E",  "#D7C1B1",
+                     "#689030", "#AD6F3B", "#CD9BCD",  "#6DDE88", "#652926", "#7FDCC0",
+                      "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#38333E", "#599861")
+  
+  hull <- data %>%
+    group_by(!!hull_var) %>%
+    slice(grDevices::chull(NMDS1, NMDS2))
+  # browser()
+  #'*h_var is "year"*
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) +
+    geom_polygon(aes(colour = year), data = hull, alpha = 0.5, fill = NA) +
+    scale_shape_manual(values=c(7,8,4, 11,23,12,3,10,0,15,1,16,2,17,25,6,5,9,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
+    geom_point( aes(shape = crop, colour = year), size = 3) + #!!hull_var; show.legend = FALSE,
+    scale_color_manual(values=color_palette) +
+    aes(fill = year) +
+    labs(title = plot_title,
+         x = "NMDS1",
+         y = "NMDS2",
+         shape = "Crop",
+         fill = tools::toTitleCase(h_var))
+  
+  # plot + scale_color_manual(values=color_palette) +
+  #   scale_fill_manual(values=color_palette)
+  # browser()
+  return(plot)
+}
+
+plot_nmds_paired_prov_unexp<- function(data, h_var, plot_title) {
+  #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
+  hull_var <- sym(h_var)
+  data <- data %>% 
+    mutate(crop = case_when(str_detect(sample, "u") ~ "unexposed",
+                            TRUE ~ crop))
+  color_palette <- c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", "#3F4921",
+                     "#C0717C", "#5F7FC7", "#673770", "#D3D93E", "#508578", "#D7C1B1",
+                     "#689030", "#AD6F3B", "#CD9BCD", "#D14285", "#6DDE88", "#652926", "#7FDCC0",
+                     "#C84248", "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#38333E", "#599861")
+  
+  hull <- data %>%
+    group_by(!!hull_var) %>%
+    slice(grDevices::chull(NMDS1, NMDS2))
+  # browser()
+  #'*h_var is "province"*
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) +
+    geom_polygon(aes(colour = crop), data = hull, alpha = 0.5, fill = NA) +
+    scale_shape_manual(values=c(7,10,9,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
+    geom_point( aes(shape = province, colour = crop), size = 3) + #!!hull_var; show.legend = FALSE,
+    scale_color_manual(values=color_palette) +
+    aes(fill = crop) +
+    labs(title = plot_title,
+         x = "NMDS1",
+         y = "NMDS2",
+         shape = "Province",
+         fill = tools::toTitleCase(h_var))
+  
+  # plot + scale_color_manual(values=color_palette) +
+  #   scale_fill_manual(values=color_palette)
+  # browser()
+  return(plot)
+}
+
+
 #'*data is province_crop_data, plot_title is NMDS: by province*
 plot_nmds_2_paired <- function(data, h_var, plot_title) {
   #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
   hull_var <- sym(h_var)
+  data <- data %>% 
+    mutate(crop = case_when(str_detect(sample, "u") ~ "unexposed",
+                            TRUE ~ crop))
 
   hull <- data %>%
     group_by(!!hull_var) %>%
@@ -1432,16 +2292,81 @@ plot_nmds_2_paired <- function(data, h_var, plot_title) {
   # browser()
   #'*h_var is "province"*
   plot <- ggplot(data, aes(x = NMDS1, y = NMDS2), show.legend = FALSE) +
-    geom_polygon(aes(colour = !!hull_var), data = hull, alpha = 0.5, fill = NA) +
-    scale_shape_manual(values=c(7,9,10,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
-    geom_point( aes(shape = crop, colour = !!hull_var), size = 3) + #!!hull_var; show.legend = FALSE,
-    aes(fill = !!hull_var) +
+    geom_polygon(aes(colour = crop), data = hull, alpha = 0.5, fill = NA) +
+    scale_shape_manual(values=c(7,10,9,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
+    geom_point( aes(shape = province, colour = crop), size = 3) + #!!hull_var; show.legend = FALSE,
+    aes(fill = crop) +
     labs(title = plot_title,
          x = "NMDS1",
          y = "NMDS2",
-         shape = "Crop",
+         shape = "Province",
          fill = tools::toTitleCase(h_var))
+  
+  # browser()
+  return(plot)
+}
 
+plot_nmds_2_across <- function(data, h_var, plot_title) {
+  #'*Symbols are a kind of defused expression that represent objects in environments. sym() takes strings as input and turn them into symbols.*
+  hull_var <- sym(h_var)
+  # browser()
+  data <- data %>%
+    filter(!str_detect(sample, "u"))
+  # browser()
+  data <- data %>%
+    filter(!str_detect(crop, "20"))
+  # browser()
+  
+  color_palette <- c("#89C5DA", "#DA5724", "#74D944", "#CE50CA", "#3F4921",
+                     "#C0717C", "#5F7FC7", "#673770", "#D3D93E", "#508578", "#D7C1B1",
+                     "#689030", "#AD6F3B", "#CD9BCD", "#D14285", "#6DDE88", "#652926", "#7FDCC0",
+                     "#C84248", "#8569D5", "#5E738F", "#D1A33D", "#8A7C64", "#38333E", "#599861")
+  
+  hull <- data %>%
+    group_by(!!hull_var) %>%
+    slice(grDevices::chull(NMDS1, NMDS2))
+  # browser()
+  #'*h_var is "province"*
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) + #, show.legend = FALSE
+    geom_polygon(aes(colour = crop), data = hull, alpha = 0.5, fill = NA) + #, show.legend = FALSE
+    scale_shape_manual(values=c(9, 6, 8, 7, 11, 10,9,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) + #c(1, 5, 7) values=1:22
+    geom_point(aes(shape = province, colour = crop), size = 3) + #!!hull_var; show.legend = FALSE,
+    scale_color_manual(values=color_palette) + 
+    aes(fill = crop) +
+    labs(title = plot_title,
+         x = "NMDS1",
+         y = "NMDS2",
+         shape = "Province",
+         fill = tools::toTitleCase(h_var))
+  # plot + guides(shape = "none")
+
+  # plot + scale_color_manual(values=color_palette) +
+  #   scale_fill_manual(values=color_palette)
+  plot
+}
+
+plot_nmds_2_all <- function(data, h_var, plot_title) {
+  hull_var <- sym(h_var)
+  browser()
+  data <- data %>% 
+    filter(data, crop != "unexposed")
+  
+  hull <- data %>%
+    group_by(!!hull_var) %>%
+    slice(grDevices::chull(NMDS1, NMDS2))
+  
+  #'*h_var is "crop"*
+  plot <- ggplot(data, aes(x = NMDS1, y = NMDS2)) +
+    geom_polygon(aes(colour = crop), data = hull, alpha = 0.5, fill = NA) +
+    scale_shape_manual(values=c(7,9,10,12,3,4,8,11,0,15,1,16,2,17,25,6,5,23,60,61,35,36, 64, 38)) +
+    geom_point( aes(shape = province, colour = crop), size = 3) +
+    aes(fill = crop) +
+    labs(title = plot_title,
+         x = "NMDS1",
+         y = "NMDS2",
+         shape = "Province",
+         fill = tools::toTitleCase(h_var))
+  
   plot
 }
 
@@ -1517,16 +2442,135 @@ province_act_2_nmds <- function(province_crop_data, dataset_name, outdir) {
          bg = "white")
 }
 
-pair_act_2_nmds <- function(province_crop_data, dataset_name, outdir) {
-  province_crops_treat_nmds <- plot_nmds_2_paired(province_crop_data,
-                                                    "province",
-                                                    "NMDS: Paired Provinces")
-  ggsave(plot = province_crops_treat_nmds,
-         filename = glue("{outdir}/nmds_plot_province.png"),
-         bg = "white")
+nmds_cac_year <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_year_crop(province_crop_data,
+                                                           "year",
+                                                           "NMDS: Canola Oil Samples 2020 vs 2021")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_cac_year.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+nmds_hbb_year <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_year_crop(province_crop_data,
+                                                          "year",
+                                                          "NMDS: Highbush Blueberry Samples 2020 vs 2021")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_hbb_year.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+nmds_cra_year <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_year_crop(province_crop_data,
+                                                          "year",
+                                                          "NMDS: Cranberry Samples 2020 vs 2021")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_cra_year.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
 }
 
 
+nmds_cas_year <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_year_crop(province_crop_data,
+                                                          "year",
+                                                          "NMDS: Canola Seed Samples 2020 vs 2021")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_cas_year.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+unexp_nmds_AB_BC<- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_prov_unexp(province_crop_data,
+                                                  "crop",
+                                                  "NMDS: Alberta vs Britisth Columbia")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_AB_BC.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+unexp_nmds_AB_QC<- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_prov_unexp(province_crop_data,
+                                                           "crop",
+                                                           "NMDS: Alberta vs Quebec")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_AB_QC.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+unexp_nmds_AB_MB <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_prov_unexp(province_crop_data,
+                                                           "crop",
+                                                           "NMDS: Alberta vs Manitoba")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_AB_MB.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+unexp_nmds_AB_ON <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_paired_prov_unexp(province_crop_data,
+                                                           "crop",
+                                                           "NMDS: Alberta vs Ontario")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+                     filename = glue("{outdir}/nmds_plot_AB_ON.png"),
+                     bg = "white")
+  # browser()
+  return(province_crops_treat_nmds)
+}
+
+#'*crop needs to be changed to province for this to work. Might be other changes, definitely to plot_nmds_2_paired*
+pair_act_2_nmds_AB_BC <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_2_paired(province_crop_data,
+                                                    "crop",
+                                                    "NMDS: Paired Provinces")
+  savedplot = ggsave(plot = province_crops_treat_nmds,
+         filename = glue("{outdir}/nmds_plot_AB_BC.png"),
+         bg = "white")
+  browser()
+  return(province_crops_treat_nmds)
+}
+
+across_crop_act_2_nmds <- function(across_crops_data, dataset_name, outdir) {
+  across_crops_nmds <- plot_nmds_2_across(across_crops_data,
+                                                  "crop",
+                                                  "NMDS: All Crops, Across Provinces. Only Exposed Samples, for 2021")
+  ggsave(plot = across_crops_nmds,
+         filename = glue("{outdir}/nmds_plot_data_across_all_crops_prov_2021.png"),
+         width=8, height=10, dpi=300,
+         bg = "white")
+  return(across_crops_nmds)
+}
+
+pair_act_2_nmds_AB_QC <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_2_paired(province_crop_data,
+                                                  "province",
+                                                  "NMDS: Paired Provinces")
+  ggsave(plot = province_crops_treat_nmds,
+         filename = glue("{outdir}/nmds_plot_AB_QC.png"),
+         bg = "white")
+}
+
+pair_act_2_nmds_AB_MB <- function(province_crop_data, dataset_name, outdir) {
+  province_crops_treat_nmds <- plot_nmds_2_paired(province_crop_data,
+                                                  "province",
+                                                  "NMDS: Paired Provinces")
+  ggsave(plot = province_crops_treat_nmds,
+         filename = glue("{outdir}/nmds_plot_AB_MB.png"),
+         bg = "white")
+}
 # make and save nmds plots for genus and species levels using read data
 # uses raw reads to calculate proportions
 export("make_nmds_plots")
@@ -1580,32 +2624,149 @@ make_nmds_plots_provinces <- function(merged_crops, treatment_key, dataset_name,
   # browser()
   #'*at this point HBB21 is already corrupted - in the form HBB01u_t2>, when all the other provinces are in the form COR04e_t2_ON_20*
   province_data <- province_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
+  
 
 
   utils::write.csv(province_data,
                    file = glue("{outdir}/nmds_plot_data_provinces.csv"),
                    row.names = F)
 
-  province_act_2_nmds(province_data, dataset_name, outdir)
+  plotted = province_act_2_nmds(province_data, dataset_name, outdir)
+  
+  plotted
 }
 
+export("make_nmds_plots_across_crops")
+make_nmds_plots_across_crops <- function(merged_crops, treatment_key, dataset_name, outdir) {
+  # browser()
+  across_crops <- across_crops_prep_and_ano(merged_crops, treatment_key, "Across Crops Compared", dataset_name, outdir)
+  
+  utils::write.csv(across_crops,
+                   file = glue("{outdir}/nmds_plot_data_across_all_crops_prov.csv"),
+                   row.names = F)
+  
+  final_plot = across_crop_act_2_nmds(across_crops, dataset_name, outdir)
+  return(final_plot)
+}
+
+export("make_nmds_paired_crop_by_year")
+make_nmds_paired_crop_by_year <- function(merged_crops, treatment_key, dataset_name, outdir) {
+  # browser()
+  cac_paired <- cac_year_prep_and_ano(merged_crops, treatment_key, "CAC 20 21 Compared", dataset_name, outdir)
+  
+  utils::write.csv(cac_paired,
+                   file = glue("{outdir}/nmds_plot_data_cac_20_21.csv"),
+                   row.names = F)
+  
+  paired_years_cac = nmds_cac_year(cac_paired, dataset_name, outdir)
+  # browser()
+  #######
+  # browser()
+  cas_paired <- cas_year_prep_and_ano(merged_crops, treatment_key, "cas 20 21 Compared", dataset_name, outdir)
+  
+  utils::write.csv(cas_paired,
+                   file = glue("{outdir}/nmds_plot_data_cas_20_21.csv"),
+                   row.names = F)
+  
+  paired_years_cas = nmds_cas_year(cas_paired, dataset_name, outdir)
+  # browser()
+  #########
+  # browser()
+  cra_paired <- cra_year_prep_and_ano(merged_crops, treatment_key, "cra 20 21 Compared", dataset_name, outdir)
+  
+  utils::write.csv(cra_paired,
+                   file = glue("{outdir}/nmds_plot_data_cra_20_21.csv"),
+                   row.names = F)
+  
+  paired_years_cra = nmds_cra_year(cra_paired, dataset_name, outdir)
+  # browser()
+  ########
+  hbb_paired <- hbb_year_prep_and_ano(merged_crops, treatment_key, "hbb 20 21 Compared", dataset_name, outdir)
+  
+  utils::write.csv(hbb_paired,
+                   file = glue("{outdir}/nmds_plot_data_hbb_20_21.csv"),
+                   row.names = F)
+  
+  paired_years_hbb = nmds_hbb_year(hbb_paired, dataset_name, outdir)
+  # browser()
+}
+
+export("make_nmds_paired_prov_unex_by_crop")
+make_nmds_paired_prov_unex_by_crop <- function(merged_crops, treatment_key, dataset_name, outdir) {
+  # browser()
+  BC_AB_paired <- BC_AB_unexp_prep_and_ano(merged_crops, treatment_key, "BC AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(BC_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_BC_AB_unexp.csv"),
+                   row.names = F)
+  
+  paired_BCAB_unexp = unexp_nmds_AB_BC(BC_AB_paired, dataset_name, outdir)
+  # browser()
+  #######
+  QC_AB_paired <- QC_AB_unexp_prep_and_ano(merged_crops, treatment_key, "QC AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(QC_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_QC_AB_unexp.csv"),
+                   row.names = F)
+  
+  paired_QCAB_unexp = unexp_nmds_AB_QC(QC_AB_paired, dataset_name, outdir)
+  # browser()
+  #########
+  MB_AB_paired <- MB_AB_unexp_prep_and_ano(merged_crops, treatment_key, "MB AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(MB_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_MB_AB_unexp.csv"),
+                   row.names = F)
+  
+  paired_MBAB_unexp = unexp_nmds_AB_MB(MB_AB_paired, dataset_name, outdir)
+  ########
+  ON_AB_paired <- ON_AB_unexp_prep_and_ano(merged_crops, treatment_key, "ON AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(ON_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_ON_AB_unexp.csv"),
+                   row.names = F)
+  
+  paired_ONAB_unexp = unexp_nmds_AB_ON(ON_AB_paired, dataset_name, outdir)
+  
+  return(paired_BCAB_unexp)
+}
+
+#'*Ontario currently not covered (see last repeat of code)*
 export("make_nmds_plots_paired_provinces")
 make_nmds_plots_paired_provinces <- function(merged_crops, treatment_key, dataset_name, outdir) {
-  # browser()
-  #'*at this point HBB21 is already corrupted - in the form HBB01u_t2>, when all the other provinces are in the form COR04e_t2_ON_20*
-  BC_AB_paired <- BC_AB_pair_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
+# browser()
+  BC_AB_paired <- BC_AB_pair_prep_and_ano(merged_crops, treatment_key, "BC AB Compared", dataset_name, outdir)
 
   utils::write.csv(BC_AB_paired,
                    file = glue("{outdir}/nmds_plot_data_BC_AB.csv"),
                    row.names = F)
 
-  pair_act_2_nmds(BC_AB_paired, dataset_name, outdir)
-
-  QC_AB_paired <- QC_AB_pair_prep_and_ano(merged_crops, treatment_key, "provinces Compared", dataset_name, outdir)
+  paired_BCAB = pair_act_2_nmds_AB_BC(BC_AB_paired, dataset_name, outdir)
+  browser()
+#######
+  QC_AB_paired <- QC_AB_pair_prep_and_ano(merged_crops, treatment_key, "QC AB Compared", dataset_name, outdir)
 
   utils::write.csv(QC_AB_paired,
                    file = glue("{outdir}/nmds_plot_data_QC_AB.csv"),
                    row.names = F)
 
-  pair_act_2_nmds(QC_AB_paired, dataset_name, outdir)
+  pair_act_2_nmds_AB_QC(QC_AB_paired, dataset_name, outdir)
+#########
+  MB_AB_paired <- MB_AB_pair_prep_and_ano(merged_crops, treatment_key, "MB AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(QC_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_MB_AB.csv"),
+                   row.names = F)
+  
+  pair_act_2_nmds_AB_MB(MB_AB_paired, dataset_name, outdir)
+  ########
+  MB_AB_paired <- MB_AB_pair_prep_and_ano(merged_crops, treatment_key, "MB AB Compared", dataset_name, outdir)
+  
+  utils::write.csv(QC_AB_paired,
+                   file = glue("{outdir}/nmds_plot_data_MB_AB.csv"),
+                   row.names = F)
+  
+  pair_act_2_nmds_AB_MB(MB_AB_paired, dataset_name, outdir)
+  
+return(paired_BCAB)
 }
