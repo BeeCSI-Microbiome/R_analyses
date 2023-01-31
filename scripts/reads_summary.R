@@ -6,6 +6,7 @@ import("glue")
 import("dplyr")
 import("stringr")
 import("utils")
+import("tibble")
 # ------------------------------------------------------------------------------
 
 # ---------------------------------- Globals -----------------------------------
@@ -22,7 +23,7 @@ taxa_list <- c("root", # total classified reads in a sample
 # ------------------------------ Table Formatting ------------------------------
 
 export("create_summary_table")
-create_summary_table <- function(read_table, dataset_name){
+create_summary_table <- function(read_table, dataset_name, main_outdir){
   # Rename a duplicate taxa name
   read_table <- read_table %>% mutate(name = case_when(
     name == "Actinobacteria" & taxRank == "C" ~ "Actinomycetia",
@@ -83,6 +84,6 @@ create_summary_table <- function(read_table, dataset_name){
   ta <- ta %>% select(!matches("(?<!total)(classified|Bacteria|Apis_mellifera|Other_Eukaryota|Fungi)_reads", perl = TRUE))
   ta <- ta %>% relocate("percent_classified_Bacteria", .after = "percent_classified_Apis_mellifera")
 
-  write.table(ta, file = glue("results/{dataset_name}/{dataset_name}_read_summary.csv"), quote = F, sep = ",", row.names = F)
+  write.table(ta, file = glue("{main_outdir}/{dataset_name}_read_summary.csv"), quote = F, sep = ",", row.names = F)
   return(ta)
 }
