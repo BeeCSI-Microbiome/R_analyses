@@ -1,18 +1,33 @@
 ---
 title: "BeeCSI Taxonomic Analysis Report"
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+params:
+  dataset_name: "dataset_name"
 format:
   pdf:
-    output-file: "./results/oxy_2021"
     output-ext: "pdf"
     toc: true
     toc-depth: 2
 ---
-{{< pagebreak >}}
+\pagebreak
 
 # Experiment Details
 ```{r, echo = TRUE}
 # Data and metadata information
-dataset_name <- "oxy_2021"
+# dataset_name <- "soy_2020"
 experiment_key <- read.csv("Taxonomic_Experiment_Key.csv")
 ```
 **Grouping:**
@@ -60,21 +75,19 @@ treatmentNames
 subset(experiment_key$Description, experiment_key$dataset_key == dataset_name)
 ```
 
-
 ```{r install, message=FALSE, warning=FALSE, echo = FALSE}
 # install requirements and set directories. 
-if (!requireNamespace("glue", quietly = TRUE))
-    install.packages("glue")
-if (!requireNamespace("png", quietly = TRUE))
-    install.packages("png")
-
-library("glue")
-library("png")
+pkg_list <- c("glue", "png", "stringr", "tidyverse")
+for (pkg_name in pkg_list) {
+  if (!requireNamespace(pkg_name, quietly = TRUE))
+    install.packages(pkg_name)
+  library(pkg_name, character.only = TRUE)
+}
 
 path <- getwd()
 
 # Kept in case this ever gets changed. 
-main_outdir <- glue("{path}/results/{dataset_name}")
+main_outdir <- glue("{path}/results/act2_results/{dataset_name}")
 nmds_dir <- glue("{main_outdir}/nmds_anosim")
 alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
 rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
@@ -83,141 +96,197 @@ kraken_matrix_dir <-
   glue("{main_outdir}/aggregated_kraken_reports")
 # <DA> Subdirectory for DA results
 da_dir <- glue("{main_outdir}/differential_abundance")
-da_fitzig_dir <- glue("{da_dir}/fitzig")
 da_ancombc_dir <- glue("{da_dir}/ancombc")
-ind_sp_dir <- glue("{main_outdir}/differential_abundance/indicator_species_analysis")
+ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
+
+# Define a function for use later
+trim_path <- function(path_string) {
+  gsub('.*(R_analyses.*)','\\1',path_string)
+}
 
 ```
-{{< pagebreak >}}
+
+\pagebreak
 
 # Alpha Diversity
+
+**Base file location:**
+
+  * `r trim_path(alpha_div_dir)`
+
+```{r, echo = FALSE}
+kableExtra::kbl(c("alpha_stats.txt",
+               "alpha_div_data.csv",
+               "alpha_div_shannon.png",
+               "alpha_div_simpson.png"),
+  col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+**Alpha diversity** is a measurement of richness (number) and/or distribution (evenness) of taxa within a single sample. There are many indices by which alpha diversity is calculated. Two common indices are presented here:  **Simpson index** and **Shannon Index**.
+
+
 ## Kruskal Wallis Test
+
+The KW Test, like ANOVA, is a comparison of means between a set of groups. It is used when the data doesn't follow a normal distribution or doesn't have a big enough sample size. It has the following assumptions:
+
+- Dependent variable is measured at the ordinal or continuous level
+- Independent variable should have two or more independent, categorical groups
+- Observations are independent both between and within groups
+- All groups should have the same shape distributions
+
+In the following case, KW is used to compare the the alpha diversity measurements by replicate groups and by treatment groups for both the Shannon and Simpson indices. If a p-value is significant (e.g. < 0.05), **this indicates at least one pair of groups have significantly different median (mean on rank) values**, i.e. at least two groups have significantly different average alpha diversity.
 
 ```{r, echo = FALSE, comment=''}
 cat(readLines(glue('{alpha_div_dir}/alpha_stats.txt')), sep = "\n")
 ```
-{{< pagebreak >}}
+\pagebreak
 
 ## Alpha diversity value table
 ```{r, echo = FALSE}
-knitr::kable(glue("{alpha_div_dir}/alpha_div_data.csv"), col.names = "File Location")
-
 alphaSummary <- read.csv(glue("{alpha_div_dir}/alpha_div_data.csv"))
 
 alphaSummaryKey <- c("Sample", "Observed Richness", "Inverse Simpson", "Simpson", "Shannon", "Evenness", "Replicate", "Treatment")
 
-knitr::kable(alphaSummary, col.names = alphaSummaryKey, digits = 4)
+kableExtra::kbl(alphaSummary, col.names = alphaSummaryKey, booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"),
+                            full_width = TRUE)
 ```
-{{< pagebreak >}}
+\pagebreak
 
 ## Shannon Plot
-```{r, echo = FALSE}
-knitr::kable(glue("{alpha_div_dir}/alpha_div_shannon.png"), col.names = "File Location")
-
-# Figure Import 
-alphaShannon <- readPNG(glue("{alpha_div_dir}/alpha_div_shannon.png"), native = TRUE, info = TRUE)
-
-# displaying an imported image:
-grid::grid.raster(alphaShannon)
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+knitr::include_graphics(glue("{alpha_div_dir}/alpha_div_shannon.png"))
 treatmentNames
 ```
-{{< pagebreak >}}
+\pagebreak
 
 ## Simpson Plot
-```{r, echo = FALSE}
-knitr::kable(glue("{alpha_div_dir}/alpha_div_simpson.png"), col.names = "File Location")
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+knitr::include_graphics(glue("{alpha_div_dir}/alpha_div_simpson.png"))
 
-# Figure Import 
-alphaSimpson <- readPNG(glue("{alpha_div_dir}/alpha_div_simpson.png"), native = TRUE, info = TRUE)
-
-# displaying an imported image:
-grid::grid.raster(alphaSimpson)
 treatmentNames
 ```
-{{< pagebreak >}}
+\pagebreak
 
 # Differential Abundance - ANCOM-BC
 
-## ANCOM-BC: Taxa LevelGenus
+**Base file location:**
+
+  * `r trim_path(da_ancombc_dir)`
 
 ```{r, echo = FALSE}
-# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
+# Glob volcano plot file names - there may be multiple depending on treatment
+volc_plots <- Sys.glob(glue("{da_ancombc_dir}/*.png"))
 
-knitr::kable(glue("{da_ancombc_dir}/{dataset_name}_Genus_ancombc.csv"), col.names = "File Location")
+kableExtra::kbl(c(glue("{dataset_name}_Genus_ancombc.csv"),
+               glue("{dataset_name}_Species_ancombc.csv"),
+               basename(trim_path(volc_plots))),
+  col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
+```
+**Differential abundance analysis (DAA)** is used to identify taxa that are statistically more abundant in one condition than another. Many DAA methods are available, each with varying assumptions, false discovery control, and statistical power. There exists no benchmark standard method.
 
-# Generalize this the output names are not good for this right now. 
-genusANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Genus_ancombc.csv"))
+**ANCOM-BC** has the following properties:
 
-ancomColNames <- c("Genus", "log2", "lfc", "p-val", "q-val", "diff. abundant", "change type")
+- Has bias correction to account for the compositional quality of microbiome sequence data
+- Improved false-positive control
+- Adequate statistical power in comparison to other methods
 
-knitr::kable(genusANCOM, col.names = ancomColNames, digits = 4)
+and the following assumptions:
+
+- The expected relative abundance of each taxon in a random sample is equal to the relative abundance of the taxon in the ecosystem of the sample
+- Samples are independent between experimental groups
+- For a given taxon, all subjects within and between groups are independent
+- Variability among differentially abundant taxa is larger than that among the null taxa
+
+
+**Log-Fold-change**: in the following result tables and volcano plots, log-fold-change measures the magnitude by which a given taxon is differentially abundant compared to the control. A negative value indicates the taxon is less abundant in the treatment group than the control group, and a positive value indicates that the taxon is more abundant in the treatment group than the control group. With log2 (log base 2), magnitudes of -1 and 1 represent a two-fold decrease and increase in abundance, respectively.
+\pagebreak
+
+## ANCOM-BC: Taxa Level Genus
+
+```{r, echo = FALSE}
+# GENERALIZE FOR MULTIPLE TREATMENTS
+genusANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Genera_ancombc.csv"))
+
+ancomColNames <- c("Genus", "log2-fold-change", "lfc", "p-val", "q-val", "diff. abundant", "change type")
+
+kableExtra::kbl(genusANCOM, col.names = ancomColNames, booktabs = TRUE,
+                longtable = TRUE, digits = c(NA,3,3,7,7,NA,NA)) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"), font_size = 10) %>% 
+  kableExtra::column_spec(1, width = "12em") %>% 
+  kableExtra::column_spec(c(2,3), width = "4em") %>% 
+  kableExtra::column_spec(c(4,5), width = "6em") %>% 
+  kableExtra::column_spec(c(6,7), width = "5em")
 ```
 
-```{r, echo = FALSE}
-# Basically copied from Jonathan Ho's code. 
-controls <- c('control', 'unexposed')
-all_treatments = read.csv(glue("{main_outdir}/treatmentKey.csv"), header = TRUE)
-just_treats <- all_treatments[!all_treatments %in% controls]
-
-base_title <- 'Cage Control vs'
-  
-plot_title_i <-
-        paste(base_title, just_treats[1], '-', 'Genus', '-', dataset_name)
-
-Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-grid::grid.raster(Temp)
-
-```
-
-```{r, echo = FALSE}
-if (length(just_treats) == 2) {
-  plot_title_i <-
-          paste(base_title, just_treats[2], '-', 'Genus', '-', dataset_name)
-  
-  Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-  grid::grid.raster(Temp)
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+for (plot_path in volc_plots){
+  if (str_detect(plot_path, "Genera")) {
+    temp_path <- plot_path
+    break
+  }
 }
+knitr::include_graphics(temp_path)
 ```
-
-{{< pagebreak >}}
+\pagebreak
 
 ## ANCOM-BC: Taxa Level Species
 
 ```{r, echo = FALSE}
-# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
-
-knitr::kable(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"), col.names = "File Location")
-
-# Generalize this the output names are not good for this right now. 
 speciesANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"))
 
-ancomColNames <- c("Species", "log2", "lfc", "p-val", "q-val", "diff. abundant", "change type")
+ancomColNames <- c("Species", "log2-fold-change", "log10-fold-change", "p-val",
+                   "q-val", "diff. abundant", "change type")
 
-knitr::kable(speciesANCOM, col.names = ancomColNames, digits = 4)
-```
-{{< pagebreak >}}
-
-```{r, echo = FALSE}
-plot_title_i <-
-        paste(base_title, just_treats[1], '-', 'Species', '-', dataset_name)
-
-Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-grid::grid.raster(Temp)
-```
-
-```{r, echo = FALSE}
-if (length(just_treats) == 2) {
-  plot_title_i <-
-          paste(base_title, just_treats[2], '-', 'Species', '-', dataset_name)
+kableExtra::kbl(speciesANCOM, col.names = ancomColNames, booktabs = TRUE,
+                longtable = TRUE, digits = c(NA,3,3,7,7,NA,NA)) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"), font_size = 10) %>% 
+  kableExtra::column_spec(1, width = "12em") %>% 
+  kableExtra::column_spec(c(2,3), width = "4em") %>% 
+  kableExtra::column_spec(c(4,5), width = "6em") %>% 
+  kableExtra::column_spec(c(6,7), width = "5em")
   
-  Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-  grid::grid.raster(Temp)
+```
+\pagebreak
+
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+for (plot_path in volc_plots){
+  if (str_detect(plot_path, "Species")) {
+    temp_path <- plot_path
+    break
+  }
 }
+knitr::include_graphics(temp_path)
 ```
 
-{{< pagebreak >}}
+
+\pagebreak
 
 # Beta Diversity
+
+**Base file location:**
+
+  * `r trim_path(nmds_dir)`
+
+```{r, echo = FALSE}
+kableExtra::kbl(c("anosim.txt",
+               "nmds_plot_treatment_genus.png",
+               "nmds_plot_data_genus.csv",
+               "nmds_plot_treatment_species.png",
+               "nmds_plot_data_species.csv"),
+  col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
+```
+**Beta diversity** is a quantification of the degree of difference between communities (between samples). There are many indices by which beta diversity can be measured. For both the NMDS ordination plots and corresponding ANOSIM statistical tests, the Bray-Curtis dissimilarity index is used.
+
+The **ANOSIM test** (analysis of similarity) evaluates a ranked dissimilarity matrix (calculated here via Bray-Curtis), comparing the degree of difference between groups of samples. The groupings tested here are *replicate* and *treatment*. ANOSIM is a global test, meaning that a significant p-value indicates a significantly different community composition between at least one pair of groupings, but it does not indicate which pair(s). Both the genus- and species-level results are reported.
+
+Following the ANOSIM results, **NMDS** (non-metric multi-dimensional scaling) ordination plots are shown. Ordination methods attempt to represent the variance/correspondence between between multi-dimensional objects (e.g. taxonomic classification results of a set of microbiome samples) in a two dimensional plot. NMDS is rank based and was calculated using the Bray-Curtis index, so it corresponds quite well with the ANOSIM test results.
+
+On the NMDS plots, each point represents a sample, and the distances between samples convey the similarity between samples. The more similar the communities, the nearer the points on the plot and vice versa. Coloured polygons are used to show which samples share a treatment group, and point symbols are used to show which samples are within the same experimental replicate.
+
 ## ANOSIM Test
 ```{r, echo = FALSE, comment=''}
 temp <- readLines(glue("{nmds_dir}/anosim.txt"))
@@ -227,93 +296,85 @@ temp <-gsub(",\\s*distance",",\n\tdistance",temp)
 cat(temp, sep = "\n")
 ```
 
-{{< pagebreak >}}
+\pagebreak
 
 ## NMDS Plots
 ### NMDS: Taxa Level Genus
-```{r, echo = FALSE}
-knitr::kable(glue("{nmds_dir}/nmds_plot_treatment_genus.png"), col.names = "File Location")
-
-genusMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_genus.png"), native = TRUE, info = TRUE)
-grid::grid.raster(genusMNDS)
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+knitr::include_graphics(glue("{nmds_dir}/nmds_plot_treatment_genus.png"))
 ```
 
-{{< pagebreak >}}
+\pagebreak
 
 ```{r, echo = FALSE}
-# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
-
-knitr::kable(glue("{nmds_dir}/nmds_plot_data_genus.csv"), col.names = "File Location")
-
-# Generalize this the output names are not good for this right now. 
 genusNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_genus.csv"))
-knitr::kable(genusNMDS)
+kableExtra::kbl(genusNMDS, booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
-{{< pagebreak >}}
+\pagebreak
 
 ### NMDS: Taxa Level Species
-```{r, echo = FALSE}
-knitr::kable(glue("{nmds_dir}/nmds_plot_treatment_species.png"), col.names = "File Location")
-
-speciesMNDS <- readPNG(glue("{nmds_dir}/nmds_plot_treatment_species.png"), native = TRUE, info = TRUE)
-grid::grid.raster(speciesMNDS)
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+knitr::include_graphics(glue("{nmds_dir}/nmds_plot_treatment_species.png"))
 ```
 
-{{< pagebreak >}}
+\pagebreak
 
 ```{r, echo = FALSE}
-# I have to get the names changed or figure out Lance's method if it is modular and I missed it. 
-
-knitr::kable(glue("{nmds_dir}/nmds_plot_data_species.csv"), col.names = "File Location")
-
 # Generalize this the output names are not good for this right now. 
 speciesNMDS <- read.csv(glue("{nmds_dir}/nmds_plot_data_species.csv"))
-knitr::kable(speciesNMDS)
+kableExtra::kbl(speciesNMDS, booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
-{{< pagebreak >}}
+\pagebreak
 
 # Relative Abundance
-```{r, echo = FALSE}
-knitr::kable(glue("{rel_abund_dir}/relative_abundance_plot.png"), col.names = "File Location")
 
-speciesMNDS <- readPNG(glue("{rel_abund_dir}/relative_abundance_plot.png"), native = TRUE, info = TRUE)
-grid::grid.raster(speciesMNDS)
-```
+**Base file location:**
 
-{{< pagebreak >}}
+  * `r trim_path(rel_abund_dir)`
 
 ```{r, echo = FALSE}
-# Generalize this the output names are not good for this right now. 
-# Make wide table into long table?
-
-knitr::kable(glue("{rel_abund_dir}/relative_abundance_proportions.csv"), col.names = "File Location")
-
-relativeAbundanceCSV <- read.csv(glue("{rel_abund_dir}/relative_abundance_proportions.csv"))
-
-RelColNames <-  colnames(relativeAbundanceCSV)
-RelColNames <- gsub('.', '\ ', RelColNames, fixed = TRUE)
-
-colnames(relativeAbundanceCSV) <- RelColNames
-
-knitr::kable(relativeAbundanceCSV[,c(1,2,3,4,14,15)], digits = 4)
-knitr::kable(relativeAbundanceCSV[,c(1,5,6,7,14,15)], digits = 4)
-knitr::kable(relativeAbundanceCSV[,c(1,8,9,10,14,15)], digits = 4)
-knitr::kable(relativeAbundanceCSV[,c(1,11,12,13,14,15)], digits = 4)
+kableExtra::kbl(c("relative_abundance_plot.png",
+               "relative_abundance_proportions.csv"),
+             col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
-{{< pagebreak >}}
+
+The following plots display the relative abundances (proportions) of *classified bacterial* sequence reads for a dedicated set genera, species, and groupings near those taxa levels, by sample. The taxa included were determined by the BeeCSI microbiome team and include the core honey bee microbiome members, some pathogenic bacteria, and a grouping for "all other bacteria". Additional taxa may be included on a dataset-by-dataset basis if they were classified above a 1% threshold in multiple samples.
+
+The results consist only of classified reads, so the proportion of reads that were unable to be classified in each sample are excluded. Additionally, only bacterial reads are included, so reads classified as eukaryota (including host) are excluded.
+
+
+```{r, echo = FALSE, fig.fullwidth=TRUE}
+knitr::include_graphics(glue("{rel_abund_dir}/relative_abundance_plot.png"))
+```
+
+\pagebreak
 
 # Differential Abundance: IndicSpecies (Indicator Species Analysis)
-## Factor: Treatment - Taxa Level: All
-``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.txt"))
 
-temp <-gsub("\t","",temp)
+For complete results of indicSpecies analyses, including non-significant results, consult the following files:
 
-cat(temp, sep = "\n")
+**Base file location:**
+
+  * `r trim_path(ind_sp_dir)`
+  
+```{r, echo = FALSE}
+kableExtra::kbl(c(glue("{dataset_name}_treatment_indicators_Genus.txt"),
+  glue("{dataset_name}_treatment_indicators_Species.txt"),
+  glue("{dataset_name}_replicate_indicators_Genus.txt"),
+  glue("{dataset_name}_replicate_indicators_Species.txt")),
+  col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
-{{< pagebreak >}}
+Because of the diversity of **Differential Abundance Analysis** (DAA) methods, a secondary method has been implemented. Indicator Species Analysis, from the indicSpecies package, assesses statistical significance of the relationship between taxa abundance and sample groupings. The function `multipatt` from indicSpecies was used with the function option `r.g`.
+
+The following are the indicSpecies results, formatted as the default output of the package. The analysis was performed for the both the treatment and replicate factors for both genus and species levels (although the default output refers to "species" in all cases). Only significant results are displayed here.
+
+\pagebreak
 
 ## Factor: Treatment - Taxa Level: Genus
 ``` {r, echo = FALSE, comment=''}
@@ -323,7 +384,7 @@ temp <-gsub("\t","",temp)
 
 cat(temp, sep = "\n")
 ```
-{{< pagebreak >}}
+\pagebreak
 
 ## Factor: Treatment - Taxa Level: Species
 ``` {r, echo = FALSE, comment=''}
@@ -333,17 +394,7 @@ temp <-gsub("\t","",temp)
 
 cat(temp, sep = "\n")
 ```
-{{< pagebreak >}}
-
-## Factor: Replicate - Taxa Level: All
-``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.txt"))
-
-temp <-gsub("\t","",temp)
-
-cat(temp, sep = "\n")
-```
-{{< pagebreak >}}
+\pagebreak
 
 ## Factor: Replicate - Taxa Level: Genus
 ``` {r, echo = FALSE, comment=''}
@@ -353,7 +404,7 @@ temp <-gsub("\t","",temp)
 
 cat(temp, sep = "\n")
 ```
-{{< pagebreak >}}
+\pagebreak
 
 ## Factor: Replicate - Taxa Level: Species
 ``` {r, echo = FALSE, comment=''}
@@ -363,63 +414,18 @@ temp <-gsub("\t","",temp)
 
 cat(temp, sep = "\n")
 ```
-{{< pagebreak >}}
+\pagebreak
 
-# Appendix A - IndicSpecies 
-## Treatment - All
+For complete results of indicSpecies analyses, including non-significant results, consult the following files:
+
+**Base file location:**
+
+  * `r trim_path(ind_sp_dir)`
 ```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.csv"), col.names = "File Location")
-
-TreatAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_all.csv"))
-
-knitr::kable(TreatAll, digits = 3)
-```
-{{< pagebreak >}}
-
-## Treatment - Genus
-```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.csv"), col.names = "File Location")
-
-TreatGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.csv"))
-
-knitr::kable(TreatGenus, digits = 3)
-```
-{{< pagebreak >}}
-
-## Treatment - Species
-```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.csv"), col.names = "File Location")
-
-TreatSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.csv"))
-
-knitr::kable(TreatSpp, digits = 3)
-```
-{{< pagebreak >}}
-## Replicate - All
-```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.csv"), col.names = "File Location")
-
-RepAll <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_all.csv"))
-
-knitr::kable(RepAll, digits = 3)
-```
-{{< pagebreak >}}
-
-## Replicate - Genus
-```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.csv"), col.names = "File Location")
-
-RepGenus <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.csv"))
-
-knitr::kable(RepGenus, digits = 3)
-```
-{{< pagebreak >}}
-
-## Replicate - Species
-```{r, echo = FALSE}
-knitr::kable(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.csv"), col.names = "File Location")
-
-RepSpp <- read.csv(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.csv"))
-
-knitr::kable(RepSpp, digits = 3)
+kableExtra::kbl(c(glue("{dataset_name}_treatment_indicators_Genus.csv"),
+  glue("{dataset_name}_treatment_indicators_Species.csv"),
+  glue("{dataset_name}_replicate_indicators_Genus.csv"),
+  glue("{dataset_name}_replicate_indicators_Species.csv")),
+  col.names = "File names", booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
