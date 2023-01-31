@@ -312,6 +312,7 @@ calc_nmds <- function(data) {
 
 # runs anosim and saves results in a text file in results folder
 calc_ano <- function(d, group_data, taxa_level, dataset_name, outdir) {
+
   heading <- paste(taxa_level, "ANOSIM results:\n")
   ano_data <- select(d, -"sample") %>%
     as.matrix()
@@ -483,7 +484,6 @@ taxa_cutoff_explore <- function(taxa_count_matrix, dataset_name) {
   pc_sc[c(-1,-2)] <- sapply(X=colnames(pc_sc[c(-1,-2)]),
                             FUN = function(colname){
                               col <- pc_sc[,colname]
-                              #print(bac_sc[[colname]])
                               col / bac_sc[[colname]] * 100
                             })
 
@@ -496,11 +496,14 @@ taxa_cutoff_explore <- function(taxa_count_matrix, dataset_name) {
              taxRank == "S") %>%
     mutate(new_taxa_of_interest = !str_detect(name, taxa_of_interest_regex))
 
+  # Sheet name must be substring first 31 chars of dataset_name to fit xlsx
+  truncated_dataset_name <- str_sub(dataset_name, 1, 31)
+
   xl_file <- loadWorkbook("additional_taxa_above_1p.xlsx")
-  tryCatch({addWorksheet(xl_file, dataset_name)},
+  tryCatch({addWorksheet(xl_file, truncated_dataset_name)},
            error=function(cond){message(cond)})
 
-  writeData(xl_file, sheet = dataset_name,
+  writeData(xl_file, sheet = truncated_dataset_name,
             x = select(taxa_above_cutoff, name, taxRank, new_taxa_of_interest))
   saveWorkbook(xl_file, "additional_taxa_above_1p.xlsx", overwrite = TRUE)
 
