@@ -27,7 +27,7 @@ format:
 # Experiment Details
 ```{r, echo = TRUE}
 # Data and metadata information
-# dataset_name <- "soy_2020"
+
 experiment_key <- read.csv("Taxonomic_Experiment_Key.csv")
 ```
 **Grouping:**
