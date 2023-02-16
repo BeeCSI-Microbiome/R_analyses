@@ -1,0 +1,351 @@
+Stressor,Province,Lab,Type,Code,Replicate,Dose,Treatment,Sample
+Amitraz,Ontario,Amro,Cage,AMZ,1,d0,not exposed,AMZ01_d0_M
+Amitraz,Ontario,Amro,Cage,AMZ,1,d1,exposed,AMZ01_d1_M
+Amitraz,Ontario,Amro,Cage,AMZ,2,d0,not exposed,AMZ02_d0_M
+Amitraz,Ontario,Amro,Cage,AMZ,2,d1,exposed,AMZ02_d1_M
+Amitraz,Manitoba,Rob,Cage,AMZ,4,d0,not exposed,AMZ04_d0_M
+Amitraz,Manitoba,Rob,Cage,AMZ,4,d1,exposed,AMZ04_d1_M
+Amitraz,Manitoba,Rob,Cage,AMZ,5,d0,not exposed,AMZ05_d0_M
+Amitraz,Manitoba,Rob,Cage,AMZ,5,d1,exposed,AMZ05_d1_M
+Amitraz,Manitoba,Rob,Cage,AMZ,6,d0,not exposed,AMZ06_d0_M
+Amitraz,Manitoba,Rob,Cage,AMZ,6,d1,exposed,AMZ06_d1_M
+Chalkbrood,Alberta,Steve,Colony,CHA,6,d0,not inoculated,CHA06_d0_M
+Chalkbrood,Alberta,Steve,Colony,CHA,6,d1,inoculated,CHA06_d1_M
+Chalkbrood,Alberta,Steve,Colony,CHA,7,d0,not inoculated,CHA07_d0_M
+Chalkbrood,Alberta,Steve,Colony,CHA,7,d1,inoculated,CHA07_d1_M
+Chalkbrood,Alberta,Steve,Colony,CHA,8,d0,not inoculated,CHA08_d0_M
+Chalkbrood,Alberta,Steve,Colony,CHA,8,d1,inoculated,CHA08_d1_M
+Chalkbrood,Alberta,Steve,Colony,CHA,14,d0,not inoculated,CHA14_d0_M
+Chalkbrood,Alberta,Steve,Colony,CHA,14,d1,inoculated,CHA14_d1_M
+Chalkbrood,Alberta,Steve,Colony,CHA,15,d0,not inoculated,CHA15_d0_M
+Chalkbrood,Alberta,Steve,Colony,CHA,15,d1,inoculated,CHA15_d1_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,1,d0,not exposed,CFS01_d0_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,1,dC,chronic chlorantranili.,CFS01_dC_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,1,dF,chronic flupyradifurone,CFS01_dF_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,1,dS,chronic sulfoxaflor,CFS01_dS_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,2,d0,not exposed,CFS02_d0_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,2,dC,chronic chlorantranili.,CFS02_dC_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,2,dF,chronic flupyradifurone,CFS02_dF_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,2,dS,chronic sulfoxaflor,CFS02_dS_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,3,d0,not exposed,CFS03_d0_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,3,dC,chronic chlorantranili.,CFS03_dC_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,3,dF,chronic flupyradifurone,CFS03_dF_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Amro,Colony,CFS,3,dS,chronic sulfoxaflor,CFS03_dS_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,5,d0,not exposed,CFS05_d0_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,5,dC,chronic chlorantranili.,CFS05_dC_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,5,dF,chronic flupyradifurone,CFS05_dF_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,5,dS,chronic sulfoxaflor,CFS05_dS_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,6,d0,not exposed,CFS06_d0_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,6,dC,chronic chlorantranili.,CFS06_dC_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,6,dF,chronic flupyradifurone,CFS06_dF_M
+Chlorantranili. + flupyradifurone + sulfoxaflor,Ontario,Ernesto,Colony,CFS,6,dS,chronic sulfoxaflor,CFS06_dS_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,2,d0,not exposed,CTX02_d0_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,2,dC,chronic clothian,CTX02_dC_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,2,dT,chronic thiameth,CTX02_dT_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,3,d0,not exposed,CTX03_d0_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,3,dC,chronic clothian,CTX03_dC_M
+Clothian&Thiameth,Ontario,Amro,Colony,CTX,3,dT,chronic thiameth,CTX03_dT_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,4,d0,not exposed,CTX04_d0_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,4,dC,chronic clothian,CTX04_dC_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,4,dT,chronic thiameth,CTX04_dT_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,5,d0,not exposed,CTX05_d0_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,5,dC,chronic clothian,CTX05_dC_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,5,dT,chronic thiameth,CTX05_dT_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,6,d0,not exposed,CTX06_d0_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,6,dC,chronic clothian,CTX06_dC_M
+Clothian&Thiameth,Ontario,Ernesto,Colony,CTX,6,dT,chronic thiameth,CTX06_dT_M
+Clothianidin,Ontario,Amro,Cage,CLO,1,d0,not exposed,CLO01_d0_M
+Clothianidin,Ontario,Amro,Cage,CLO,1,d1,sublethal,CLO01_d1_M
+Clothianidin,Ontario,Amro,Cage,CLO,1,d2,acute,CLO01_d2_M
+Clothianidin,Ontario,Amro,Cage,CLO,2,d0,not exposed,CLO02_d0_M
+Clothianidin,Ontario,Amro,Cage,CLO,2,d1,sublethal,CLO02_d1_M
+Clothianidin,Ontario,Amro,Cage,CLO,2,d2,acute,CLO02_d2_M
+Clothianidin,Ontario,Amro,Cage,CLO,3,d0,not exposed,CLO03_d0_M
+Clothianidin,Ontario,Amro,Cage,CLO,3,d1,sublethal,CLO03_d1_M
+Clothianidin,Ontario,Amro,Cage,CLO,3,d2,acute,CLO03_d2_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,5,d0,not exposed,CLO05_d0_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,5,d1,sublethal,CLO05_d1_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,5,d2,acute,CLO05_d2_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,6,d0,not exposed,CLO06_d0_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,6,d1,sublethal,CLO06_d1_M
+Clothianidin,Ontario,Ernesto,Cage,CLO,6,d2,acute,CLO06_d2_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,1,d0,not exposed,FMA01_d0_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,1,d1,low exposure,FMA01_d1_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,1,d2,high exposure,FMA01_d2_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,2,d0,not exposed,FMA02_d0_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,2,d1,low exposure,FMA02_d1_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,2,d2,high exposure,FMA02_d2_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,3,d0,not exposed,FMA03_d0_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,3,d1,low exposure,FMA03_d1_M
+Formic Acid,Ontario,Ernesto,Cage,FMA,3,d2,high exposure,FMA03_d2_M
+Formic Acid,Manitoba,Rob,Cage,FMA,4,d0,not exposed,FMA04_d0_M
+Formic Acid,Manitoba,Rob,Cage,FMA,4,d1,low exposure,FMA04_d1_M
+Formic Acid,Manitoba,Rob,Cage,FMA,4,d2,high exposure,FMA04_d2_M
+Formic Acid,Manitoba,Rob,Cage,FMA,5,d0,not exposed,FMA05_d0_M
+Formic Acid,Manitoba,Rob,Cage,FMA,5,d1,low exposure,FMA05_d1_M
+Formic Acid,Manitoba,Rob,Cage,FMA,5,d2,high exposure,FMA05_d2_M
+Foulbrood,Alberta,Steve,Colony,AFB,8,d0,not infected,AFB08_d0_M
+Foulbrood,Alberta,Steve,Colony,AFB,8,d1,subclinical,AFB08_d1_M
+Foulbrood,Alberta,Steve,Colony,AFB,8,d2,clinical,AFB08_d2_M
+Foulbrood,Alberta,Steve,Colony,AFB,9,d0,not infected,AFB09_d0_M
+Foulbrood,Alberta,Steve,Colony,AFB,9,d1,subclinical,AFB09_d1_M
+Foulbrood,Alberta,Steve,Colony,AFB,9,d2,clinical,AFB09_d2_M
+Foulbrood,Alberta,Steve,Colony,AFB,10,d0,not infected,AFB10_d0_M
+Foulbrood,Alberta,Steve,Colony,AFB,10,d1,subclinical,AFB10_d1_M
+Foulbrood,Alberta,Steve,Colony,AFB,10,d2,clinical,AFB10_d2_M
+Foulbrood,Alberta,Steve,Colony,AFB,11,d0,not infected,AFB11_d0_M
+Foulbrood,Alberta,Steve,Colony,AFB,11,d1,subclinical,AFB11_d1_M
+Foulbrood,Alberta,Steve,Colony,AFB,11,d2,clinical,AFB11_d2_M
+Foulbrood,Alberta,Steve,Colony,AFB,12,d0,not infected,AFB12_d0_M
+Foulbrood,Alberta,Steve,Colony,AFB,12,d1,subclinical,AFB12_d1_M
+Foulbrood,Alberta,Steve,Colony,AFB,12,d2,clinical,AFB12_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_CTL,1,d0,not exposed,A_CTL01_d0_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,1,d1,low exposure boscalid,A_BOS01_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,1,d1,low exposure fludioxonil,A_FLX01_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,1,d1,low exposure pyrimethanil,A_PYM01_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,1,d2,high exposure boscalid,A_BOS01_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,1,d2,high exposure fludioxonil,A_FLX01_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,1,d2,high exposure pyrimethanil,A_PYM01_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_CTL,2,d0,not exposed,A_CTL02_d0_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,2,d1,low exposure boscalid,A_BOS02_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,2,d1,low exposure fludioxonil,A_FLX02_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,2,d1,low exposure pyrimethanil,A_PYM02_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,2,d2,high exposure boscalid,A_BOS02_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,2,d2,high exposure fludioxonil,A_FLX02_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,2,d2,high exposure pyrimethanil,A_PYM02_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_CTL,3,d0,not exposed,A_CTL03_d0_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,3,d1,low exposure boscalid,A_BOS03_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,3,d1,low exposure fludioxonil,A_FLX03_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,3,d1,low exposure pyrimethanil,A_PYM03_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_BOS,3,d2,high exposure boscalid,A_BOS03_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_FLX,3,d2,high exposure fludioxonil,A_FLX03_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,Ontario,Amro,Cage,A_PYM,3,d2,high exposure pyrimethanil,A_PYM03_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_CTL,4,d0,not exposed,A_CTL04_d0_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_BOS,4,d1,low exposure boscalid,A_BOS04_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_FLX,4,d1,low exposure fludioxonil,A_FLX04_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_PYM,4,d1,low exposure pyrimethanil,A_PYM04_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_BOS,4,d2,high exposure boscalid,A_BOS04_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_FLX,4,d2,high exposure fludioxonil,A_FLX04_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_PYM,4,d2,high exposure pyrimethanil,A_PYM04_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_CTL,6,d0,not exposed,A_CTL06_d0_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_BOS,6,d1,low exposure boscalid,A_BOS06_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_FLX,6,d1,low exposure fludioxonil,A_FLX06_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_PYM,6,d1,low exposure pyrimethanil,A_PYM06_d1_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_BOS,6,d2,high exposure boscalid,A_BOS06_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_FLX,6,d2,high exposure fludioxonil,A_FLX06_d2_M
+Group A: boscalid + fludioxonil + pyrimethanil,British Columbia,Leonard,Cage,A_PYM,6,d2,high exposure pyrimethanil,A_PYM06_d2_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_CTL,1,d0,not exposed,B_CTL01_d0_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_FLY,1,d1,low exposure fluopyram,B_FLY01_d1_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_PYC,1,d1,low exposure pyraclostrobin,B_PYC01_d1_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_FLY,1,d2,high exposure fluopyram,B_FLY01_d2_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_PYC,1,d2,high exposure pyraclostrobin,B_PYC01_d2_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_CTL,2,d0,not exposed,B_CTL02_d0_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_FLY,2,d1,low exposure fluopyram,B_FLY02_d1_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_PYC,2,d1,low exposure pyraclostrobin,B_PYC02_d1_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_FLY,2,d2,high exposure fluopyram,B_FLY02_d2_M
+Group B: fluopyram + pyraclostrobin,Ontario,Ernesto,Cage,B_PYC,2,d2,high exposure pyraclostrobin,B_PYC02_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_CTL,4,d0,not exposed,B_CTL04_d0_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,4,d1,low exposure fluopyram,B_FLY04_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,4,d1,low exposure pyraclostrobin,B_PYC04_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,4,d2,high exposure fluopyram,B_FLY04_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,4,d2,high exposure pyraclostrobin,B_PYC04_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_CTL,5,d0,not exposed,B_CTL05_d0_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,5,d1,low exposure fluopyram,B_FLY05_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,5,d1,low exposure pyraclostrobin,B_PYC05_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,5,d2,high exposure fluopyram,B_FLY05_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,5,d2,high exposure pyraclostrobin,B_PYC05_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_CTL,6,d0,not exposed,B_CTL06_d0_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,6,d1,low exposure fluopyram,B_FLY06_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,6,d1,low exposure pyraclostrobin,B_PYC06_d1_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_FLY,6,d2,high exposure fluopyram,B_FLY06_d2_M
+Group B: fluopyram + pyraclostrobin,British Columbia,Leonard,Cage,B_PYC,6,d2,high exposure pyraclostrobin,B_PYC06_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CTL,1,d0,not exposed,C_CTL01_d0_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,1,d1,low exposure chlorantraniliprole,C_CHL01_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,1,d1,low exposure spinetoram,C_SPN01_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,1,d1,low exposure spirotetramat,C_SPR01_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,1,d2,high exposure chlorantraniliprole,C_CHL01_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,1,d2,high exposure spinetoram,C_SPN01_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,1,d2,high exposure spirotetramat,C_SPR01_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CTL,2,d0,not exposed,C_CTL02_d0_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,2,d1,low exposure chlorantraniliprole,C_CHL02_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,2,d1,low exposure spinetoram,C_SPN02_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,2,d1,low exposure spirotetramat,C_SPR02_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,2,d2,high exposure chlorantraniliprole,C_CHL02_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,2,d2,high exposure spinetoram,C_SPN02_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,2,d2,high exposure spirotetramat,C_SPR02_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CTL,3,d0,not exposed,C_CTL03_d0_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,3,d1,low exposure chlorantraniliprole,C_CHL03_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,3,d1,low exposure spinetoram,C_SPN03_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,3,d1,low exposure spirotetramat,C_SPR03_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_CHL,3,d2,high exposure chlorantraniliprole,C_CHL03_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPN,3,d2,high exposure spinetoram,C_SPN03_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Amro,Cage,C_SPR,3,d2,high exposure spirotetramat,C_SPR03_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CTL,5,d0,not exposed,C_CTL05_d0_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CHL,5,d1,low exposure chlorantraniliprole,C_CHL05_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPN,5,d1,low exposure spinetoram,C_SPN05_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPR,5,d1,low exposure spirotetramat,C_SPR05_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CHL,5,d2,high exposure chlorantraniliprole,C_CHL05_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPN,5,d2,high exposure spinetoram,C_SPN05_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPR,5,d2,high exposure spirotetramat,C_SPR05_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CTL,6,d0,not exposed,C_CTL06_d0_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CHL,6,d1,low exposure chlorantraniliprole,C_CHL06_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPN,6,d1,low exposure spinetoram,C_SPN06_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPR,6,d1,low exposure spirotetramat,C_SPR06_d1_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_CHL,6,d2,high exposure chlorantraniliprole,C_CHL06_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPN,6,d2,high exposure spinetoram,C_SPN06_d2_M
+Group C: chlorantraniliprole + spinetoram + spirotetramat,Ontario,Ernesto,Cage,C_SPR,6,d2,high exposure spirotetramat,C_SPR06_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_CTL,1,d0,not exposed,D_CTL01_d0_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,1,d1,low exposure flupyradifurone,D_FLP01_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,1,d1,low exposure sulfoxaflor,D_SUL01_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,1,d2,high exposure flupyradifurone,D_FLP01_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,1,d2,high exposure sulfoxaflor,D_SUL01_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_CTL,2,d0,not exposed,D_CTL02_d0_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,2,d1,low exposure flupyradifurone,D_FLP02_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,2,d1,low exposure sulfoxaflor,D_SUL02_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,2,d2,high exposure flupyradifurone,D_FLP02_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,2,d2,high exposure sulfoxaflor,D_SUL02_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_CTL,3,d0,not exposed,D_CTL03_d0_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,3,d1,low exposure flupyradifurone,D_FLP03_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,3,d1,low exposure sulfoxaflor,D_SUL03_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_FLP,3,d2,high exposure flupyradifurone,D_FLP03_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Amro,Cage,D_SUL,3,d2,high exposure sulfoxaflor,D_SUL03_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_CTL,4,d0,not exposed,D_CTL04_d0_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_FLP,4,d1,low exposure flupyradifurone,D_FLP04_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_SUL,4,d1,low exposure sulfoxaflor,D_SUL04_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_FLP,4,d2,high exposure flupyradifurone,D_FLP04_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_SUL,4,d2,high exposure sulfoxaflor,D_SUL04_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_CTL,5,d0,not exposed,D_CTL05_d0_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_FLP,5,d1,low exposure flupyradifurone,D_FLP05_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_SUL,5,d1,low exposure sulfoxaflor,D_SUL05_d1_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_FLP,5,d2,high exposure flupyradifurone,D_FLP05_d2_M
+Group D: flupyradifurone + sulfoxaflor,Ontario,Ernesto,Cage,D_SUL,5,d2,high exposure sulfoxaflor,D_SUL05_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_CTL,1,d0,not exposed,E_CTL01_d0_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,1,d1,low exposure glyphosate,E_GLY01_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,1,d1,low exposure metconazole,E_MET01_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,1,d2,high exposure glyphosate,E_GLY01_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,1,d2,high exposure metconazole,E_MET01_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_CTL,2,d0,not exposed,E_CTL02_d0_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,2,d1,low exposure glyphosate,E_GLY02_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,2,d1,low exposure metconazole,E_MET02_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,2,d2,high exposure glyphosate,E_GLY02_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,2,d2,high exposure metconazole,E_MET02_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_CTL,3,d0,not exposed,E_CTL03_d0_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,3,d1,low exposure glyphosate,E_GLY03_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,3,d1,low exposure metconazole,E_MET03_d1_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_GLY,3,d2,high exposure glyphosate,E_GLY03_d2_M
+Group E: glyphosate + metconazole,Ontario,Amro,Cage,E_MET,3,d2,high exposure metconazole,E_MET03_d2_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_CTL,5,d0,not exposed,E_CTL05_d0_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_GLY,5,d1,low exposure glyphosate,E_GLY05_d1_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_MET,5,d1,low exposure metconazole,E_MET05_d1_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_GLY,5,d2,high exposure glyphosate,E_GLY05_d2_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_MET,5,d2,high exposure metconazole,E_MET05_d2_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_CTL,6,d0,not exposed,E_CTL06_d0_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_GLY,6,d1,low exposure glyphosate,E_GLY06_d1_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_MET,6,d1,low exposure metconazole,E_MET06_d1_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_GLY,6,d2,high exposure glyphosate,E_GLY06_d2_M
+Group E: glyphosate + metconazole,Ontario,Ernesto,Cage,E_MET,6,d2,high exposure metconazole,E_MET06_d2_M
+IAPV,Manitoba,Rob,Cage,IAP,1,d0,not infected,IAP01_d0_M
+IAPV,Manitoba,Rob,Cage,IAP,1,d1,infected,IAP01_d1_M
+IAPV,Manitoba,Rob,Cage,IAP,2,d0,not infected,IAP02_d0_M
+IAPV,Manitoba,Rob,Cage,IAP,2,d1,infected,IAP02_d1_M
+IAPV,Manitoba,Rob,Cage,IAP,3,d0,not infected,IAP03_d0_M
+IAPV,Manitoba,Rob,Cage,IAP,3,d1,infected,IAP03_d1_M
+IAPV,British Columbia,Leonard,Cage,IAP,4,d0,not infected,IAP04_d0_M
+IAPV,British Columbia,Leonard,Cage,IAP,4,d1,infected,IAP04_d1_M
+IAPV,British Columbia,Leonard,Cage,IAP,5,d0,not infected,IAP05_d0_M
+IAPV,British Columbia,Leonard,Cage,IAP,5,d1,infected,IAP05_d1_M
+Nosema,Quebec,Pierre,Cage,NOS,1,d0,0 spores/bee,NOS01_d0_M
+Nosema,Quebec,Pierre,Cage,NOS,1,d1,104 spores/bee,NOS01_d1_M
+Nosema,Quebec,Pierre,Cage,NOS,1,d2,105 spores/bee,NOS01_d2_M
+Nosema,Quebec,Pierre,Cage,NOS,2,d0,0 spores/bee,NOS02_d0_M
+Nosema,Quebec,Pierre,Cage,NOS,2,d1,104 spores/bee,NOS02_d1_M
+Nosema,Quebec,Pierre,Cage,NOS,2,d2,105 spores/bee,NOS02_d2_M
+Nosema,Alberta,Steve,Cage,NOS,3,d0,0 spores/bee,NOS03_d0_M
+Nosema,Alberta,Steve,Cage,NOS,3,d1,104 spores/bee,NOS03_d1_M
+Nosema,Alberta,Steve,Cage,NOS,3,d2,105 spores/bee,NOS03_d2_M
+Nosema,Alberta,Steve,Cage,NOS,4,d0,0 spores/bee,NOS04_d0_M
+Nosema,Alberta,Steve,Cage,NOS,4,d1,104 spores/bee,NOS04_d1_M
+Nosema,Alberta,Steve,Cage,NOS,4,d2,105 spores/bee,NOS04_d2_M
+Nosema,Quebec,Pierre,Cage,NOS,6,d0,0 spores/bee,NOS06_d0_M
+Nosema,Quebec,Pierre,Cage,NOS,6,d1,104 spores/bee,NOS06_d1_M
+Nosema,Quebec,Pierre,Cage,NOS,6,d2,105 spores/bee,NOS06_d2_M
+Oxalic Acid,Ontario,Ernesto,Cage,OXA,1,d0,not exposed,OXA01_d0_M
+Oxalic Acid,Ontario,Ernesto,Cage,OXA,1,d1,exposed,OXA01_d1_M
+Oxalic Acid,Ontario,Ernesto,Cage,OXA,2,d0,not exposed,OXA02_d0_M
+Oxalic Acid,Ontario,Ernesto,Cage,OXA,2,d1,exposed,OXA02_d1_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,4,d0,not exposed,OXA04_d0_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,4,d1,exposed,OXA04_d1_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,5,d0,not exposed,OXA05_d0_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,5,d1,exposed,OXA05_d1_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,6,d0,not exposed,OXA06_d0_M
+Oxalic Acid,Manitoba,Rob,Cage,OXA,6,d1,exposed,OXA06_d1_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,1,d0,not exposed,OXY01_d0_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,1,d1,exposed,OXY01_d1_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,2,d0,not exposed,OXY02_d0_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,2,d1,exposed,OXY02_d1_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,3,d0,not exposed,OXY03_d0_M
+Oxytetracycline,Ontario,Amro,Cage,OXY,3,d1,exposed,OXY03_d1_M
+Oxytetracycline,British Columbia,Leonard,Cage,OXY,7,d0,not exposed,OXY07_d0_M
+Oxytetracycline,British Columbia,Leonard,Cage,OXY,7,d1,exposed,OXY07_d1_M
+Oxytetracycline,British Columbia,Leonard,Cage,OXY,9,d0,not exposed,OXY09_d0_M
+Oxytetracycline,British Columbia,Leonard,Cage,OXY,9,d1,exposed,OXY09_d1_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,1,"d0, time 2",nutritious multifloral,PDV01_d0_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,1,"d1, time 2",nutritious monoculture,PDV01_d1_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,1,"d2, time 2",non-nutritious multifloral,PDV01_d2_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,2,"d0, time 2",nutritious multifloral,PDV02_d0_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,2,"d1, time 2",nutritious monoculture,PDV02_d1_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,2,"d2, time 2",non-nutritious multifloral,PDV02_d2_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,3,"d0, time 2",nutritious multifloral,PDV03_d0_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,3,"d1, time 2",nutritious monoculture,PDV03_d1_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,3,"d2, time 2",non-nutritious multifloral,PDV03_d2_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,4,"d0, time 2",nutritious multifloral,PDV04_d0_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,4,"d1, time 2",nutritious monoculture,PDV04_d1_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,4,"d2, time 2",non-nutritious multifloral,PDV04_d2_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,5,"d0, time 2",nutritious multifloral,PDV05_d0_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,5,"d1, time 2",nutritious monoculture,PDV05_d1_t2_M
+Pollen Diversity,Alberta,Shelley,Colony,PDV,5,"d2, time 2",non-nutritious multifloral,PDV05_d2_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,1,"d0, time 2",natural,PRE01_d0_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,1,"d1, time 2",restricted,PRE01_d1_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,1,"d2, time 2",supplemented,PRE01_d2_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,2,"d0, time 2",natural,PRE02_d0_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,2,"d1, time 2",restricted,PRE02_d1_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,2,"d2, time 2",supplemented,PRE02_d2_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,3,"d0, time 2",natural,PRE03_d0_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,3,"d1, time 2",restricted,PRE03_d1_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,3,"d2, time 2",supplemented,PRE03_d2_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,4,"d0, time 2",natural,PRE04_d0_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,4,"d1, time 2",restricted,PRE04_d1_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,4,"d2, time 2",supplemented,PRE04_d2_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,5,"d0, time 2",natural,PRE05_d0_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,5,"d1, time 2",restricted,PRE05_d1_t2_M
+Pollen Restriction,Alberta,Shelley,Colony,PRE,5,"d2, time 2",supplemented,PRE05_d2_t2_M
+Thiamethoxam,Ontario,Amro,Cage,THI,2,d0,not exposed,THI02_d0_M
+Thiamethoxam,Ontario,Amro,Cage,THI,2,d1,sublethal,THI02_d1_M
+Thiamethoxam,Ontario,Amro,Cage,THI,2,d2,acute,THI02_d2_M
+Thiamethoxam,Ontario,Amro,Cage,THI,3,d0,not exposed,THI03_d0_M
+Thiamethoxam,Ontario,Amro,Cage,THI,3,d1,sublethal,THI03_d1_M
+Thiamethoxam,Ontario,Amro,Cage,THI,3,d2,acute,THI03_d2_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,4,d0,not exposed,THI04_d0_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,4,d1,sublethal,THI04_d1_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,4,d2,acute,THI04_d2_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,5,d0,not exposed,THI05_d0_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,5,d1,sublethal,THI05_d1_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,5,d2,acute,THI05_d2_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,6,d0,not exposed,THI06_d0_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,6,d1,sublethal,THI06_d1_M
+Thiamethoxam,Ontario,Ernesto,Cage,THI,6,d2,acute,THI06_d2_M
+Varroa,Manitoba,Rob,Cage,VAR,4,d0,0% infestation,VAR04_d0_M
+Varroa,Manitoba,Rob,Cage,VAR,4,d1,1% infestation,VAR04_d1_M
+Varroa,Manitoba,Rob,Cage,VAR,4,d2,5% infestation,VAR04_d2_M
+Varroa,Manitoba,Rob,Cage,VAR,5,d0,0% infestation,VAR05_d0_M
+Varroa,Manitoba,Rob,Cage,VAR,5,d1,1% infestation,VAR05_d1_M
+Varroa,Manitoba,Rob,Cage,VAR,5,d2,5% infestation,VAR05_d2_M
+Varroa,Manitoba,Rob,Cage,VAR,6,d0,0% infestation,VAR06_d0_M
+Varroa,Manitoba,Rob,Cage,VAR,6,d1,1% infestation,VAR06_d1_M
+Varroa,Manitoba,Rob,Cage,VAR,6,d2,5% infestation,VAR06_d2_M
+Varroa,Quebec,Pierre,Cage,VAR,8,d0,0% infestation,VAR08_d0_M
+Varroa,Quebec,Pierre,Cage,VAR,8,d1,1% infestation,VAR08_d1_M
+Varroa,Quebec,Pierre,Cage,VAR,8,d2,5% infestation,VAR08_d2_M
+Varroa,Quebec,Pierre,Cage,VAR,9,d0,0% infestation,VAR09_d0_M
+Varroa,Quebec,Pierre,Cage,VAR,9,d1,1% infestation,VAR09_d1_M
+Varroa,Quebec,Pierre,Cage,VAR,9,d2,5% infestation,VAR09_d2_M
