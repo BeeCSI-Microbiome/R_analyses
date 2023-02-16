@@ -26,7 +26,7 @@ taxa_lvl_key <- c(D="Domain",
                   C="Class",
                   O="Order",
                   F="Family",
-                  G="Genus",
+                  G="Genera",
                   S="Species")
 
 # User Defined Variables --------------------------------------------------
@@ -40,12 +40,12 @@ tidy_data <- function(d) {
   clean_data <- select(d,-taxRank,-taxLineage, -taxID, -depth) %>%
     pivot_longer(!name, names_to = "sample", values_to = "value") %>%
     pivot_wider(names_from = "name", values_from = "value")
-  
+
   return(clean_data)
 }
 
 # add in treatment and replicate cols
-# Samples gathered from column names are treated with regular expressions to 
+# Samples gathered from column names are treated with regular expressions to
 # extract replicate number and treatments.
 treat_reps <- function(d, treatment_key) {
   d <- d %>% mutate(replicate = extract_replicate_string(sample),
@@ -54,7 +54,7 @@ treat_reps <- function(d, treatment_key) {
 }
 
 extract_replicate_string <- function(sample_string) {
-  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>% 
+  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>%
     str_remove("^0+")
   paste0("Rep ", digits)
 }
@@ -72,7 +72,7 @@ extract_treatment_string <- function(sample_string, treatment_key) {
   } else {
     stop("The sample column names do not match the implemented regex patterns")
   }
-  
+
   if (all(treatment_codes %in% names(treatment_key))) {
     unlist(treatment_key[treatment_codes], use.names = FALSE)
   } else {
@@ -87,28 +87,33 @@ extract_treatment_string <- function(sample_string, treatment_key) {
 
 # Functions for ANCOM-BC --------------------------------------------------
 # setup data and object for ancombc
-prep_data <- function(count_table, treatment_key, rank) {
+prep_data <- function(count_table, treatment_key, rank, meta_table) {
   data <- count_table %>%
     filter(taxRank == rank)
-  
+
   abun_data <- select(data,-taxRank,-taxLineage, -taxID, -depth) %>%
     column_to_rownames('name') %>%
     as.matrix()
-  
+
   metadata <- tidy_data(data) %>%
     select(sample) %>%
-    treat_reps(treatment_key) %>%
-    column_to_rownames('sample')
+    treat_reps(treatment_key)
+
+  if (!is.null(meta_table)) {
+    metadata <- metadata %>%
+      merge(select(meta_table, Sample, Lab), by.x = "sample", by.y = "Sample")
+  }
+  metadata <- metadata %>% column_to_rownames('sample')
 
   OTU <- otu_table(abun_data, taxa_are_rows = T)
   samples <- sample_data(metadata)
-  
+
   phylo_obj <- phyloseq(OTU, samples)
 
   sample_data(phylo_obj)$treatment <-
     as.factor(sample_data(phylo_obj)$treatment) %>%
     stats::relevel(treatment_key[[1]])
-  
+
   return(phylo_obj)
 }
 
@@ -119,20 +124,20 @@ visualize_save <-
            dataset_name,
            rank,
            outdir) {
-    
     # only get treatment related log-fold-changes (lfc), adj p-vals, and diffs
     df <- data.frame(mod$res) %>%
+      column_to_rownames(var = "taxon") %>%
       select(contains('treatment')) %>%
-      select(contains('lfc') | contains('p_val') | contains('q_val') |
-               contains('diff')) %>%
+      select(starts_with('lfc_') | starts_with('p_') | starts_with('q_') |
+               starts_with('diff_')) %>%
       mutate(across(
-        contains('lfc'),
+        starts_with('lfc_'),
         .fns = function(x)
           log2(exp(x)),
         .names = "log2_{col}"
       )) %>%
-      relocate(contains("log2"))
-    
+      relocate(starts_with("log2_"))
+
     # loop through treatment names and do everything inside
     controls <- c('control', 'unexposed')
     all_treatments <- unlist(treatment_key, use.names = FALSE)
@@ -142,64 +147,77 @@ visualize_save <-
       # setup identifiable strings for i-th treatment
       diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
         sym()
-      q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+      q_val_i <- paste('q_treatment', i, sep = '') %>%
         sym()
-      lfc_i <- paste('log2_lfc.treatment', i, sep = '') %>%
+      log2_lfc_i <- paste('log2_lfc_treatment', i, sep = '') %>%
         sym()
       plot_title_i <-
         paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
-      
+
       # determines whether DA are increases or decreases
       df <- mutate(df,!!diff_abun_i := ifelse(
         df[, grep(q_val_i,
                   colnames(df))] < 0.05,
-        ifelse(df[, grep(lfc_i,
+        ifelse(df[, grep(log2_lfc_i,
                          colnames(df))] >= 0,
                'Increase',
                'Decrease'),
         'No Change'
       ))
-      
+
       # adjust factor levels for plotting
       df[, grep(diff_abun_i, colnames(df))] <-
         factor(df[, grep(diff_abun_i, colnames(df))],
                levels = c('Increase', 'No Change', 'Decrease'))
-      
+
       # plot and save
       da_plot <-
-        volc_plot(df, lfc_i, q_val_i, diff_abun_i, plot_title_i)
+        volc_plot(df, log2_lfc_i, q_val_i, diff_abun_i, plot_title_i)
       ggsave(da_plot,
              filename = glue("{outdir}/{plot_title_i}.png"))
     }
+    # Write the full ancom results
     write.csv(
-      df,
+      arrange(df, row.names(df)),
       file = glue("{outdir}/{dataset_name}_{rank}_ancombc.csv"),
       row.names = T
     )
-    
+    # Format and write the collaborator-formatted ancom results
+    df <- df %>%
+      rownames_to_column(var = "taxa_name") %>%
+      select(matches("^(taxa_name|p_|q_|log2).*")) %>%
+      rename_with(.fn = ~ "log2_fold_change", .cols = starts_with("log2")) %>%
+      rename_with(.fn = ~ "p-value", .cols = starts_with("p_")) %>%
+      rename_with(.fn = ~ "corrected_p-value", .cols = starts_with("q_"))
+
+    write.csv(
+      df,
+      file = glue("{outdir}/{dataset_name}_{rank}_ancombc_collaborator.csv"),
+      row.names = FALSE
+    )
   }
 
 # volcano plot helper
 volc_plot <-
   function(df,
-           lfc_i,
+           log2_lfc_i,
            q_val_i,
            diff_abun_i,
            plot_title_i) {
     # determine x range
     x_default = 1.35
-    x_data = max(abs(df[, grep(lfc_i, colnames(df))]))
+    x_data = max(abs(df[, grep(log2_lfc_i, colnames(df))]))
     x_use = max(x_default, x_data) + 0.15
-    
+
     # determine y range
     y_default = 1.40
     y_data = -log10(min(df[, grep(q_val_i, colnames(df))]))
     y_use = max(y_default, y_data) + 0.10
-    
+
     # plot
     da_plot <- ggplot(df,
                       aes(
-                        x = !!lfc_i,
+                        x = !!log2_lfc_i,
                         y = -log10(!!q_val_i),
                         colour = !!diff_abun_i
                       )) +
@@ -212,12 +230,6 @@ volc_plot <-
       xlim(0 - x_use,
            0 + x_use) +
       ylim(0, y_use) +
-      geom_vline(
-        xintercept = c(-1, 1),
-        lty = 4,
-        col = "black",
-        lwd = 0.8
-      ) +
       geom_hline(
         yintercept = -log10(0.05),
         lty = 4,
@@ -229,7 +241,7 @@ volc_plot <-
            title = plot_title_i) +
       theme(legend.position = "right",
             legend.title = element_blank())
-    
+
     return(da_plot)
   }
 
@@ -239,11 +251,34 @@ run_ancombc <- function(count_table,
                         treatment_key,
                         dataset_name,
                         rank_symbol,
-                        outdir) {
+                        outdir,
+                        meta_table) {
+
+  has_multiple_treatments <- length(treatment_key) > 2
   phylo_obj <-
-    prep_data(count_table, treatment_key, rank_symbol)
-  ancom_result <- ancombc(phylo_obj,
-                          formula = 'treatment+replicate',
-                          p_adj_method = "BH")
+    prep_data(count_table, treatment_key, rank_symbol, meta_table)
+
+  if (has_multiple_treatments) {
+    ancom_result <- ancombc2(data = phylo_obj,
+                             fix_formula = 'treatment',
+                             rand_formula = '(1 | replicate)',
+                             p_adj_method = "BH",
+                             group = "treatment",
+                             mdfdr_control = list(fwer_ctrl_method = "BH", B = 100),
+                             dunnet = TRUE,
+                             global = TRUE)
+  } else {
+    if (length(unique(sample_data(phylo_obj)$Lab)) > 1) {
+      rand_formula_str <- '(1 | replicate) + (1 | Lab)'
+    } else {
+      rand_formula_str <- '(1 | replicate)'
+    }
+    ancom_result <- ancombc2(data = phylo_obj,
+                             fix_formula = 'treatment',
+                             rand_formula = rand_formula_str,
+                             p_adj_method = "BH")
+  }
+
   visualize_save(ancom_result, treatment_key, dataset_name, taxa_lvl_key[rank_symbol], outdir)
+  return(ancom_result)
 }
