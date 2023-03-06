@@ -28,8 +28,11 @@ format_count_table <- function(tb){
 
   # Remove clade read columns
   tb <- tb %>% select(-contains("cladeReads"))
-  tb <- tb %>% rename_with(.cols = starts_with("taxonReads") & !ends_with("_M"),
-                           .fn = ~ paste0(.x, "_M"))
+  if(length(select(tb, starts_with("taxonReads") & !ends_with("_M"))) != 0){
+    tb <- tb %>% rename_with(.cols = starts_with("taxonReads") & !ends_with("_M"),
+                             .fn = ~ paste0(.x, "_M"))
+  }
+  tb
 }
 
 
