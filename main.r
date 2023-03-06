@@ -24,7 +24,7 @@ indicsp <- use("scripts/indicator_taxa_analysis.R")
 
 
 run_all_analyses <- function(dataset_name, counts_path, treatment_key,
-                             filter_string="", act1_meta=NULL){
+                             filter_string="", act1_meta=NULL, outdir="results/"){
   # Globals -----------------------------------------------------------------
   # Name of the dataset for file writing purposes
   # dataset_name <- "a_flx_d1_low_exposure"
@@ -49,7 +49,7 @@ run_all_analyses <- function(dataset_name, counts_path, treatment_key,
   # treatment_key <- list(d0="control",d1="low_exposure")
 
   ## Create output directories ####
-  main_outdir <- glue("results/act2_results/{dataset_name}")
+  main_outdir <- glue("{outdir}/{dataset_name}")
   nmds_dir <- glue("{main_outdir}/nmds_anosim")
   alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
   rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
@@ -61,7 +61,7 @@ run_all_analyses <- function(dataset_name, counts_path, treatment_key,
     ifelse(!dir.exists(path), dir.create(path, mode = "777"), FALSE)
   }
 
-  lapply(c(main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir, da_dir,
+  lapply(c(outdir, main_outdir, nmds_dir, alpha_div_dir, rel_abund_dir, da_dir,
            da_ancombc_dir,ind_sp_dir), create_dir_if_nonexistant)
   # _________________________________________________________________________
 
