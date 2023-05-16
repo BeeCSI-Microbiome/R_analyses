@@ -87,7 +87,7 @@ extract_treatment_string <- function(sample_string, treatment_key) {
 
 # Functions for ANCOM-BC --------------------------------------------------
 # setup data and object for ancombc
-prep_data <- function(count_table, treatment_key, rank, meta_table) {
+prep_data <- function(count_table, treatment_key, rank) {
   data <- count_table %>%
     filter(taxRank == rank)
 
@@ -99,10 +99,6 @@ prep_data <- function(count_table, treatment_key, rank, meta_table) {
     select(sample) %>%
     treat_reps(treatment_key)
 
-  if (!is.null(meta_table)) {
-    metadata <- metadata %>%
-      merge(select(meta_table, Sample, Lab), by.x = "sample", by.y = "Sample")
-  }
   metadata <- metadata %>% column_to_rownames('sample')
 
   OTU <- otu_table(abun_data, taxa_are_rows = T)
@@ -126,12 +122,12 @@ visualize_save <-
            outdir) {
     # only get treatment related log-fold-changes (lfc), adj p-vals, and diffs
     df <- data.frame(mod$res) %>%
-      column_to_rownames(var = "taxon") %>%
+      column_to_rownames(var = "lfc.taxon") %>%
       select(contains('treatment')) %>%
-      select(starts_with('lfc_') | starts_with('p_') | starts_with('q_') |
+      select(starts_with('lfc.') | starts_with('p_') | starts_with('q_') |
                starts_with('diff_')) %>%
       mutate(across(
-        starts_with('lfc_'),
+        starts_with('lfc.'),
         .fns = function(x)
           log2(exp(x)),
         .names = "log2_{col}"
@@ -145,11 +141,11 @@ visualize_save <-
 
     for (i in just_treats) {
       # setup identifiable strings for i-th treatment
-      diff_abun_i <- paste('diff_abun_', i, sep = '') %>%
+      diff_abun_i <- paste('diff_abun.', i, sep = '') %>%
         sym()
-      q_val_i <- paste('q_treatment', i, sep = '') %>%
+      q_val_i <- paste('q_val.treatment', i, sep = '') %>%
         sym()
-      log2_lfc_i <- paste('log2_lfc_treatment', i, sep = '') %>%
+      log2_lfc_i <- paste('log2_lfc.treatment', i, sep = '') %>%
         sym()
       plot_title_i <-
         paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
@@ -251,33 +247,15 @@ run_ancombc <- function(count_table,
                         treatment_key,
                         dataset_name,
                         rank_symbol,
-                        outdir,
-                        meta_table) {
+                        outdir) {
 
-  has_multiple_treatments <- length(treatment_key) > 2
   phylo_obj <-
-    prep_data(count_table, treatment_key, rank_symbol, meta_table)
+    prep_data(count_table, treatment_key, rank_symbol)
 
-  if (has_multiple_treatments) {
-    ancom_result <- ancombc2(data = phylo_obj,
-                             fix_formula = 'treatment',
-                             rand_formula = '(1 | replicate)',
-                             p_adj_method = "BH",
-                             group = "treatment",
-                             mdfdr_control = list(fwer_ctrl_method = "BH", B = 100),
-                             dunnet = TRUE,
-                             global = TRUE)
-  } else {
-    if (length(unique(sample_data(phylo_obj)$Lab)) > 1) {
-      rand_formula_str <- '(1 | replicate) + (1 | Lab)'
-    } else {
-      rand_formula_str <- '(1 | replicate)'
-    }
-    ancom_result <- ancombc2(data = phylo_obj,
-                             fix_formula = 'treatment',
-                             rand_formula = rand_formula_str,
-                             p_adj_method = "BH")
-  }
+  ancom_result <- ancombc(phylo_obj,
+                          formula = 'treatment+replicate',
+                          p_adj_method = "BH")
+
 
   visualize_save(ancom_result, treatment_key, dataset_name, taxa_lvl_key[rank_symbol], outdir)
   return(ancom_result)

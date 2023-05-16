@@ -20,22 +20,27 @@ ip <- use("scripts/initial_processing.R")
 exploratory <- use("scripts/exploratory_functions.R")
 da_ancombc <- use("scripts/da-ancombc.R")
 indicsp <- use("scripts/indicator_taxa_analysis.R")
-# _________________________________________________________________________
+# ___________________________________________________________________________
 
 
-run_all_analyses <- function(dataset_name, counts_path, treatment_key,
-                             filter_string="", act1_meta=NULL){
-  # Globals -----------------------------------------------------------------
-  # Name of the dataset for file writing purposes
-  # dataset_name <- "a_flx_d1_low_exposure"
-  # filepath to the taxon count table
-  # counts_path <- "../data/a_flx_2021/a_flx_2021_aggregated_counts.csv"
-
-  # Activity 1 Metadata sheet
-  # act1_meta <- read_csv("activity-1_metadata.csv")
-
-
-  # Read input files --------------------------------------------------------
+#' Read in taxonomic count tables, format them, then perform analyses
+#'
+#' @param dataset_name
+#' @param counts_path
+#' @param treatment_key
+#' @param filter_string
+#' @param outdir
+#'
+#' @return
+#' @export
+#'
+#' @examples
+run_all_analyses <- function(dataset_name,
+                             counts_path,
+                             treatment_key,
+                             filter_string = "",
+                             outdir = "results") {
+  # 1. Read and filter input files ------------------------------------------
   ct <- read_csv(counts_path)
 
   # filter the treatment that isn't being analyzed
@@ -88,18 +93,20 @@ run_all_analyses <- function(dataset_name, counts_path, treatment_key,
             row.names = FALSE)
 
   # ANCOMBC Differential Abundance ------------------------------------------
-  ancom_species_results <- da_ancombc$run_ancombc(tables[["raw_clade"]],
-                                                  treatment_key,
-                                                  dataset_name,
-                                                  "S",
-                                                  da_ancombc_dir,
-                                                  act1_meta)
-  ancom_genus_results <- da_ancombc$run_ancombc(tables[["raw_clade"]],
-                                                treatment_key,
-                                                dataset_name,
-                                                "G",
-                                                da_ancombc_dir,
-                                                act1_meta)
+  ancom_species_results <- da_ancombc$run_ancombc(
+    count_table = tables[["raw_clade"]],
+    treatment_key = treatment_key,
+    dataset_name = dataset_name,
+    rank_symbol = "S",
+    outdir = da_ancombc_dir
+  )
+  ancom_genus_results <- da_ancombc$run_ancombc(
+    count_table = tables[["raw_clade"]],
+    treatment_key = treatment_key,
+    dataset_name = dataset_name,
+    rank_symbol = "G",
+    outdir = da_ancombc_dir
+  )
 
   # Indicator Taxa Analysis--------------------------------------------------
   # indicsp$run_indicator_analysis(tables[["raw_clade"]],
