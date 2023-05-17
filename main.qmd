@@ -15,7 +15,8 @@ header-includes:
   - \usepackage[normalem]{ulem}
   - \usepackage{makecell}
 params:
-  dataset_name: "dataset_name"
+  main_result_dir: NULL
+  dataset_name: NULL
 format:
   pdf:
     output-ext: "pdf"
@@ -32,39 +33,41 @@ experiment_key <- read.csv("Taxonomic_Experiment_Key.csv")
 ```
 **Grouping:**
 ```{r, echo = FALSE}
-subset(experiment_key$highest.grouping, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$highest.grouping, experiment_key$dataset_key == params$dataset_name)
 ```
   
 **Year**:
 ```{r, echo = FALSE}
-subset(experiment_key$year, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$year, experiment_key$dataset_key == params$dataset_name)
 ```
   
 **Activity:**
 ```{r, echo = FALSE}
-subset(experiment_key$activity, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$activity, experiment_key$dataset_key == params$dataset_name)
 ```
   
 **Stressor Name:**
 ```{r, echo = FALSE}
-subset(experiment_key$highest.grouping, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$highest.grouping, experiment_key$dataset_key == params$dataset_name)
 ```
   
 **Number of Samples:**
 ```{r, echo = FALSE}
-subset(experiment_key$X..Samples, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$X..Samples, experiment_key$dataset_key == params$dataset_name)
 ```
   
 **Treatments:**
 ```{r, echo = FALSE}
-if(subset(experiment_key$Number.of.Treatments, experiment_key$dataset_key == dataset_name) == 2) {
-  treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == dataset_name),
-  subset(experiment_key$d1_treatment, experiment_key$dataset_key == dataset_name))
+if(subset(experiment_key$Number.of.Treatments, experiment_key$dataset_key == params$dataset_name) == 2) {
+  treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == params$dataset_name),
+  subset(experiment_key$d1_treatment, experiment_key$dataset_key == params$dataset_name),
+  subset(experiment_key$d2_treatment, experiment_key$dataset_key == params$dataset_name))
+  treatmentNames <- treatmentNames[treatmentNames !=  ""]
   
 } else {
-    treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == dataset_name),
-  subset(experiment_key$d1_treatment, experiment_key$dataset_key == dataset_name),
-    subset(experiment_key$d2_treatment, experiment_key$dataset_key == dataset_name))
+    treatmentNames <- c(subset(experiment_key$d0_treatment, experiment_key$dataset_key == params$dataset_name),
+  subset(experiment_key$d1_treatment, experiment_key$dataset_key == params$dataset_name),
+    subset(experiment_key$d2_treatment, experiment_key$dataset_key == params$dataset_name))
 }
 
 treatmentNames
@@ -72,7 +75,7 @@ treatmentNames
 
 **Description:**
 ```{r, echo = FALSE}
-subset(experiment_key$Description, experiment_key$dataset_key == dataset_name)
+subset(experiment_key$Description, experiment_key$dataset_key == params$dataset_name)
 ```
 
 ```{r install, message=FALSE, warning=FALSE, echo = FALSE}
@@ -87,7 +90,7 @@ for (pkg_name in pkg_list) {
 path <- getwd()
 
 # Kept in case this ever gets changed. 
-main_outdir <- glue("{path}/results/act2_results/{dataset_name}")
+main_outdir <- glue("{path}/{params$main_result_dir}")
 nmds_dir <- glue("{main_outdir}/nmds_anosim")
 alpha_div_dir <- glue("{main_outdir}/alpha_diversity")
 rel_abund_dir <-  glue("{main_outdir}/relative_abundance")
@@ -101,7 +104,7 @@ ind_sp_dir <- glue("{da_dir}/indicator_species_analysis")
 
 # Define a function for use later
 trim_path <- function(path_string) {
-  gsub('.*(R_analyses.*)','\\1',path_string)
+  paste0("*result_directory*", gsub(glue('.*{main_outdir}(.*)'),'\\1',path_string))
 }
 
 ```
@@ -144,7 +147,6 @@ cat(readLines(glue('{alpha_div_dir}/alpha_stats.txt')), sep = "\n")
 
 ## Alpha diversity value table
 ```{r, echo = FALSE}
-knitr::kable(glue("{alpha_div_dir}/alpha_div_data.csv"), col.names = "File Location")
 
 alphaSummary <- read.csv(glue("{alpha_div_dir}/alpha_div_data.csv"))
 
@@ -181,8 +183,8 @@ treatmentNames
 # Glob volcano plot file names - there may be multiple depending on treatment
 volc_plots <- Sys.glob(glue("{da_ancombc_dir}/*.png"))
 
-kableExtra::kbl(c(glue("{dataset_name}_Genus_ancombc.csv"),
-               glue("{dataset_name}_Species_ancombc.csv"),
+kableExtra::kbl(c(glue("{params$dataset_name}_Genus_ancombc.csv"),
+               glue("{params$dataset_name}_Species_ancombc.csv"),
                basename(trim_path(volc_plots))),
   col.names = "File names", booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
@@ -210,7 +212,7 @@ and the following assumptions:
 
 ```{r, echo = FALSE}
 # GENERALIZE FOR MULTIPLE TREATMENTS
-genusANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Genera_ancombc.csv"))
+genusANCOM <- read.csv(glue("{da_ancombc_dir}/{params$dataset_name}_Genera_ancombc.csv"))
 
 ancomColNames <- c("Genus", "log2-fold-change", "lfc", "p-val", "q-val", "diff. abundant", "change type")
 
@@ -237,7 +239,7 @@ knitr::include_graphics(temp_path)
 ## ANCOM-BC: Taxa Level Species
 
 ```{r, echo = FALSE}
-speciesANCOM <- read.csv(glue("{da_ancombc_dir}/{dataset_name}_Species_ancombc.csv"))
+speciesANCOM <- read.csv(glue("{da_ancombc_dir}/{params$dataset_name}_Species_ancombc.csv"))
 
 ancomColNames <- c("Species", "log2-fold-change", "log10-fold-change", "p-val",
                    "q-val", "diff. abundant", "change type")
@@ -266,25 +268,6 @@ knitr::include_graphics(temp_path)
 
 \pagebreak
 
-```{r, echo = FALSE}
-plot_title_i <-
-        paste(base_title, just_treats[1], '-', 'Species', '-', dataset_name)
-
-Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-grid::grid.raster(Temp)
-```
-
-```{r, echo = FALSE}
-if (length(just_treats) == 2) {
-  plot_title_i <-
-          paste(base_title, just_treats[2], '-', 'Species', '-', dataset_name)
-  
-  Temp <- readPNG(glue("{da_ancombc_dir}/{plot_title_i}.png"), native = TRUE, info = TRUE)
-  grid::grid.raster(Temp)
-}
-```
-
-{{< pagebreak >}}
 
 # Beta Diversity
 
@@ -357,7 +340,6 @@ kableExtra::kbl(speciesNMDS, booktabs = TRUE) %>%
 
   * `r trim_path(rel_abund_dir)`
 
-{{< pagebreak >}}
 
 ```{r, echo = FALSE}
 kableExtra::kbl(c("relative_abundance_plot.png",
@@ -386,10 +368,10 @@ For complete results of indicSpecies analyses, including non-significant results
   * `r trim_path(ind_sp_dir)`
   
 ```{r, echo = FALSE}
-kableExtra::kbl(c(glue("{dataset_name}_treatment_indicators_Genus.txt"),
-  glue("{dataset_name}_treatment_indicators_Species.txt"),
-  glue("{dataset_name}_replicate_indicators_Genus.txt"),
-  glue("{dataset_name}_replicate_indicators_Species.txt")),
+kableExtra::kbl(c(glue("{params$dataset_name}_treatment_indicators_Genus.txt"),
+  glue("{params$dataset_name}_treatment_indicators_Species.txt"),
+  glue("{params$dataset_name}_replicate_indicators_Genus.txt"),
+  glue("{params$dataset_name}_replicate_indicators_Species.txt")),
   col.names = "File names", booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```
@@ -402,7 +384,7 @@ The following are the indicSpecies results, formatted as the default output of t
 
 ## Factor: Treatment - Taxa Level: Genus
 ``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Genus.txt"))
+temp <- readLines(glue("{ind_sp_dir}/{params$dataset_name}_treatment_indicators_Genus.txt"))
 
 temp <-gsub("\t","",temp)
 
@@ -412,7 +394,7 @@ cat(temp, sep = "\n")
 
 ## Factor: Treatment - Taxa Level: Species
 ``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_treatment_indicators_Species.txt"))
+temp <- readLines(glue("{ind_sp_dir}/{params$dataset_name}_treatment_indicators_Species.txt"))
 
 temp <-gsub("\t","",temp)
 
@@ -422,7 +404,7 @@ cat(temp, sep = "\n")
 
 ## Factor: Replicate - Taxa Level: Genus
 ``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Genus.txt"))
+temp <- readLines(glue("{ind_sp_dir}/{params$dataset_name}_replicate_indicators_Genus.txt"))
 
 temp <-gsub("\t","",temp)
 
@@ -432,7 +414,7 @@ cat(temp, sep = "\n")
 
 ## Factor: Replicate - Taxa Level: Species
 ``` {r, echo = FALSE, comment=''}
-temp <- readLines(glue("{ind_sp_dir}/{dataset_name}_replicate_indicators_Species.txt"))
+temp <- readLines(glue("{ind_sp_dir}/{params$dataset_name}_replicate_indicators_Species.txt"))
 
 temp <-gsub("\t","",temp)
 
@@ -446,10 +428,10 @@ For complete results of indicSpecies analyses, including non-significant results
 
   * `r trim_path(ind_sp_dir)`
 ```{r, echo = FALSE}
-kableExtra::kbl(c(glue("{dataset_name}_treatment_indicators_Genus.csv"),
-  glue("{dataset_name}_treatment_indicators_Species.csv"),
-  glue("{dataset_name}_replicate_indicators_Genus.csv"),
-  glue("{dataset_name}_replicate_indicators_Species.csv")),
+kableExtra::kbl(c(glue("{params$dataset_name}_treatment_indicators_Genus.csv"),
+  glue("{params$dataset_name}_treatment_indicators_Species.csv"),
+  glue("{params$dataset_name}_replicate_indicators_Genus.csv"),
+  glue("{params$dataset_name}_replicate_indicators_Species.csv")),
   col.names = "File names", booktabs = TRUE) %>%
   kableExtra::kable_styling(latex_options = c("striped", "hold_position"))
 ```

@@ -152,6 +152,8 @@ run_all_analyses <- function(dataset_name,
 
   # Write the pdf report ----------------------------------------------------
   rmarkdown::render("main.qmd",
-                    output_file = glue("{main_outdir}/{dataset_name}_report_{Sys.Date()}.pdf"),
-                    params = list(dataset_name = dataset_name))
+    output_file = glue("{main_outdir}/{dataset_name}_report_{Sys.Date()}.pdf"),
+    params = list(main_result_dir = main_outdir,
+                  dataset_name = dataset_name)
+  )
 }
