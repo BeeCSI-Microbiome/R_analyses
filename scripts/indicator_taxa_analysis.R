@@ -132,7 +132,7 @@ get_reg_ex <- function(sampleID){
 
   if (all(str_detect(sampleID, "_d[[:alnum:]]+"))) {
     # Does sample string match activity 1 pattern?
-    reg <- paste0("((?:(?:\\w_){0,1}\\w{3})(\\d\\d)_(d[[:alnum:]])(?:_t(\\d)){0,1}).*")
+    reg <- paste0("((?:(?:\\w_){0,1}\\w{3})(\\d\\d)[[:alnum:]]{0,1}_(d[[:alnum:]])(?:_t(\\d)){0,1}).*")
   } else if (all(str_detect(sampleID, "\\D\\D\\D[[:alnum:]]{2}[e|u]"))) {
     # Or activity 2 pattern?
     reg <- paste0("(\\D\\D\\D(..)([e|u])(?:_t(\\d)){0,1}).*")
