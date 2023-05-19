@@ -29,8 +29,6 @@ taxa_lvl_key <- c(D="Domain",
                   G="Genera",
                   S="Species")
 
-# User Defined Variables --------------------------------------------------
-base_title <- 'Cage Control vs'
 
 
 # Functions from exploratory_functions.R ----------------------------------
@@ -138,6 +136,7 @@ visualize_save <-
     controls <- c('control', 'unexposed')
     all_treatments <- unlist(treatment_key, use.names = FALSE)
     just_treats <- all_treatments[!all_treatments %in% controls]
+    control_str <- controls[controls %in% all_treatments]
 
     for (i in just_treats) {
       # setup identifiable strings for i-th treatment
@@ -148,7 +147,7 @@ visualize_save <-
       log2_lfc_i <- paste('log2_lfc.treatment', i, sep = '') %>%
         sym()
       plot_title_i <-
-        paste(base_title, i, '-', str_to_title(rank), '-', dataset_name)
+        paste(str_to_title(control_str), "vs", i, "-", str_to_title(rank), "-", dataset_name)
 
       # determines whether DA are increases or decreases
       df <- mutate(df,!!diff_abun_i := ifelse(
