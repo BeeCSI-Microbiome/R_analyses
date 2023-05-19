@@ -38,7 +38,9 @@ indicsp <- use("scripts/indicator_taxa_analysis.R")
 #'   the treatment of interest. The keys should be the sample name substrings
 #'   that identify samples as belonging to the given treatment, and the values
 #'   should be strings that are more descriptive. E.g. `list(u = "unexposed", e
-#'   = "exposed")`
+#'   = "exposed")`. The treatment that will be treated as control for the
+#'   purpose of differential abundance analysis via ANCOMBC *must* be the first
+#'   value in the list.
 #' @param filter_string A substring identifying the treatment to be removed from
 #'   the analyses (in the case of experiments with 3 treatments). The substring
 #'   should uniquely identify the samples (column names in the taxa tables) with
