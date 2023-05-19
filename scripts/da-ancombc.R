@@ -3,7 +3,7 @@
 # Takes two functions from exploratory_functions.R for data wrangling:
 # tidy_data and treat_reps
 # Takes as input: raw clade counts (should *not* be scaled/normalized)
-# Uses treatment+replicate for as the model, but this can be
+# Uses treatment+replicate for the model, but this can be
 # customized in the ancombc function itself.
 
 # Author(s): Jonathan Ho
@@ -21,22 +21,23 @@ modules::import("glue")
 modules::import("phyloseq")
 
 
-taxa_lvl_key <- c(D="Domain",
-                  P="Phylum",
-                  C="Class",
-                  O="Order",
-                  F="Family",
-                  G="Genera",
-                  S="Species")
-
+taxa_lvl_key <- c(
+  D = "Domain",
+  P = "Phylum",
+  C = "Class",
+  O = "Order",
+  F = "Family",
+  G = "Genera",
+  S = "Species"
+)
 
 
 # Functions from exploratory_functions.R ----------------------------------
 
 # cleans data into tidy format
 tidy_data <- function(d) {
-  clean_data <- select(d,-taxRank,-taxLineage, -taxID, -depth) %>%
-    pivot_longer(!name, names_to = "sample", values_to = "value") %>%
+  clean_data <- select(d, -taxRank, -taxLineage, -taxID, -depth) |>
+    pivot_longer(!name, names_to = "sample", values_to = "value") |>
     pivot_wider(names_from = "name", values_from = "value")
 
   return(clean_data)
@@ -46,13 +47,14 @@ tidy_data <- function(d) {
 # Samples gathered from column names are treated with regular expressions to
 # extract replicate number and treatments.
 treat_reps <- function(d, treatment_key) {
-  d <- d %>% mutate(replicate = extract_replicate_string(sample),
-                    treatment = extract_treatment_string(sample, treatment_key))
+  d <- d |>
+    mutate(replicate = extract_replicate_string(sample),
+           treatment = extract_treatment_string(sample, treatment_key))
   return(d)
 }
 
 extract_replicate_string <- function(sample_string) {
-  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") %>%
+  digits <- str_extract(sample_string, "(?<=\\w{3,5})\\d\\d") |>
     str_remove("^0+")
   paste0("Rep ", digits)
 }
@@ -78,7 +80,8 @@ extract_treatment_string <- function(sample_string, treatment_key) {
       unique(treatment_codes)[!unique(treatment_codes) %in% names(treatment_key)]
     stop(paste(
       "The following treatment code(s) detected from samples names were not found in treatment key you provided:",
-      paste(missing_codes, collapse = ", ")))
+      paste(missing_codes, collapse = ", ")
+    ))
   }
 }
 
@@ -86,18 +89,18 @@ extract_treatment_string <- function(sample_string, treatment_key) {
 # Functions for ANCOM-BC --------------------------------------------------
 # setup data and object for ancombc
 prep_data <- function(count_table, treatment_key, rank) {
-  data <- count_table %>%
+  data <- count_table |>
     filter(taxRank == rank)
 
-  abun_data <- select(data,-taxRank,-taxLineage, -taxID, -depth) %>%
-    column_to_rownames('name') %>%
+  abun_data <- select(data, -taxRank, -taxLineage, -taxID, -depth) |>
+    column_to_rownames("name") |>
     as.matrix()
 
-  metadata <- tidy_data(data) %>%
-    select(sample) %>%
+  metadata <- tidy_data(data) |>
+    select(sample) |>
     treat_reps(treatment_key)
 
-  metadata <- metadata %>% column_to_rownames('sample')
+  metadata <- metadata |> column_to_rownames("sample")
 
   OTU <- otu_table(abun_data, taxa_are_rows = T)
   samples <- sample_data(metadata)
@@ -105,7 +108,7 @@ prep_data <- function(count_table, treatment_key, rank) {
   phylo_obj <- phyloseq(OTU, samples)
 
   sample_data(phylo_obj)$treatment <-
-    as.factor(sample_data(phylo_obj)$treatment) %>%
+    as.factor(sample_data(phylo_obj)$treatment) |>
     stats::relevel(treatment_key[[1]])
 
   return(phylo_obj)
@@ -119,57 +122,57 @@ visualize_save <-
            rank,
            outdir) {
     # only get treatment related log-fold-changes (lfc), adj p-vals, and diffs
-    df <- data.frame(mod$res) %>%
-      column_to_rownames(var = "lfc.taxon") %>%
-      select(contains('treatment')) %>%
-      select(starts_with('lfc.') | starts_with('p_') | starts_with('q_') |
-               starts_with('diff_')) %>%
+    df <- data.frame(mod$res) |>
+      column_to_rownames(var = "lfc.taxon") |>
+      select(contains("treatment")) |>
+      select(starts_with("lfc.") | starts_with("p_") | starts_with("q_") |
+        starts_with("diff_")) |>
       mutate(across(
-        starts_with('lfc.'),
-        .fns = function(x)
-          log2(exp(x)),
+        starts_with("lfc."),
+        .fns = function(x) {
+          log2(exp(x))
+        },
         .names = "log2_{col}"
-      )) %>%
+      )) |>
       relocate(starts_with("log2_"))
 
     # loop through treatment names and do everything inside
-    controls <- c('control', 'unexposed')
+    controls <- c("control", "unexposed")
     all_treatments <- unlist(treatment_key, use.names = FALSE)
     just_treats <- all_treatments[!all_treatments %in% controls]
     control_str <- controls[controls %in% all_treatments]
 
     for (i in just_treats) {
       # setup identifiable strings for i-th treatment
-      diff_abun_i <- paste('diff_abun.', i, sep = '') %>%
+      diff_abun_i <- paste("diff_abun.", i, sep = "") |>
         sym()
-      q_val_i <- paste('q_val.treatment', i, sep = '') %>%
+      q_val_i <- paste("q_val.treatment", i, sep = "") |>
         sym()
-      log2_lfc_i <- paste('log2_lfc.treatment', i, sep = '') %>%
+      log2_lfc_i <- paste("log2_lfc.treatment", i, sep = "") |>
         sym()
       plot_title_i <-
         paste(str_to_title(control_str), "vs", i, "-", str_to_title(rank), "-", dataset_name)
 
       # determines whether DA are increases or decreases
-      df <- mutate(df,!!diff_abun_i := ifelse(
-        df[, grep(q_val_i,
-                  colnames(df))] < 0.05,
-        ifelse(df[, grep(log2_lfc_i,
-                         colnames(df))] >= 0,
-               'Increase',
-               'Decrease'),
-        'No Change'
+      df <- mutate(df, !!diff_abun_i := ifelse(
+        df[, grep(q_val_i, colnames(df))] < 0.05,
+        ifelse(df[, grep(log2_lfc_i, colnames(df))] >= 0,
+               "Increase",
+               "Decrease"),
+        "No Change"
       ))
 
       # adjust factor levels for plotting
       df[, grep(diff_abun_i, colnames(df))] <-
         factor(df[, grep(diff_abun_i, colnames(df))],
-               levels = c('Increase', 'No Change', 'Decrease'))
+          levels = c("Increase", "No Change", "Decrease")
+        )
 
       # plot and save
-      da_plot <-
-        volc_plot(df, log2_lfc_i, q_val_i, diff_abun_i, plot_title_i)
+      da_plot <- volc_plot(df, log2_lfc_i, q_val_i, diff_abun_i, plot_title_i)
       ggsave(da_plot,
-             filename = glue("{outdir}/{plot_title_i}.png"))
+        filename = glue("{outdir}/{plot_title_i}.png")
+      )
     }
     # Write the full ancom results
     write.csv(
@@ -178,12 +181,13 @@ visualize_save <-
       row.names = T
     )
     # Format and write the collaborator-formatted ancom results
-    df <- df %>%
-      rownames_to_column(var = "taxa_name") %>%
-      select(matches("^(taxa_name|p_|q_|log2).*")) %>%
-      rename_with(.fn = ~ "log2_fold_change", .cols = starts_with("log2")) %>%
-      rename_with(.fn = ~ "p-value", .cols = starts_with("p_")) %>%
-      rename_with(.fn = ~ "corrected_p-value", .cols = starts_with("q_"))
+
+    df <- df |>
+      rownames_to_column(var = "taxa_name") |>
+      select(matches("^(taxa_name|p_|q_|log2).*")) |>
+      rename_with(.fn = ~"log2_fold_change", .cols = starts_with("log2")) |>
+      rename_with(.fn = ~"p-value", .cols = starts_with("p_")) |>
+      rename_with(.fn = ~"corrected_p-value", .cols = starts_with("q_"))
 
     write.csv(
       df,
@@ -200,30 +204,28 @@ volc_plot <-
            diff_abun_i,
            plot_title_i) {
     # determine x range
-    x_default = 1.35
-    x_data = max(abs(df[, grep(log2_lfc_i, colnames(df))]))
-    x_use = max(x_default, x_data) + 0.15
+    x_default <- 1.35
+    x_data <- max(abs(df[, grep(log2_lfc_i, colnames(df))]))
+    x_use <- max(x_default, x_data) + 0.15
 
     # determine y range
-    y_default = 1.40
-    y_data = -log10(min(df[, grep(q_val_i, colnames(df))]))
-    y_use = max(y_default, y_data) + 0.10
+    y_default <- 1.40
+    y_data <- -log10(min(df[, grep(q_val_i, colnames(df))]))
+    y_use <- max(y_default, y_data) + 0.10
 
     # plot
-    da_plot <- ggplot(df,
-                      aes(
-                        x = !!log2_lfc_i,
-                        y = -log10(!!q_val_i),
-                        colour = !!diff_abun_i
-                      )) +
+    da_plot <- df |>
+      ggplot(aes(x = !!log2_lfc_i,
+                 y = -log10(!!q_val_i),
+                 colour = !!diff_abun_i)
+      ) +
       geom_point(alpha = 0.5, size = 3) +
       scale_color_manual(values = c(
-        'Increase' = 'blue',
-        'No Change' = 'black',
-        'Decrease' = 'red'
+        "Increase" = "blue",
+        "No Change" = "black",
+        "Decrease" = "red"
       )) +
-      xlim(0 - x_use,
-           0 + x_use) +
+      xlim(0 - x_use, 0 + x_use) +
       ylim(0, y_use) +
       geom_hline(
         yintercept = -log10(0.05),
@@ -247,12 +249,11 @@ run_ancombc <- function(count_table,
                         dataset_name,
                         rank_symbol,
                         outdir) {
-
   phylo_obj <-
     prep_data(count_table, treatment_key, rank_symbol)
 
   ancom_result <- ancombc(phylo_obj,
-                          formula = 'treatment+replicate',
+                          formula = "treatment+replicate",
                           p_adj_method = "BH")
 
 
