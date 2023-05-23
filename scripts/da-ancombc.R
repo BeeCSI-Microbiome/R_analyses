@@ -6,9 +6,6 @@
 # Uses treatment+replicate for the model, but this can be
 # customized in the ancombc function itself.
 
-# Author(s): Jonathan Ho
-# Updated: Apr 14, 2022
-
 modules::import("tidyr")
 modules::import("stringr")
 modules::import("ANCOMBC")
